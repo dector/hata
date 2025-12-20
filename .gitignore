@@ -1,0 +1,8 @@
+# Databases
+/data/
+
+# Compiled binaries
+/out/
+
+# Generated code
+/internal/orm/
