@@ -1,0 +1,1 @@
+- To build project - run 'ror ai:build'

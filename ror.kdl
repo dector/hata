@@ -1,3 +1,11 @@
 task build {
     cmd "go build -o out/hata ./cmd/hata/"
 }
+
+//region LLM-context
+
+task ai:build {
+    cmd "go build -o out/hata.llm ./cmd/hata/"
+}
+
+//endregion
