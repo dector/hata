@@ -1,10 +1,20 @@
 task build {
+    description "Build project"
+
     cmd "go build -o out/hata ./cmd/hata/"
+}
+
+task run {
+    description "Run project"
+
+    cmd "go run ./cmd/hata"
 }
 
 //region LLM-context
 
 task ai:build {
+    description "[Agent] build project"
+
     cmd "go build -o out/hata.llm ./cmd/hata/"
 }
 
