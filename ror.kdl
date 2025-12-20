@@ -1,0 +1,3 @@
+task build {
+    cmd "go build -o out/hata ./cmd/hata/"
+}
