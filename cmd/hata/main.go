@@ -5,33 +5,49 @@ import (
 	"fmt"
 	"log"
 
-	"hata/internal/orm"
-
-	_ "github.com/mattn/go-sqlite3"
+	"hata/internal/db"
 )
 
 func main() {
-	client, err := orm.Open("sqlite3", "file:data/dev.db?cache=shared&_fk=1")
-	if err != nil {
-		log.Fatalf("failed opening connection to sqlite: %v", err)
-	}
-	defer client.Close()
+	database := db.New()
 
 	ctx := context.Background()
 
-	// Run the auto migration tool.
-	if err := client.Schema.Create(ctx); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+	// Open database (uses default path: data/hata.db)
+	if err := database.Open(ctx, ""); err != nil {
+		log.Fatalf("failed opening database: %v", err)
+	}
+	defer database.Close()
+
+	// Run the auto migration tool
+	if err := database.RunMigrations(ctx); err != nil {
+		log.Fatalf("failed running migrations: %v", err)
 	}
 
-	// Query all sys__kv records
-	kvs, err := client.SysKV.Query().All(ctx)
+	// Get KV repository
+	kvRepo := database.Repos().KV()
+
+	// Count all key-value pairs
+	count, err := kvRepo.Count(ctx)
 	if err != nil {
-		log.Fatalf("failed querying sys__kv: %v", err)
+		log.Fatalf("failed counting sys__kv: %v", err)
+	}
+
+	fmt.Printf("Total sys__kv records: %d\n", count)
+
+	// List all keys
+	keys, err := kvRepo.ListAllKeys(ctx)
+	if err != nil {
+		log.Fatalf("failed listing keys: %v", err)
 	}
 
 	fmt.Println("sys__kv records:")
-	for _, kv := range kvs {
-		fmt.Printf("  %s = %s\n", kv.Key, kv.Value)
+	for _, key := range keys {
+		value, err := kvRepo.GetByKey(ctx, key)
+		if err != nil {
+			log.Printf("  %s = <error: %v>\n", key, err)
+			continue
+		}
+		fmt.Printf("  %s = %s\n", key, value)
 	}
 }
