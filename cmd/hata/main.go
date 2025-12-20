@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"hata/internal/db"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -13,6 +17,36 @@ func main() {
 
 	ctx := context.Background()
 
+	testDb(database, ctx)
+
+	startServer(database, ctx)
+}
+
+func startServer(database db.DB, ctx context.Context) {
+	// Setup chi router
+	r := chi.NewRouter()
+
+	// Add middleware
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// Add routes
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Welcome to Hata!"))
+	})
+
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+
+	// Start server
+	log.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatalf("failed starting server: %v", err)
+	}
+}
+
+func testDb(database db.DB, ctx context.Context) {
 	// Open database (uses default path: data/hata.db)
 	if err := database.Open(ctx, ""); err != nil {
 		log.Fatalf("failed opening database: %v", err)

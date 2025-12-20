@@ -7,7 +7,18 @@ task build {
 task run {
     description "Run project"
 
-    cmd "go run ./cmd/hata"
+    cmd #"""go tool air \
+        -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
+        -build.full_bin="./out/hata.air" \
+        -proxy.enabled=true \
+        -proxy.proxy_port=3000 \
+        -proxy.app_port=8080 \
+        -build.include_dir="cmd,internal,pkg" \
+        -build.include_ext="go,templ" \
+        -build.exclude_regex="_templ.go" \
+        -build.delay=100 \
+        -tmp_dir=out
+    """#
 }
 
 //region LLM-context
