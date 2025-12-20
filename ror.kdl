@@ -1,3 +1,5 @@
+default task=run
+
 task build {
     description "Build project"
 
@@ -7,7 +9,10 @@ task build {
 task run {
     description "Run project"
 
-    cmd #"""go tool air \
+    env AIR=1
+
+    cmd #"""go tool \
+      air \
         -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
         -build.full_bin="./out/hata.air" \
         -proxy.enabled=true \
@@ -17,7 +22,7 @@ task run {
         -build.include_ext="go,templ" \
         -build.exclude_regex="_templ.go" \
         -build.delay=100 \
-        -tmp_dir=out
+        -tmp_dir=out \
     """#
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"hata/internal/db"
 
@@ -39,9 +40,17 @@ func startServer(database db.DB, ctx context.Context) {
 		w.Write([]byte("OK"))
 	})
 
+	host := "http://localhost"
+	port := "8080"
+
+	portAccess := port
+	if os.Getenv("AIR") == "1" {
+		portAccess = "3000"
+	}
+
 	// Start server
-	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Printf("Starting server on %s:%s\n", host, portAccess)
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), r); err != nil {
 		log.Fatalf("failed starting server: %v", err)
 	}
 }
