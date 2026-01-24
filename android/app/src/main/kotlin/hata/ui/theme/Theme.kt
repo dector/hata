@@ -1,4 +1,4 @@
-package space.dector.hata.ui.theme
+package hata.ui.theme
 
 import android.app.Activity
 import android.os.Build

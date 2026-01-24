@@ -1,4 +1,4 @@
-package space.dector.hata.ui.theme
+package hata.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

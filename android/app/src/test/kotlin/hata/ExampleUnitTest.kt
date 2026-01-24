@@ -1,4 +1,4 @@
-package space.dector.hata
+package hata
 
 import org.junit.Test
 

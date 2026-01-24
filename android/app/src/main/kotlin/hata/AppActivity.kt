@@ -1,4 +1,4 @@
-package space.dector.hata
+package hata
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import space.dector.hata.ui.theme.HataTheme
+import hata.ui.theme.HataTheme
 
 
 class AppActivity : ComponentActivity() {

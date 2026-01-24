@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "space.dector.hata"
+    namespace = "hata"
     compileSdk {
         version = release(36)
     }
