@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -22,12 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -52,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import hata.ui.components.TopBar
+import hata.ui.theme.Colors
 import hata.ui.utils.preview
 
 
@@ -64,16 +61,14 @@ fun Mockup1UI() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF1E2423))
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .background(Colors.mainBg)
+                .padding(paddingValues),
         ) {
+            TopBar(
+                name = "Home",
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Top bar
-            TopBar()
-
-            Spacer(modifier = Modifier.height(32.dp))
 
             // Welcome text
             WelcomeSection()
@@ -92,74 +87,9 @@ fun Mockup1UI() {
 }
 
 @Composable
-fun TopBar() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "My Home",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Dropdown",
-                tint = Color.White,
-            )
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White,
-                )
-                // Red notification dot
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .offset(x = 8.dp, y = (-8).dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFEF5350)),
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFB39B8D)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = Color(0xFFE8D4C4),
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun WelcomeSection() {
-    val name = "Dan"
-
     Text(
+        modifier = Modifier.padding(horizontal = 16.dp),
         text = "Welcome home,\nDan",
         color = Color.White,
         fontSize = 36.sp,
@@ -171,7 +101,9 @@ fun WelcomeSection() {
 @Composable
 fun StatusChips() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         StatusChip(
@@ -233,6 +165,7 @@ fun DeviceCardsGrid() {
     )
 
     LazyVerticalGrid(
+        modifier = Modifier.padding(horizontal = 16.dp),
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
