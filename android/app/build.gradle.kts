@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.app)
     alias(libs.plugins.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -46,6 +47,7 @@ dependencies {
 
     //endregion
 
+    implementation(libs.kotlinx.serialization.json)
 
     //region Compose
 
@@ -65,6 +67,13 @@ dependencies {
 
     //endregion
 
+    //region Nav3
+
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+    //endregion
 
     //region Test
 

@@ -1,4 +1,4 @@
-package hata
+package hata.ui.utils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import hata.ui.theme.HataTheme
 
+
 @Composable
 fun preview(
     pad: Dp = 0.dp,
@@ -17,7 +18,7 @@ fun preview(
 ) {
     HataTheme {
         Box(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
                 .padding(pad),
         ) {

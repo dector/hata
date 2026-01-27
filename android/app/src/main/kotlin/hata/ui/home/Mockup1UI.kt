@@ -52,20 +52,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import hata.preview
+import hata.ui.utils.preview
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Mockup1UI() {
     Scaffold(
-        bottomBar = { BottomNavigationBar() }
+        bottomBar = { BottomNavigationBar() },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF1E2423))
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -95,37 +96,37 @@ fun TopBar() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "My Home",
                 color = Color.White,
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = "Dropdown",
-                tint = Color.White
+                tint = Color.White,
             )
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
                 modifier = Modifier
                     .size(48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Notifications",
-                    tint = Color.White
+                    tint = Color.White,
                 )
                 // Red notification dot
                 Box(
@@ -133,7 +134,7 @@ fun TopBar() {
                         .size(8.dp)
                         .offset(x = 8.dp, y = (-8).dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFEF5350))
+                        .background(Color(0xFFEF5350)),
                 )
             }
 
@@ -142,12 +143,12 @@ fun TopBar() {
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFB39B8D)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
-                    tint = Color(0xFFE8D4C4)
+                    tint = Color(0xFFE8D4C4),
                 )
             }
         }
@@ -163,7 +164,7 @@ fun WelcomeSection() {
         color = Color.White,
         fontSize = 36.sp,
         fontWeight = FontWeight.Bold,
-        lineHeight = 42.sp
+        lineHeight = 42.sp,
     )
 }
 
@@ -171,22 +172,22 @@ fun WelcomeSection() {
 fun StatusChips() {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         StatusChip(
             icon = Icons.Default.Lightbulb,
             text = "3 lights on",
-            iconTint = Color(0xFF8FB899)
+            iconTint = Color(0xFF8FB899),
         )
         StatusChip(
             icon = Icons.Default.Thermostat,
             text = "AC 22°C",
-            iconTint = Color(0xFF8FB899)
+            iconTint = Color(0xFF8FB899),
         )
         StatusChip(
             icon = Icons.Default.Shield,
             text = "Active",
-            iconTint = Color(0xFF8FB899)
+            iconTint = Color(0xFF8FB899),
         )
     }
 }
@@ -200,23 +201,23 @@ fun StatusChip(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFF2D3533),
-        modifier = Modifier.height(48.dp)
+        modifier = Modifier.height(48.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = text,
                 color = Color.White,
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
     }
@@ -228,13 +229,13 @@ fun DeviceCardsGrid() {
         DeviceCardData.LivingRoomLamp(),
         DeviceCardData.KitchenAC(),
         DeviceCardData.FrontDoor(),
-        DeviceCardData.AllFloorLights()
+        DeviceCardData.AllFloorLights(),
     )
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(devices) { device ->
             when (device) {
@@ -254,24 +255,24 @@ fun LampCard(data: DeviceCardData.LivingRoomLamp) {
         color = Color(0xFF2D3533),
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(280.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
+                .padding(20.dp),
         ) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF3D4845)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Default.Lightbulb,
                     contentDescription = null,
-                    tint = Color(0xFF6B7875)
+                    tint = Color(0xFF6B7875),
                 )
             }
 
@@ -281,7 +282,7 @@ fun LampCard(data: DeviceCardData.LivingRoomLamp) {
                 text = "${data.brightness}%",
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -290,12 +291,12 @@ fun LampCard(data: DeviceCardData.LivingRoomLamp) {
                 text = data.title,
                 color = Color.White,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = data.status,
                 color = Color(0xFF6B7875),
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
     }
@@ -308,29 +309,29 @@ fun ACCard(data: DeviceCardData.KitchenAC) {
         color = Color(0xFF8FB899),
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(280.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
+                .padding(20.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFA8C5B0)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.AcUnit,
                         contentDescription = null,
-                        tint = Color.White
+                        tint = Color.White,
                     )
                 }
 
@@ -341,8 +342,8 @@ fun ACCard(data: DeviceCardData.KitchenAC) {
                         checkedThumbColor = Color.White,
                         checkedTrackColor = Color(0xFFC8DFD0),
                         uncheckedThumbColor = Color(0xFF6B7875),
-                        uncheckedTrackColor = Color(0xFF3D4845)
-                    )
+                        uncheckedTrackColor = Color(0xFF3D4845),
+                    ),
                 )
             }
 
@@ -352,12 +353,12 @@ fun ACCard(data: DeviceCardData.KitchenAC) {
                 text = data.title,
                 color = Color.White,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = data.status,
                 color = Color.White.copy(alpha = 0.85f),
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
     }
@@ -370,36 +371,36 @@ fun DoorCard(data: DeviceCardData.FrontDoor) {
         color = Color(0xFF2D3533),
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(280.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
+                .padding(20.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF3D4845)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
-                        tint = Color(0xFF6B7875)
+                        tint = Color(0xFF6B7875),
                     )
                 }
 
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More options",
-                    tint = Color(0xFF6B7875)
+                    tint = Color(0xFF6B7875),
                 )
             }
 
@@ -409,12 +410,12 @@ fun DoorCard(data: DeviceCardData.FrontDoor) {
                 text = data.title,
                 color = Color.White,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = data.status,
                 color = Color(0xFF6B7875),
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
     }
@@ -427,7 +428,7 @@ fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
         color = Color(0xFF2D3533),
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(280.dp),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Background group text
@@ -438,25 +439,25 @@ fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp)
+                    .padding(end = 16.dp),
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
+                    .padding(20.dp),
             ) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF3D4845)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lightbulb,
                         contentDescription = null,
-                        tint = Color(0xFF6B7875)
+                        tint = Color(0xFF6B7875),
                     )
                 }
 
@@ -466,12 +467,12 @@ fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
                     text = data.title,
                     color = Color.White,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
                     text = data.status,
                     color = Color(0xFF6B7875),
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
                 )
             }
         }
@@ -482,13 +483,13 @@ fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
 fun BottomNavigationBar() {
     NavigationBar(
         containerColor = Color(0xFF1E2423),
-        contentColor = Color.White
+        contentColor = Color.White,
     ) {
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Home,
-                    contentDescription = "Home"
+                    contentDescription = "Home",
                 )
             },
             label = { Text("Home") },
@@ -499,14 +500,14 @@ fun BottomNavigationBar() {
                 selectedTextColor = Color(0xFF8FB899),
                 indicatorColor = Color(0xFF2D3533),
                 unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875)
-            )
+                unselectedTextColor = Color(0xFF6B7875),
+            ),
         )
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Dashboard,
-                    contentDescription = "Scenes"
+                    contentDescription = "Scenes",
                 )
             },
             label = { Text("Scenes") },
@@ -517,14 +518,14 @@ fun BottomNavigationBar() {
                 selectedTextColor = Color(0xFF8FB899),
                 indicatorColor = Color(0xFF2D3533),
                 unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875)
-            )
+                unselectedTextColor = Color(0xFF6B7875),
+            ),
         )
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Schedule,
-                    contentDescription = "Auto"
+                    contentDescription = "Auto",
                 )
             },
             label = { Text("Auto") },
@@ -535,14 +536,14 @@ fun BottomNavigationBar() {
                 selectedTextColor = Color(0xFF8FB899),
                 indicatorColor = Color(0xFF2D3533),
                 unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875)
-            )
+                unselectedTextColor = Color(0xFF6B7875),
+            ),
         )
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = "Settings",
                 )
             },
             label = { Text("Settings") },
@@ -553,8 +554,8 @@ fun BottomNavigationBar() {
                 selectedTextColor = Color(0xFF8FB899),
                 indicatorColor = Color(0xFF2D3533),
                 unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875)
-            )
+                unselectedTextColor = Color(0xFF6B7875),
+            ),
         )
     }
 }
