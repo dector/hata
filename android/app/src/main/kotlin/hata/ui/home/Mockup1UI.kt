@@ -87,7 +87,7 @@ fun Mockup1UI() {
 }
 
 @Composable
-fun WelcomeSection() {
+private fun WelcomeSection() {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
         text = "Welcome home,\nDan",
@@ -99,7 +99,7 @@ fun WelcomeSection() {
 }
 
 @Composable
-fun StatusChips() {
+private fun StatusChips() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,7 +125,7 @@ fun StatusChips() {
 }
 
 @Composable
-fun StatusChip(
+private fun StatusChip(
     icon: ImageVector,
     text: String,
     iconTint: Color,
@@ -156,7 +156,7 @@ fun StatusChip(
 }
 
 @Composable
-fun DeviceCardsGrid() {
+private fun DeviceCardsGrid() {
     val devices = listOf(
         DeviceCardData.LivingRoomLamp(),
         DeviceCardData.KitchenAC(),
@@ -182,7 +182,7 @@ fun DeviceCardsGrid() {
 }
 
 @Composable
-fun LampCard(data: DeviceCardData.LivingRoomLamp) {
+private fun LampCard(data: DeviceCardData.LivingRoomLamp) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFF2D3533),
@@ -236,7 +236,7 @@ fun LampCard(data: DeviceCardData.LivingRoomLamp) {
 }
 
 @Composable
-fun ACCard(data: DeviceCardData.KitchenAC) {
+private fun ACCard(data: DeviceCardData.KitchenAC) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFF8FB899),
@@ -298,7 +298,7 @@ fun ACCard(data: DeviceCardData.KitchenAC) {
 }
 
 @Composable
-fun DoorCard(data: DeviceCardData.FrontDoor) {
+private fun DoorCard(data: DeviceCardData.FrontDoor) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFF2D3533),
@@ -355,7 +355,7 @@ fun DoorCard(data: DeviceCardData.FrontDoor) {
 }
 
 @Composable
-fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
+private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFF2D3533),
@@ -413,7 +413,7 @@ fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
 }
 
 @Composable
-fun BottomNavigationBar() {
+private fun BottomNavigationBar() {
     NavigationBar(
         containerColor = Color(0xFF1E2423),
         contentColor = Color.White,
