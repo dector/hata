@@ -35,6 +35,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -48,6 +49,17 @@ dependencies {
     //endregion
 
     implementation(libs.kotlinx.serialization.json)
+
+    //region Networking
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+
+    //endregion
 
     //region Compose
 

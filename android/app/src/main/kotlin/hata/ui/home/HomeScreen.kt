@@ -1,21 +1,27 @@
 package hata.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import hata.ui.components.DeviceCard
 import hata.ui.components.DeviceCardsGrid
 import hata.ui.components.TopBar
@@ -24,13 +30,17 @@ import hata.ui.utils.preview
 
 
 @Composable
-fun HomeScreen() {
-    HomeScreenUI()
+fun HomeScreen(
+    viewModel: HomeViewModel = viewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    HomeScreenUI(state = uiState)
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun HomeScreenUI() {
+private fun HomeScreenUI(state: HomeUiState) {
     Scaffold(
 //        bottomBar = { BottomNavigationBar() },
     ) { paddingValues ->
@@ -39,35 +49,56 @@ private fun HomeScreenUI() {
                 .fillMaxSize()
                 .background(Colors.mainBg),
         ) {
+            val homeName = when (state) {
+                is HomeUiState.WithData -> state.data.home.name
+                else -> "Home"
+            }
             TopBar(
-                name = "Home",
+                name = homeName,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Welcome text
             WelcomeSection()
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            val devices = listOf<DeviceCard>(
-                DeviceCard.Generic(
-                    title = "Air Cooler",
-                    status = "On",
-                    isOn = true,
-                    icon = DeviceCard.Icon.AC,
-                ),
-                DeviceCard.Generic(
-                    title = "Lamp",
-                    status = "Off",
-                    isOn = false,
-                    icon = DeviceCard.Icon.Light,
-                ),
-            )
+            StateSection(state)
+        }
+    }
+}
+
+@Composable
+private fun StateSection(state: HomeUiState) {
+    when (state) {
+        is HomeUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = Color.White)
+
+            }
+        }
+
+        is HomeUiState.WithData -> {
             DeviceCardsGrid(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                devices = devices,
+                devices = state.data.devices,
             )
+        }
+
+        is HomeUiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Error: ${state.message}",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
         }
     }
 }
@@ -170,5 +201,37 @@ private fun BottomNavigationBar() {
 @Preview
 @Composable
 private fun Preview_HomeScreen() = preview {
-    HomeScreenUI()
+    HomeScreenUI(
+        state = HomeUiState.WithData(
+            data = HomeDisplayData(
+                home = HomeDisplay(name = "My Home"),
+                devices = listOf(
+                    DeviceCard.Generic(
+                        title = "Living Room",
+                        status = "3 lights on",
+                        isOn = true,
+                        icon = DeviceCard.Icon.Light,
+                    ),
+                    DeviceCard.Generic(
+                        title = "Bedroom",
+                        status = "Off",
+                        isOn = false,
+                        icon = DeviceCard.Icon.Light,
+                    ),
+                    DeviceCard.Generic(
+                        title = "Air Cooler",
+                        status = "On",
+                        isOn = true,
+                        icon = DeviceCard.Icon.AC,
+                    ),
+                    DeviceCard.Generic(
+                        title = "Kitchen",
+                        status = "Ready",
+                        isOn = false,
+                        icon = DeviceCard.Icon.Default,
+                    ),
+                ),
+            ),
+        ),
+    )
 }
