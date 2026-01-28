@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import hata.ui.components.DeviceCard
+import hata.ui.components.DeviceCardsGrid
 import hata.ui.components.TopBar
 import hata.ui.theme.Colors
 import hata.ui.utils.preview
@@ -47,6 +49,25 @@ private fun HomeScreenUI() {
             WelcomeSection()
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            val devices = listOf<DeviceCard>(
+                DeviceCard.Generic(
+                    title = "Air Cooler",
+                    status = "On",
+                    isOn = true,
+                    icon = DeviceCard.Icon.AC,
+                ),
+                DeviceCard.Generic(
+                    title = "Lamp",
+                    status = "Off",
+                    isOn = false,
+                    icon = DeviceCard.Icon.Light,
+                ),
+            )
+            DeviceCardsGrid(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                devices = devices,
+            )
         }
     }
 }
