@@ -4,9 +4,7 @@ import com.squareup.moshi.JsonClass
 
 
 @JsonClass(generateAdapter = true)
-data class Device(
+data class Integration(
     val id: String,
-    val name: String,
-    val type: DeviceType,
-    val integration: Integration? = null,
+    val data: IntegrationData,
 )

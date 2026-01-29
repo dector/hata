@@ -1,6 +1,7 @@
 package hata.domain.usecases
 
 import hata.data.api.RemoteConfigurationService
+import hata.data.models.Device
 import hata.data.models.DeviceType
 import hata.ui.components.DeviceCard
 import hata.ui.home.HomeDisplay
@@ -27,7 +28,7 @@ class LoadRemoteConfigurationUseCase(
                     .map { (room, device) ->
                         DeviceCard.Generic(
                             title = "[${room.name}] ${device.name}",
-                            status = "Ready",
+                            status = toStatus(device),
                             isOn = false,
                             icon = when (device.type) {
                                 DeviceType.Light -> DeviceCard.Icon.Light
@@ -42,4 +43,14 @@ class LoadRemoteConfigurationUseCase(
                 )
             }
     }
+}
+
+private fun toStatus(device: Device): String {
+    val integration = device.integration
+        ?: return "Ready"
+
+    val integrationName = integration.id
+        .substringBefore('-')
+        .replaceFirstChar { it.uppercase() }
+    return "[$integrationName] ${integration.data.ip}"
 }

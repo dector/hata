@@ -1,0 +1,39 @@
+{
+  "homes": [
+    {
+      "id": "h-main",
+      "name": "Hata",
+      "rooms": [
+        {
+          "id": "r-office",
+          "name": "Office",
+          "devices": [
+            {
+              "id": "d-office-top",
+              "name": "Top Light",
+              "type": "light",
+              "integration": {
+                "id": "wiz-1",
+                "data": {
+                  "type": "wifi",
+                  "ip": "192.168.1.41"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "r-bedroom",
+          "name": "Bedroom",
+          "devices": [
+            {
+              "id": "d-bedroom-top",
+              "name": "Top Light",
+              "type": "light"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
