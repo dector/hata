@@ -2,16 +2,18 @@ package hata.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import hata.data.api.RemoteConfigurationServiceImpl
+import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class HomeViewModel(
-    private val loadRemoteConfigurationUseCase: LoadRemoteConfigurationUseCase = create(),
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val loadRemoteConfigurationUseCase: LoadRemoteConfigurationUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState>
@@ -47,17 +49,5 @@ class HomeViewModel(
                     }
                 }
         }
-    }
-}
-
-private inline fun <reified T> create(): T {
-    return when (T::class) {
-        LoadRemoteConfigurationUseCase::class -> LoadRemoteConfigurationUseCase(
-            configurationService = RemoteConfigurationServiceImpl(
-                baseUrl = "https://gist.githubusercontent.com/dector/abd9d949a769dc7b0392e7f6529ad148/raw/",
-            ),
-        ) as T
-
-        else -> error("Unknown type: ${T::class}")
     }
 }

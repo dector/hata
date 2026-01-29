@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.app)
     alias(libs.plugins.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -55,6 +57,14 @@ dependencies {
     //endregion
 
     implementation(libs.kotlinx.serialization.json)
+
+    //region Hilt
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    //endregion
 
     //region Networking
 
