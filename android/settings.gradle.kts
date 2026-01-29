@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hata"
 include(":app")
+include(":integrations:wiz")

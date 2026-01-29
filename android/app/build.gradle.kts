@@ -58,6 +58,12 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+    //region Integrations
+
+    implementation(project(":integrations:wiz"))
+
+    //endregion
+
     //region Hilt
 
     implementation(libs.hilt.android)
