@@ -32,6 +32,7 @@ import hata.ui.utils.preview
 @Composable
 fun TopBar(
     name: String,
+    hasNotifications: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -40,60 +41,75 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = name,
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Dropdown",
-                tint = Color.White,
-            )
-        }
+        HomeDropdown(name)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White,
-                )
-                // Red notification dot
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .offset(x = 8.dp, y = (-8).dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFEF5350)),
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFB39B8D)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = Color(0xFFE8D4C4),
-                )
-            }
+            NotificationsButton(hasNotifications)
+            Avatar()
         }
+    }
+}
+
+@Composable
+private fun NotificationsButton(hasNotifications: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Notifications,
+            contentDescription = "Notifications",
+            tint = Color.White,
+        )
+        if (hasNotifications) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .offset(x = 8.dp, y = (-8).dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEF5350)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeDropdown(name: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = name,
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = "Dropdown",
+            tint = Color.White,
+        )
+    }
+}
+
+@Composable
+private fun Avatar() {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(Color(0xFFB39B8D)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Profile",
+            tint = Color(0xFFE8D4C4),
+        )
     }
 }
 
@@ -102,5 +118,6 @@ fun TopBar(
 fun TopBarPreview() = preview {
     TopBar(
         name = "My Home",
+        hasNotifications = true,
     )
 }
