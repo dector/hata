@@ -1,8 +1,8 @@
 # Databases
-/data/
+data/
 
 # Compiled binaries
-/out/
+out/
 
 # Generated code
-/internal/orm/
+internal/orm/
