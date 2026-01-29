@@ -1,0 +1,328 @@
+{
+  "project": {
+    "name": "Hata Android",
+    "generated": "2026-01-30",
+    "path": "/home/dector/projects/hata/android",
+    "type": "android-app",
+    "applicationId": "space.dector.hata"
+  },
+  "techStack": {
+    "language": "Kotlin 2.3.0",
+    "buildSystem": "Gradle 9.0.0 (AGP)",
+    "uiFramework": "Jetpack Compose (BOM 2026.01.00)",
+    "designSystem": "Material Design 3",
+    "navigation": "AndroidX Navigation3",
+    "dependencyInjection": "Hilt (Dagger)",
+    "networking": ["Retrofit", "OkHttp", "Moshi"],
+    "minSdk": 24,
+    "targetSdk": 36,
+    "javaVersion": "11"
+  },
+  "entryPoints": [
+    {
+      "name": "Application",
+      "path": "app/src/main/kotlin/hata/HataApplication.kt",
+      "description": "Hilt-enabled Application class",
+      "type": "application"
+    },
+    {
+      "name": "Main Activity",
+      "path": "app/src/main/kotlin/hata/AppActivity.kt",
+      "description": "Compose UI entry with EdgeToEdge support",
+      "type": "activity"
+    },
+    {
+      "name": "Navigation Router",
+      "path": "app/src/main/kotlin/hata/AppRouter.kt",
+      "description": "Nav3-based routing (Home, Mockup routes)",
+      "type": "router"
+    },
+    {
+      "name": "DI Configuration",
+      "path": "app/src/main/kotlin/hata/di/AppModule.kt",
+      "description": "Hilt modules for app dependencies",
+      "type": "di-module"
+    }
+  ],
+  "modules": [
+    {
+      "name": "app",
+      "path": "app/",
+      "type": "android-application",
+      "purpose": "Main Android application with home automation UI",
+      "keyComponents": [
+        "HomeViewModel",
+        "HomeScreen",
+        "TopBar",
+        "DeviceCardsGrid",
+        "GenericDeviceCard"
+      ],
+      "layers": {
+        "data": {
+          "path": "app/src/main/kotlin/hata/data/",
+          "components": [
+            "RemoteConfigurationService",
+            "RemoteConfigurationServiceImpl",
+            "Device",
+            "DeviceType",
+            "Integration",
+            "Home",
+            "Room",
+            "RemoteConfiguration"
+          ]
+        },
+        "domain": {
+          "path": "app/src/main/kotlin/hata/domain/",
+          "useCases": [
+            "LoadRemoteConfigurationUseCase"
+          ]
+        },
+        "ui": {
+          "path": "app/src/main/kotlin/hata/ui/",
+          "features": [
+            "home",
+            "components",
+            "theme",
+            "utils"
+          ]
+        },
+        "di": {
+          "path": "app/src/main/kotlin/hata/di/",
+          "modules": [
+            "AppModule",
+            "CoroutinesModule"
+          ]
+        }
+      }
+    },
+    {
+      "name": "integrations:wiz",
+      "path": "integrations/wiz/",
+      "type": "android-library",
+      "purpose": "Standalone module for controlling WiZ smart lights via UDP",
+      "exports": [
+        "WizDiscovery.scan()",
+        "WizControl",
+        "WizDevice",
+        "Result"
+      ],
+      "features": [
+        "UDP broadcast discovery (port 38899)",
+        "JSON-based device communication",
+        "Coroutine-based async operations",
+        "RGB color control (0-255)",
+        "Color temperature (2200K-6500K)",
+        "Brightness control (10-100)"
+      ],
+      "components": [
+        {
+          "name": "WizModels",
+          "path": "integrations/wiz/src/main/kotlin/hata/integrations/wiz/WizModels.kt",
+          "purpose": "Data models"
+        },
+        {
+          "name": "WizDiscovery",
+          "path": "integrations/wiz/src/main/kotlin/hata/integrations/wiz/WizDiscovery.kt",
+          "purpose": "Device discovery (UDP)"
+        },
+        {
+          "name": "WizControl",
+          "path": "integrations/wiz/src/main/kotlin/hata/integrations/wiz/WizControl.kt",
+          "purpose": "Device control commands"
+        },
+        {
+          "name": "Result",
+          "path": "integrations/wiz/src/main/kotlin/hata/integrations/wiz/Result.kt",
+          "purpose": "Result wrapper"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "core": [
+      "androidx.core:core-ktx",
+      "androidx.lifecycle:lifecycle-runtime-ktx",
+      "kotlinx.serialization.json"
+    ],
+    "di": [
+      "hilt-android",
+      "hilt-compiler",
+      "hilt-navigation-compose"
+    ],
+    "networking": [
+      "retrofit",
+      "retrofit-converter-moshi",
+      "moshi",
+      "moshi-kotlin",
+      "okhttp",
+      "okhttp-logging-interceptor"
+    ],
+    "ui": [
+      "androidx.activity:activity-compose",
+      "androidx.compose:compose-bom",
+      "androidx.compose.ui",
+      "androidx.compose.material3",
+      "androidx.compose.material.icons.extended",
+      "androidx.navigation3:navigation3-runtime",
+      "androidx.navigation3:navigation3-ui",
+      "androidx.lifecycle:lifecycle-viewmodel-navigation3"
+    ],
+    "testing": [
+      "junit4",
+      "androidx.junit",
+      "androidx.espresso.core",
+      "androidx.compose.ui.test.junit4"
+    ]
+  },
+  "configuration": {
+    "buildConfig": [
+      {
+        "name": "settings.gradle.kts",
+        "purpose": "Defines modules (:app, :integrations:wiz)"
+      },
+      {
+        "name": "build.gradle.kts",
+        "purpose": "Root build configuration with plugin aliases"
+      },
+      {
+        "name": "app/build.gradle.kts",
+        "purpose": "App module config (plugins, dependencies, build variants)"
+      },
+      {
+        "name": "gradle/libs.versions.toml",
+        "purpose": "Version catalog for all dependencies"
+      }
+    ],
+    "buildVariants": ["debug", "release"]
+  },
+  "documentation": [
+    {
+      "name": "AGENTS.md",
+      "path": "AGENTS.md",
+      "topics": [
+        "Tech stack overview",
+        "Build commands",
+        "Test commands",
+        "Project structure",
+        "Code style guidelines",
+        "Dependency management",
+        "Testing patterns"
+      ],
+      "lines": 213
+    },
+    {
+      "name": "WiZ Integration README",
+      "path": "integrations/wiz/README.md",
+      "topics": [
+        "Usage examples",
+        "API reference",
+        "Architecture details",
+        "Permissions required",
+        "Implementation differences from Go version"
+      ],
+      "lines": 207
+    }
+  ],
+  "testing": {
+    "unitTests": {
+      "count": 5,
+      "framework": "JUnit 4",
+      "location": "app/src/test/ and integrations/wiz/src/test/",
+      "files": [
+        "ExampleUnitTest.kt",
+        "WizModelsTest.kt",
+        "WizControlTest.kt",
+        "WizDiscoveryTest.kt"
+      ]
+    },
+    "instrumentedTests": {
+      "count": 1,
+      "framework": "AndroidX Test + Espresso",
+      "location": "app/src/androidTest/",
+      "files": [
+        "ExampleInstrumentedTest.kt"
+      ]
+    }
+  },
+  "buildCommands": {
+    "build": {
+      "command": "./gradlew build",
+      "description": "Full build with tests"
+    },
+    "assemble": {
+      "command": "./gradlew assemble",
+      "description": "Build without running tests"
+    },
+    "test": {
+      "command": "./gradlew test",
+      "description": "Run all unit tests"
+    },
+    "install": {
+      "command": "./gradlew installDebug",
+      "description": "Install debug build on device"
+    },
+    "lint": {
+      "command": "./gradlew lintDebug",
+      "description": "Run lint checks"
+    },
+    "clean": {
+      "command": "./gradlew clean",
+      "description": "Clean build artifacts"
+    }
+  },
+  "quickReference": {
+    "filePatterns": {
+      "viewModels": "app/src/main/kotlin/hata/ui/*/ViewModel.kt",
+      "screens": "app/src/main/kotlin/hata/ui/*/Screen.kt",
+      "dataModels": "app/src/main/kotlin/hata/data/models/*.kt",
+      "apiServices": "app/src/main/kotlin/hata/data/api/*.kt",
+      "diModules": "app/src/main/kotlin/hata/di/*.kt",
+      "unitTests": "app/src/test/kotlin/hata/**/*Test.kt",
+      "instrumentedTests": "app/src/androidTest/kotlin/hata/**/*Test.kt"
+    }
+  },
+  "statistics": {
+    "totalKotlinFiles": 36,
+    "testFiles": 5,
+    "modules": 2,
+    "documentationLines": 420,
+    "buildVariants": 2
+  },
+  "architecture": {
+    "pattern": "Clean Architecture + MVVM",
+    "layers": ["data", "domain", "ui"],
+    "designPatterns": [
+      "Repository Pattern",
+      "Use Cases",
+      "Dependency Injection",
+      "StateFlow for state management"
+    ],
+    "keyDecisions": [
+      "Compose-First (no XML layouts)",
+      "EdgeToEdge display support",
+      "Material3 design system",
+      "Modular architecture (separate integration modules)",
+      "Coroutines for async operations",
+      "Version Catalog for dependency management"
+    ]
+  },
+  "currentState": {
+    "status": "Active Development",
+    "features": [
+      "Working WiZ smart light integration with status checking",
+      "Home screen with device cards grid",
+      "Remote configuration loading from GitHub Gist",
+      "Hilt dependency injection setup",
+      "Material3 theming with dynamic colors",
+      "Navigation3 routing between screens",
+      "Basic unit and instrumentation test setup"
+    ],
+    "recentWork": [
+      "Move server files to server folder",
+      "WiZ device status updating",
+      "Kotlinize WiZ integration from Cave project",
+      "Refactor TopBar into components",
+      "Add Hilt dependency injection"
+    ]
+  }
+}

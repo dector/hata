@@ -1,0 +1,276 @@
+{
+  "project": {
+    "name": "Hata Server",
+    "language": "Go",
+    "version": "1.25.5",
+    "generated": "2026-01-30"
+  },
+  "structure": {
+    "root": "/home/dector/projects/hata/server",
+    "directories": [
+      {
+        "path": "cmd/hata",
+        "purpose": "Main application entry point"
+      },
+      {
+        "path": "data",
+        "purpose": "SQLite database storage (hata.db)"
+      },
+      {
+        "path": "internal/db",
+        "purpose": "Database layer with interfaces and implementation"
+      },
+      {
+        "path": "internal/db/repo",
+        "purpose": "Repository pattern implementations"
+      },
+      {
+        "path": "internal/db/schema",
+        "purpose": "Ent schema definitions"
+      },
+      {
+        "path": "internal/orm",
+        "purpose": "Generated ORM code (Ent, not in repo)"
+      },
+      {
+        "path": "internal/util",
+        "purpose": "Utility packages"
+      },
+      {
+        "path": "pkg",
+        "purpose": "Public packages"
+      }
+    ]
+  },
+  "entryPoints": [
+    {
+      "path": "cmd/hata/main.go",
+      "type": "application",
+      "description": "HTTP server with chi router, health checks, and database initialization"
+    },
+    {
+      "path": "internal/generate.go",
+      "type": "codegen",
+      "description": "Ent ORM code generator (via go generate)"
+    }
+  ],
+  "modules": [
+    {
+      "name": "Database Layer",
+      "path": "internal/db/db.go",
+      "purpose": "Database interface definition and management",
+      "exports": [
+        "DB interface (Open, RunMigrations, Repos, Close)",
+        "Repositories (re-exported from repo)",
+        "KVRepository (re-exported from repo)"
+      ]
+    },
+    {
+      "name": "Database Implementation",
+      "path": "internal/db/impl.go",
+      "purpose": "Concrete implementation of DB interface with SQLite optimizations",
+      "exports": [
+        "New() DB constructor",
+        "UseSqlitePerformancePragmas() utility"
+      ],
+      "features": [
+        "SQLite connection with WAL mode",
+        "Performance pragmas optimization",
+        "Auto-migrations support",
+        "Default database path: data/hata.db"
+      ]
+    },
+    {
+      "name": "Repository Layer",
+      "path": "internal/db/repo/",
+      "purpose": "Repository pattern abstractions and implementations",
+      "files": [
+        {
+          "path": "interfaces.go",
+          "exports": [
+            "Repositories interface",
+            "KVRepository interface (ListAllKeys, GetByKey, Count)"
+          ]
+        },
+        {
+          "path": "repos.go",
+          "exports": [
+            "Repos struct (repository aggregator)",
+            "NewRepos() constructor"
+          ]
+        },
+        {
+          "path": "kv.go",
+          "exports": [
+            "KVRepo implementation"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Schema Definitions",
+      "path": "internal/db/schema/syskv.go",
+      "purpose": "Ent schema definition for key-value store",
+      "schema": {
+        "entity": "SysKV",
+        "table": "sys__kv",
+        "fields": [
+          {
+            "name": "key",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "dependencies": {
+    "direct": [
+      {
+        "name": "entgo.io/ent",
+        "version": "v0.14.5",
+        "purpose": "Entity framework (ORM) with code generation"
+      },
+      {
+        "name": "github.com/go-chi/chi/v5",
+        "version": "v5.2.3",
+        "purpose": "Lightweight HTTP router"
+      },
+      {
+        "name": "github.com/mattn/go-sqlite3",
+        "version": "v1.14.17",
+        "purpose": "SQLite database driver"
+      }
+    ],
+    "tools": [
+      {
+        "name": "air-verse/air",
+        "version": "v1.63.4",
+        "purpose": "Hot reload for Go applications"
+      },
+      {
+        "name": "entgo.io/ent/cmd/ent",
+        "purpose": "Schema code generator"
+      }
+    ]
+  },
+  "configuration": [
+    {
+      "file": "go.mod",
+      "purpose": "Go module dependencies and version management"
+    },
+    {
+      "file": "CLAUDE.md",
+      "purpose": "Project documentation and AI assistant instructions"
+    }
+  ],
+  "documentation": [
+    {
+      "file": "CLAUDE.md",
+      "topics": [
+        "Technical overview",
+        "Tech stack",
+        "Project structure",
+        "Architecture patterns",
+        "Development workflow"
+      ]
+    }
+  ],
+  "testing": {
+    "unitTests": 0,
+    "integrationTests": 0,
+    "totalGoFiles": 8,
+    "testFiles": 0
+  },
+  "quickStart": [
+    {
+      "step": 1,
+      "description": "Ensure Go 1.25.5+ is installed"
+    },
+    {
+      "step": 2,
+      "command": "go generate ./...",
+      "description": "Generate ORM code (creates internal/orm/)"
+    },
+    {
+      "step": 3,
+      "command": "ror ai:build",
+      "description": "Build project (or use: go build -o out/hata cmd/hata/main.go)"
+    },
+    {
+      "step": 4,
+      "command": "./out/hata",
+      "description": "Run HTTP server (starts on port 8080)"
+    },
+    {
+      "step": 5,
+      "command": "curl http://localhost:8080/health",
+      "description": "Verify server is running"
+    }
+  ],
+  "architecture": {
+    "patterns": [
+      "Repository Pattern",
+      "Code Generation (Ent ORM)",
+      "Context-based operations",
+      "Dependency Injection"
+    ],
+    "database": {
+      "type": "SQLite3",
+      "location": "data/hata.db",
+      "features": [
+        "WAL journal mode for concurrent access",
+        "Performance pragmas (2MB cache, 256MB mmap)",
+        "Foreign key enforcement",
+        "Auto-migrations on startup"
+      ]
+    },
+    "httpServer": {
+      "router": "chi/v5",
+      "middleware": ["logging", "recovery"],
+      "routes": [
+        {"path": "/", "description": "Welcome message"},
+        {"path": "/health", "description": "Health check"}
+      ],
+      "port": 8080,
+      "airPort": 3000
+    }
+  },
+  "codeStatistics": {
+    "totalLOC": 350,
+    "goFiles": 8,
+    "packages": 4,
+    "ormGenerated": true
+  },
+  "importantNotes": [
+    "internal/orm/ is generated and should not be edited manually",
+    "Migrations auto-run on application startup",
+    "Default database path is data/hata.db (configurable)",
+    "Run go generate ./... after schema changes"
+  ],
+  "recentCommits": [
+    {
+      "hash": "9f5c39e",
+      "message": "ref(server): move server files to server folder"
+    },
+    {
+      "hash": "55f9fd2",
+      "message": "feat: #vibe WiZ devices status updating"
+    },
+    {
+      "hash": "8a45e2d",
+      "message": "ref: kotlinize Wiz integration from Cave project (untested)"
+    },
+    {
+      "hash": "7ff6192",
+      "message": "ref: cut TopBar into components"
+    },
+    {
+      "hash": "ab4148d",
+      "message": "ref: add Hilt"
+    }
+  ]
+}
