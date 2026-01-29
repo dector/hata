@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,14 +34,24 @@ import hata.ui.utils.preview
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    HomeScreenUI(state = uiState)
+    LaunchedEffect(Unit) {
+        viewModel.onDispatch(HomeUiAction.Init)
+    }
+
+    HomeScreenUI(
+        state = state,
+        dispatch = viewModel::onDispatch,
+    )
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun HomeScreenUI(state: HomeUiState) {
+private fun HomeScreenUI(
+    state: HomeUiState,
+    dispatch: (HomeUiAction) -> Unit = {},
+) {
     Scaffold(
 //        bottomBar = { BottomNavigationBar() },
     ) { paddingValues ->
@@ -71,6 +82,8 @@ private fun HomeScreenUI(state: HomeUiState) {
 @Composable
 private fun StateSection(state: HomeUiState) {
     when (state) {
+        is HomeUiState.Init -> {}
+
         is HomeUiState.Loading -> {
             Box(
                 modifier = Modifier.fillMaxSize(),

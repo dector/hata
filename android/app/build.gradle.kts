@@ -39,6 +39,12 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+    }
+}
+
 dependencies {
 
     //region AndroidX
