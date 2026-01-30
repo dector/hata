@@ -1,10 +1,9 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "hata.integrations.wiz"
+    namespace = "hata.core.annotations"
     compileSdk {
         version = release(36)
     }
@@ -21,14 +20,9 @@ android {
 }
 
 dependencies {
-    // Core dependencies
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(projects.core.annotations)
-    implementation(libs.kotlinx.serialization.json)
+    // Only dependency: javax.inject for @Qualifier
+    compileOnly("javax.inject:javax.inject:1")
 
     // Testing
     testImplementation(libs.junit4)
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotest.assertions)
-    testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -1,6 +1,8 @@
 package hata.integrations.wiz
 
 import android.util.Log
+import hata.core.annotations.IoDispatcher
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -19,14 +21,14 @@ import kotlin.time.Duration.Companion.seconds
 private const val TAG = "WizDiscovery"
 private const val WIZ_PORT = 38899
 private const val BROADCAST_ADDR = "255.255.255.255"
-private const val DISCOVERY_PACKET = """{"method":"registration","params":{"phoneMac":"AAAAAAAAAAAA","register":false,"phoneIp":"0.0.0.0","id":"1"}}"""
+private const val DISCOVERY_PACKET =
+    """{"method":"registration","params":{"phoneMac":"AAAAAAAAAAAA","register":false,"phoneIp":"0.0.0.0","id":"1"}}"""
 
-object WizDiscovery {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+class WizDiscovery(
+    @param:IoDispatcher
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val json: Json = defaultJson(),
+) {
 
     /**
      * Scans the network for WiZ devices by sending UDP broadcasts.
@@ -34,7 +36,7 @@ object WizDiscovery {
      * @param duration How long to scan for devices
      * @return List of discovered WiZ devices
      */
-    suspend fun scan(duration: Duration = 10.seconds): List<WizDevice> = withContext(Dispatchers.IO) {
+    suspend fun scan(duration: Duration = 10.seconds): List<WizDevice> = withContext(dispatcher) {
         Log.d(TAG, "Starting WiZ device discovery for $duration...")
 
         val devices = mutableListOf<WizDevice>()
@@ -78,8 +80,8 @@ object WizDiscovery {
     private suspend fun listenForResponses(
         socket: DatagramSocket,
         seenMacs: MutableSet<String>,
-        devices: MutableList<WizDevice>
-    ) = withContext(Dispatchers.IO) {
+        devices: MutableList<WizDevice>,
+    ) = withContext(dispatcher) {
         val buffer = ByteArray(2048)
         val packet = DatagramPacket(buffer, buffer.size)
 
@@ -115,7 +117,7 @@ object WizDiscovery {
         }
     }
 
-    private suspend fun broadcastDiscovery(socket: DatagramSocket) = withContext(Dispatchers.IO) {
+    private suspend fun broadcastDiscovery(socket: DatagramSocket) = withContext(dispatcher) {
         val broadcastAddr = InetAddress.getByName(BROADCAST_ADDR)
         val data = DISCOVERY_PACKET.toByteArray()
         val packet = DatagramPacket(data, data.size, broadcastAddr, WIZ_PORT)
@@ -163,7 +165,12 @@ object WizDiscovery {
             name = deviceName,
             ip = ip,
             type = deviceType,
-            mac = result.mac
+            mac = result.mac,
         )
     }
+}
+
+private fun defaultJson(): Json = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
 }

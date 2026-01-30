@@ -60,7 +60,8 @@ dependencies {
 
     //region Integrations
 
-    implementation(project(":integrations:wiz"))
+    implementation(projects.core.annotations)
+    implementation(projects.integrations.wiz)
 
     //endregion
 

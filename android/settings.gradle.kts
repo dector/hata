@@ -20,5 +20,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Hata"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+include(":core:annotations")
 include(":app")
 include(":integrations:wiz")

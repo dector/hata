@@ -4,12 +4,13 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import hata.core.annotations.ComputeDispatcher
+import hata.core.annotations.IoDispatcher
 import hata.data.api.RemoteConfigurationService
 import hata.data.api.RemoteConfigurationServiceImpl
 import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import javax.inject.Qualifier
 import javax.inject.Singleton
 
 
@@ -50,9 +51,3 @@ object CoroutinesModule {
     @Provides
     fun computeDispatcher(): CoroutineDispatcher = Dispatchers.Default
 }
-
-@Qualifier
-annotation class IoDispatcher
-
-@Qualifier
-annotation class ComputeDispatcher

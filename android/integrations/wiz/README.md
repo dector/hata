@@ -37,7 +37,10 @@ import kotlin.time.Duration.Companion.seconds
 
 fun main() = runBlocking {
     println("Scanning for WiZ devices for 10 seconds...")
-    val devices = WizDiscovery.scan(10.seconds)
+
+    // Create WizDiscovery instance
+    val discovery = WizDiscovery()
+    val devices = discovery.scan(10.seconds)
 
     if (devices.isEmpty()) {
         println("No devices found.")
@@ -49,6 +52,19 @@ fun main() = runBlocking {
         println("  - Name: ${device.name}, IP: ${device.ip}, MAC: ${device.mac}")
     }
 }
+```
+
+### Advanced: Custom Dispatcher
+
+For testing or custom coroutine contexts, you can provide a custom dispatcher:
+
+```kotlin
+import kotlinx.coroutines.Dispatchers
+import hata.integrations.wiz.WizDiscovery
+
+// With custom dispatcher
+val discovery = WizDiscovery(dispatcher = Dispatchers.Default)
+val devices = discovery.scan(10.seconds)
 ```
 
 ### Controlling Devices
@@ -154,9 +170,11 @@ when (val result = control.getState()) {
 ## Architecture
 
 - **WizModels.kt**: Data classes for devices and communication
-- **WizDiscovery.kt**: Device discovery via UDP broadcast
-- **WizControl.kt**: Device control commands
+- **WizDiscovery.kt**: Device discovery via UDP broadcast (injectable class)
+- **WizControl.kt**: Device control commands (injectable class)
 - **Result.kt**: Result wrapper for async operations
+
+Both `WizDiscovery` and `WizControl` are designed as injectable classes with default parameters for easy instantiation. The module has no Hilt dependencies and works with any DI approach or no DI at all.
 
 ## Implementation Details
 
