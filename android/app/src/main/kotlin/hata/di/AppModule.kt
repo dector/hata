@@ -6,8 +6,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.ComputeDispatcher
 import hata.core.annotations.IoDispatcher
+import hata.data.api.FakeServerServiceImpl
 import hata.data.api.RemoteConfigurationService
 import hata.data.api.RemoteConfigurationServiceImpl
+import hata.data.api.ServerService
 import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,12 @@ object AppModule {
             configurationService = configurationService,
             dispatcher = dispatcher,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun serverService(): ServerService {
+        return FakeServerServiceImpl()
     }
 }
 

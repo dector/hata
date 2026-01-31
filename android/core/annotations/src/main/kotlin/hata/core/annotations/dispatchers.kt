@@ -49,3 +49,21 @@ annotation class ComputeDispatcher
  */
 @Qualifier
 annotation class IoDispatcher
+
+/**
+ * Qualifier for authentication-related SharedPreferences.
+ *
+ * This annotation marks SharedPreferences instances used for storing authentication data.
+ * Use this qualifier to inject the auth preferences in classes that need it.
+ *
+ * Example usage in Hilt modules:
+ * ```
+ * @Provides
+ * @AuthPreferences
+ * fun authPreferences(@ApplicationContext context: Context): SharedPreferences {
+ *     return context.getSharedPreferences("hata_auth", Context.MODE_PRIVATE)
+ * }
+ * ```
+ */
+@Qualifier
+annotation class AuthPreferences

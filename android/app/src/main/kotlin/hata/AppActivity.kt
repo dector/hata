@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import hata.di.AppRouterEntryPoint
 import hata.ui.theme.HataTheme
 
 
@@ -25,12 +28,22 @@ class AppActivity : ComponentActivity() {
 
 @Composable
 fun AppContainer() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val entryPoint = EntryPointAccessors.fromApplication(
+        appContext,
+        AppRouterEntryPoint::class.java,
+    )
+
     HataTheme {
         Scaffold(
             modifier = Modifier
                 .fillMaxSize(),
         ) { innerPadding ->
-            AppRouter(innerPadding)
+            AppRouter(
+                innerPadding = innerPadding,
+                sessionRepository = entryPoint.sessionRepository(),
+            )
         }
     }
 }
