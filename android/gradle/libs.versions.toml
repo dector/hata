@@ -12,6 +12,7 @@ mockk = "1.14.9"
 kotest = "6.1.2"
 compose = "2026.01.00"
 androidx-core = "1.17.0"
+androidx-core-splashscreen = "1.2.0-alpha02"
 androidx-activity-compose = "1.12.2"
 androidx-lifecycle = "2.10.0"
 androidx-navigation3 = "1.0.0"
@@ -23,6 +24,7 @@ junit4 = "4.13.2"
 [libraries]
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidx-core-splashscreen" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-espresso" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }

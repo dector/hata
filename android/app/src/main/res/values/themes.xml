@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Main app theme -->
     <style name="Theme.Hata" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash screen theme -->
+    <style name="Theme.Hata.Splash" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background color -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <!-- Set the splash screen icon (our custom text drawable) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+
+        <!-- Duration to show the splash icon animation (in ms) -->
+        <item name="windowSplashScreenAnimationDuration">200</item>
+
+        <!-- Set the theme for the Activity after splash screen -->
+        <item name="postSplashScreenTheme">@style/Theme.Hata</item>
+    </style>
 </resources>

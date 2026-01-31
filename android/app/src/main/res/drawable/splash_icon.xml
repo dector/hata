@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="60dp"
+    android:viewportWidth="200"
+    android:viewportHeight="60">
+
+    <!-- H -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10,10 L18,10 L18,24 L32,24 L32,10 L40,10 L40,50 L32,50 L32,32 L18,32 L18,50 L10,50 Z"/>
+
+    <!-- Backtick ` -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M48,12 L52,12 L54,18 L50,18 Z"/>
+
+    <!-- a -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M60,32 Q60,26 66,26 Q72,26 72,32 L72,50 L64,50 L64,48 Q64,50 60,50 Q56,50 56,44 Q56,38 60,38 L64,38 L64,34 Q64,32 62,32 Q60,32 60,34 L60,32 M64,40 L62,40 Q60,40 60,44 Q60,46 62,46 Q64,46 64,44 L64,40 Z"/>
+
+    <!-- t -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M80,18 L88,18 L88,28 L94,28 L94,34 L88,34 L88,44 Q88,46 90,46 L94,46 L94,50 L88,50 Q80,50 80,44 L80,34 L76,34 L76,28 L80,28 Z"/>
+
+    <!-- a (second one) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M100,32 Q100,26 106,26 Q112,26 112,32 L112,50 L104,50 L104,48 Q104,50 100,50 Q96,50 96,44 Q96,38 100,38 L104,38 L104,34 Q104,32 102,32 Q100,32 100,34 L100,32 M104,40 L102,40 Q100,40 100,44 Q100,46 102,46 Q104,46 104,44 L104,40 Z"/>
+</vector>
