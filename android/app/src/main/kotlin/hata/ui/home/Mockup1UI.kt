@@ -48,7 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hata.ui.components.TopBar
-import hata.ui.theme.Colors
+import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
@@ -61,7 +61,7 @@ fun Mockup1UI() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Colors.mainBg)
+                .background(HataColors.background)
                 .padding(paddingValues),
         ) {
             TopBar(
@@ -109,17 +109,17 @@ private fun StatusChips() {
         StatusChip(
             icon = Icons.Default.Lightbulb,
             text = "3 lights on",
-            iconTint = Color(0xFF8FB899),
+            iconTint = HataColors.primary,
         )
         StatusChip(
             icon = Icons.Default.Thermostat,
             text = "AC 22°C",
-            iconTint = Color(0xFF8FB899),
+            iconTint = HataColors.primary,
         )
         StatusChip(
             icon = Icons.Default.Shield,
             text = "Active",
-            iconTint = Color(0xFF8FB899),
+            iconTint = HataColors.primary,
         )
     }
 }
@@ -132,7 +132,7 @@ private fun StatusChip(
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF2D3533),
+        color = HataColors.surface,
         modifier = Modifier.height(48.dp),
     ) {
         Row(
@@ -185,7 +185,7 @@ private fun DeviceCardsGrid() {
 private fun LampCard(data: DeviceCardData.LivingRoomLamp) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF2D3533),
+        color = HataColors.surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp),
@@ -199,13 +199,13 @@ private fun LampCard(data: DeviceCardData.LivingRoomLamp) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF3D4845)),
+                    .background(HataColors.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Default.Lightbulb,
                     contentDescription = null,
-                    tint = Color(0xFF6B7875),
+                    tint = HataColors.onSurfaceVariant,
                 )
             }
 
@@ -228,7 +228,7 @@ private fun LampCard(data: DeviceCardData.LivingRoomLamp) {
             )
             Text(
                 text = data.status,
-                color = Color(0xFF6B7875),
+                color = HataColors.onSurfaceVariant,
                 fontSize = 14.sp,
             )
         }
@@ -239,7 +239,7 @@ private fun LampCard(data: DeviceCardData.LivingRoomLamp) {
 private fun ACCard(data: DeviceCardData.KitchenAC) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF8FB899),
+        color = HataColors.primary,
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp),
@@ -258,7 +258,7 @@ private fun ACCard(data: DeviceCardData.KitchenAC) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFA8C5B0)),
+                        .background(HataColors.primaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -273,9 +273,9 @@ private fun ACCard(data: DeviceCardData.KitchenAC) {
                     onCheckedChange = {},
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFFC8DFD0),
-                        uncheckedThumbColor = Color(0xFF6B7875),
-                        uncheckedTrackColor = Color(0xFF3D4845),
+                        checkedTrackColor = HataColors.primaryContainerVariant,
+                        uncheckedThumbColor = HataColors.onSurfaceVariant,
+                        uncheckedTrackColor = HataColors.surfaceVariant,
                     ),
                 )
             }
@@ -301,7 +301,7 @@ private fun ACCard(data: DeviceCardData.KitchenAC) {
 private fun DoorCard(data: DeviceCardData.FrontDoor) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF2D3533),
+        color = HataColors.surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp),
@@ -320,20 +320,20 @@ private fun DoorCard(data: DeviceCardData.FrontDoor) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF3D4845)),
+                        .background(HataColors.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
-                        tint = Color(0xFF6B7875),
+                        tint = HataColors.onSurfaceVariant,
                     )
                 }
 
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More options",
-                    tint = Color(0xFF6B7875),
+                    tint = HataColors.onSurfaceVariant,
                 )
             }
 
@@ -347,7 +347,7 @@ private fun DoorCard(data: DeviceCardData.FrontDoor) {
             )
             Text(
                 text = data.status,
-                color = Color(0xFF6B7875),
+                color = HataColors.onSurfaceVariant,
                 fontSize = 14.sp,
             )
         }
@@ -358,7 +358,7 @@ private fun DoorCard(data: DeviceCardData.FrontDoor) {
 private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF2D3533),
+        color = HataColors.surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp),
@@ -367,7 +367,7 @@ private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
             // Background group text
             Text(
                 text = "GROUP",
-                color = Color(0xFF3D4845),
+                color = HataColors.surfaceVariant,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -384,13 +384,13 @@ private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF3D4845)),
+                        .background(HataColors.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lightbulb,
                         contentDescription = null,
-                        tint = Color(0xFF6B7875),
+                        tint = HataColors.onSurfaceVariant,
                     )
                 }
 
@@ -404,7 +404,7 @@ private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
                 )
                 Text(
                     text = data.status,
-                    color = Color(0xFF6B7875),
+                    color = HataColors.onSurfaceVariant,
                     fontSize = 14.sp,
                 )
             }
@@ -415,7 +415,7 @@ private fun LightsGroupCard(data: DeviceCardData.AllFloorLights) {
 @Composable
 private fun BottomNavigationBar() {
     NavigationBar(
-        containerColor = Color(0xFF1E2423),
+        containerColor = HataColors.background,
         contentColor = Color.White,
     ) {
         NavigationBarItem(
@@ -429,11 +429,11 @@ private fun BottomNavigationBar() {
             selected = true,
             onClick = {},
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF8FB899),
-                selectedTextColor = Color(0xFF8FB899),
-                indicatorColor = Color(0xFF2D3533),
-                unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875),
+                selectedIconColor = HataColors.primary,
+                selectedTextColor = HataColors.primary,
+                indicatorColor = HataColors.surface,
+                unselectedIconColor = HataColors.onSurfaceVariant,
+                unselectedTextColor = HataColors.onSurfaceVariant,
             ),
         )
         NavigationBarItem(
@@ -447,11 +447,11 @@ private fun BottomNavigationBar() {
             selected = false,
             onClick = {},
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF8FB899),
-                selectedTextColor = Color(0xFF8FB899),
-                indicatorColor = Color(0xFF2D3533),
-                unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875),
+                selectedIconColor = HataColors.primary,
+                selectedTextColor = HataColors.primary,
+                indicatorColor = HataColors.surface,
+                unselectedIconColor = HataColors.onSurfaceVariant,
+                unselectedTextColor = HataColors.onSurfaceVariant,
             ),
         )
         NavigationBarItem(
@@ -465,11 +465,11 @@ private fun BottomNavigationBar() {
             selected = false,
             onClick = {},
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF8FB899),
-                selectedTextColor = Color(0xFF8FB899),
-                indicatorColor = Color(0xFF2D3533),
-                unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875),
+                selectedIconColor = HataColors.primary,
+                selectedTextColor = HataColors.primary,
+                indicatorColor = HataColors.surface,
+                unselectedIconColor = HataColors.onSurfaceVariant,
+                unselectedTextColor = HataColors.onSurfaceVariant,
             ),
         )
         NavigationBarItem(
@@ -483,11 +483,11 @@ private fun BottomNavigationBar() {
             selected = false,
             onClick = {},
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF8FB899),
-                selectedTextColor = Color(0xFF8FB899),
-                indicatorColor = Color(0xFF2D3533),
-                unselectedIconColor = Color(0xFF6B7875),
-                unselectedTextColor = Color(0xFF6B7875),
+                selectedIconColor = HataColors.primary,
+                selectedTextColor = HataColors.primary,
+                indicatorColor = HataColors.surface,
+                unselectedIconColor = HataColors.onSurfaceVariant,
+                unselectedTextColor = HataColors.onSurfaceVariant,
             ),
         )
     }

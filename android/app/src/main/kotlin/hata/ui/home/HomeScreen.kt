@@ -26,7 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hata.ui.components.DeviceCard
 import hata.ui.components.DeviceCardsGrid
 import hata.ui.components.TopBar
-import hata.ui.theme.Colors
+import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
@@ -58,7 +58,7 @@ private fun HomeScreenUI(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Colors.mainBg),
+                .background(HataColors.background),
         ) {
             val homeName = when (state) {
                 is HomeUiState.WithData -> state.data.home.name

@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import hata.ui.theme.HataAccentColors
+import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
@@ -70,7 +72,7 @@ private fun NotificationsButton(hasNotifications: Boolean) {
                     .size(8.dp)
                     .offset(x = 8.dp, y = (-8).dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEF5350)),
+                    .background(HataColors.errorVariant),
             )
         }
     }
@@ -102,13 +104,13 @@ private fun Avatar() {
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(Color(0xFFB39B8D)),
+            .background(HataAccentColors.avatarBackground),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "Profile",
-            tint = Color(0xFFE8D4C4),
+            tint = HataAccentColors.avatarIcon,
         )
     }
 }

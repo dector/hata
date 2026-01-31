@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
@@ -55,7 +56,7 @@ sealed interface DeviceCard {
 fun GenericDeviceCard(data: DeviceCard.Generic) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = if (data.isOn) Color(0xFF8FB899) else Color(0xFF2D3533),
+        color = if (data.isOn) HataColors.primary else HataColors.surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(192.dp),
@@ -74,13 +75,13 @@ fun GenericDeviceCard(data: DeviceCard.Generic) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(if (data.isOn) Color(0xFFA8C5B0) else Color(0xFF3D4845)),
+                        .background(if (data.isOn) HataColors.primaryContainer else HataColors.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = iconFor(data),
                         contentDescription = null,
-                        tint = if (data.isOn) Color.White else Color(0xFF6B7875),
+                        tint = if (data.isOn) Color.White else HataColors.onSurfaceVariant,
                     )
                 }
 
@@ -89,9 +90,9 @@ fun GenericDeviceCard(data: DeviceCard.Generic) {
                     onCheckedChange = {},
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFFC8DFD0),
-                        uncheckedThumbColor = Color(0xFF6B7875),
-                        uncheckedTrackColor = Color(0xFF3D4845),
+                        checkedTrackColor = HataColors.primaryContainerVariant,
+                        uncheckedThumbColor = HataColors.onSurfaceVariant,
+                        uncheckedTrackColor = HataColors.surfaceVariant,
                         uncheckedBorderColor = Color.White.copy(alpha = 0.2f),
                     ),
                 )

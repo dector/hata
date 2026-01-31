@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import hata.ui.theme.Colors
+import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
@@ -60,7 +60,7 @@ private fun LoginScreenUI(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Colors.mainBg),
+            .background(HataColors.background),
         contentAlignment = Alignment.Center,
     ) {
         when (state) {
@@ -247,7 +247,7 @@ private fun LoadingIndicator(message: String) {
         verticalArrangement = Arrangement.Center,
     ) {
         CircularProgressIndicator(
-            color = Color(0xFF8FB899),
+            color = HataColors.primary,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -262,7 +262,7 @@ private fun LoadingIndicator(message: String) {
 private fun ErrorMessage(message: String) {
     Text(
         text = message,
-        color = Color(0xFFE57373),
+        color = HataColors.error,
         fontSize = 14.sp,
     )
 }
@@ -285,11 +285,11 @@ private fun LoginTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White,
-            focusedBorderColor = Color(0xFF8FB899),
-            unfocusedBorderColor = Color(0xFF6B7875),
-            focusedLabelColor = Color(0xFF8FB899),
-            unfocusedLabelColor = Color(0xFF6B7875),
-            cursorColor = Color(0xFF8FB899),
+            focusedBorderColor = HataColors.primary,
+            unfocusedBorderColor = HataColors.onSurfaceVariant,
+            focusedLabelColor = HataColors.primary,
+            unfocusedLabelColor = HataColors.onSurfaceVariant,
+            cursorColor = HataColors.primary,
         ),
     )
 }
@@ -305,8 +305,8 @@ private fun LoginButton(
         onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF8FB899),
-            contentColor = Color(0xFF1E2423),
+            containerColor = HataColors.primary,
+            contentColor = HataColors.onPrimary,
         ),
         shape = RoundedCornerShape(12.dp),
         enabled = enabled,

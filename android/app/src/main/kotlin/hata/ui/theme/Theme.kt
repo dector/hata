@@ -10,8 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    background = Colors.mainBg,
-    primary = Purple80,
+    background = HataColors.background,
+    surface = HataColors.surface,
+    surfaceVariant = HataColors.surfaceVariant,
+    primary = HataColors.primary,
+    onPrimary = HataColors.onPrimary,
+    primaryContainer = HataColors.primaryContainer,
+    onSurface = HataColors.onSurface,
+    onSurfaceVariant = HataColors.onSurfaceVariant,
+    error = HataColors.error,
     secondary = PurpleGrey80,
     tertiary = Pink80,
 )
