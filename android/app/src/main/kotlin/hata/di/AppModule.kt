@@ -6,7 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.ComputeDispatcher
 import hata.core.annotations.IoDispatcher
-import hata.data.api.FakeServerServiceImpl
+import hata.data.api.RealServerServiceImpl
 import hata.data.api.RemoteConfigurationService
 import hata.data.api.RemoteConfigurationServiceImpl
 import hata.data.api.ServerService
@@ -43,7 +43,7 @@ object AppModule {
     @Provides
     @Singleton
     fun serverService(): ServerService {
-        return FakeServerServiceImpl()
+        return RealServerServiceImpl()
     }
 }
 
