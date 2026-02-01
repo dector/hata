@@ -62,6 +62,12 @@ dependencies {
     //region Integrations
 
     implementation(projects.core.annotations)
+    implementation(projects.core.ui)
+
+    //region Features
+    implementation(projects.feature.notifications)
+    //endregion
+
     implementation(projects.integrations.wiz)
 
     //endregion

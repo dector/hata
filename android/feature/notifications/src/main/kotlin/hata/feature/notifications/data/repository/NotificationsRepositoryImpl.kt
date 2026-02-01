@@ -1,8 +1,8 @@
-package hata.data.repositories
+package hata.feature.notifications.data.repository
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import hata.data.models.Notification
+import hata.feature.notifications.data.model.Notification
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,6 +1,6 @@
-package hata.data.repositories
+package hata.feature.notifications.data.repository
 
-import hata.data.models.Notification
+import hata.feature.notifications.data.model.Notification
 import kotlinx.coroutines.flow.Flow
 
 

@@ -1,4 +1,4 @@
-package hata.di
+package hata.feature.notifications.di
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,8 +8,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.NotificationsPreferences
-import hata.data.repositories.NotificationsRepository
-import hata.data.repositories.NotificationsRepositoryImpl
+import hata.feature.notifications.data.repository.NotificationsRepository
+import hata.feature.notifications.data.repository.NotificationsRepositoryImpl
 import javax.inject.Singleton
 
 

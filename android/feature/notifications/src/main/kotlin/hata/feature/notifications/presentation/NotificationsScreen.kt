@@ -1,4 +1,4 @@
-package hata.ui.notifications
+package hata.feature.notifications.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import hata.data.models.Notification
+import hata.feature.notifications.data.model.Notification
 import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 import java.text.SimpleDateFormat

@@ -24,5 +24,10 @@ rootProject.name = "Hata"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":core:annotations")
-include(":app")
+include(":core:ui")
+
+include(":feature:notifications")
+
 include(":integrations:wiz")
+
+include(":app")

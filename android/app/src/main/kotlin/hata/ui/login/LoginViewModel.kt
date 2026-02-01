@@ -7,11 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.BuildConfig
 import hata.core.annotations.IoDispatcher
 import hata.data.api.ServerService
-import hata.data.models.Notification
 import hata.data.models.ServerInfo
 import hata.data.models.Session
 import hata.data.models.SessionUser
-import hata.data.repositories.NotificationsRepository
+import hata.feature.notifications.data.model.Notification
+import hata.feature.notifications.data.repository.NotificationsRepository
 import hata.data.repositories.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow

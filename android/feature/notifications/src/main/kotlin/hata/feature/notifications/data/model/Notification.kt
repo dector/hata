@@ -1,4 +1,4 @@
-package hata.data.models
+package hata.feature.notifications.data.model
 
 import kotlinx.serialization.Serializable
 

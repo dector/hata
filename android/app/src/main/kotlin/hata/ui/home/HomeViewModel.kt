@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import hata.data.repositories.NotificationsRepository
+import hata.feature.notifications.data.repository.NotificationsRepository
 import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import hata.integrations.wiz.Result
 import hata.integrations.wiz.WizControl
