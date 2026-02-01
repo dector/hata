@@ -155,6 +155,8 @@ func handleUserCommand() {
 	switch os.Args[3] {
 	case "create":
 		handleUserCreate()
+	case "list":
+		handleUserList()
 	default:
 		fmt.Printf("Unknown user command: %s\n", os.Args[3])
 		printUserUsage()
@@ -242,6 +244,53 @@ func handleUserCreate() {
 	fmt.Printf("  Display Name: %s\n", user.DisplayName)
 }
 
+func handleUserList() {
+	// Create a new FlagSet for the list command
+	listFlags := flag.NewFlagSet("list", flag.ExitOnError)
+	limit := listFlags.Int("limit", 10, "Maximum number of users to display")
+	offset := listFlags.Int("offset", 0, "Number of users to skip")
+
+	listFlags.Usage = func() {
+		printUserListUsage()
+	}
+
+	// Parse flags from remaining arguments
+	listFlags.Parse(os.Args[4:])
+
+	// Initialize database
+	database := db.New()
+	ctx := context.Background()
+
+	if err := database.Open(ctx, ""); err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer database.Close()
+
+	if err := database.RunMigrations(ctx); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// List users
+	users, total, err := database.Repos().User().List(ctx, *limit, *offset)
+	if err != nil {
+		log.Fatalf("Failed to list users: %v", err)
+	}
+
+	// Display users
+	if len(users) == 0 {
+		fmt.Println("No users found")
+		fmt.Printf("\nUsers: 0/%d\n", total)
+		return
+	}
+
+	fmt.Printf("%-5s %-30s %-30s\n", "ID", "Display Name", "Username")
+	fmt.Println("─────────────────────────────────────────────────────────────────────")
+	for _, user := range users {
+		fmt.Printf("%-5d %-30s %-30s\n", user.ID, user.DisplayName, user.Username)
+	}
+	fmt.Printf("\nUsers: %d/%d\n", len(users), total)
+}
+
 // Usage functions
 
 func printUsage() {
@@ -264,9 +313,12 @@ func printUserUsage() {
 	fmt.Println("Hata User Management")
 	fmt.Println("\nUsage:")
 	fmt.Println("  hata manage user create --email <email> --name <name> [--password <password>]")
+	fmt.Println("  hata manage user list [--limit <n>] [--offset <n>]")
 	fmt.Println("\nExamples:")
 	fmt.Println("  hata manage user create --email alice@example.com --password secret123 --name \"Alice Smith\"")
 	fmt.Println("  hata manage user create --email alice@example.com --name \"Alice Smith\"  # password will be prompted")
+	fmt.Println("  hata manage user list")
+	fmt.Println("  hata manage user list --limit 20 --offset 10")
 }
 
 func printUserCreateUsage() {
@@ -281,4 +333,17 @@ func printUserCreateUsage() {
 	fmt.Println("  hata manage user create --email alice@example.com --password secret123 --name \"Alice Smith\"")
 	fmt.Println("  hata manage user create --email bob@example.com --name \"Bob Jones\"  # interactive password")
 	fmt.Println("  hata manage user create --name \"Charlie\" --email charlie@example.com  # flags in any order")
+}
+
+func printUserListUsage() {
+	fmt.Println("List users with pagination")
+	fmt.Println("\nUsage:")
+	fmt.Println("  hata manage user list [--limit <n>] [--offset <n>]")
+	fmt.Println("\nFlags:")
+	fmt.Println("  --limit      Maximum number of users to display (default: 10)")
+	fmt.Println("  --offset     Number of users to skip (default: 0)")
+	fmt.Println("\nExamples:")
+	fmt.Println("  hata manage user list")
+	fmt.Println("  hata manage user list --limit 20")
+	fmt.Println("  hata manage user list --limit 20 --offset 10")
 }

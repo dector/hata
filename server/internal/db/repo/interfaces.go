@@ -39,6 +39,10 @@ type UserRepository interface {
 	// Create creates a new user with the given credentials.
 	// Returns error if username already exists.
 	Create(ctx context.Context, username, passwordHash, displayName string) (*UserData, error)
+
+	// List retrieves users with pagination.
+	// Returns a list of users and the total count.
+	List(ctx context.Context, limit, offset int) ([]*UserData, int, error)
 }
 
 // SessionRepository provides access to session data.

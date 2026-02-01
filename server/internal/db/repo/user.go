@@ -57,3 +57,35 @@ func (r *UserRepo) Create(ctx context.Context, username, passwordHash, displayNa
 		DisplayName:  u.DisplayName,
 	}, nil
 }
+
+// List retrieves users with pagination.
+func (r *UserRepo) List(ctx context.Context, limit, offset int) ([]*UserData, int, error) {
+	// Get total count
+	total, err := r.client.User.Query().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed counting users: %w", err)
+	}
+
+	// Get paginated users
+	users, err := r.client.User.Query().
+		Limit(limit).
+		Offset(offset).
+		All(ctx)
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed querying users: %w", err)
+	}
+
+	// Convert to UserData
+	result := make([]*UserData, len(users))
+	for i, u := range users {
+		result[i] = &UserData{
+			ID:           u.ID,
+			Username:     u.Username,
+			PasswordHash: u.PasswordHash,
+			DisplayName:  u.DisplayName,
+		}
+	}
+
+	return result, total, nil
+}
