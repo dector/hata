@@ -1,11 +1,11 @@
-package hata.feature.notifications.presentation
+package hata.feature.notifications.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.core.annotations.IoDispatcher
-import hata.feature.notifications.data.model.Notification
-import hata.feature.notifications.data.repository.NotificationsRepository
+import hata.feature.notifications.model.Notification
+import hata.feature.notifications.repository.NotificationsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

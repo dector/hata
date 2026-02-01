@@ -10,8 +10,8 @@ import hata.data.api.ServerService
 import hata.data.models.ServerInfo
 import hata.data.models.Session
 import hata.data.models.SessionUser
-import hata.feature.notifications.data.model.Notification
-import hata.feature.notifications.data.repository.NotificationsRepository
+import hata.feature.notifications.model.Notification
+import hata.feature.notifications.repository.NotificationsRepository
 import hata.data.repositories.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
