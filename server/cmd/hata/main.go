@@ -54,6 +54,7 @@ func startServer(database db.DB, ctx context.Context) {
 
 	// Create API handlers
 	authHandler := api.NewAuthHandler(database.Repos())
+	serverHandler := api.NewServerHandler()
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +70,7 @@ func startServer(database db.DB, ctx context.Context) {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/login", authHandler.Login)
 		})
+		r.Get("/ping", serverHandler.Ping)
 	})
 
 	host := "http://localhost"

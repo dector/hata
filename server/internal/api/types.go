@@ -23,6 +23,13 @@ type UserInfo struct {
 	DisplayName string `json:"displayName"`
 }
 
+// PingResponse represents the ping endpoint response.
+type PingResponse struct {
+	ServerName string `json:"serverName"`
+	Version    string `json:"version"`
+	APIVersion string `json:"apiVersion"`
+}
+
 // ErrorResponse represents an error response.
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error"`
