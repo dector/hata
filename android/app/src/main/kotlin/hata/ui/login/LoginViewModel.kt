@@ -1,8 +1,10 @@
 package hata.ui.login
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hata.BuildConfig
 import hata.core.annotations.IoDispatcher
 import hata.data.api.ServerService
 import hata.data.models.ServerInfo
@@ -16,11 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val serverService: ServerService,
     private val sessionRepository: SessionRepository,
-    @IoDispatcher
+    @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -47,9 +50,25 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleInit() {
-        if (_uiState.value is LoginUiState.Init) {
-            _uiState.value = LoginUiState.ServerInput()
+        // Reset to ServerInput state (handles both first launch and post-logout navigation)
+        currentServerInfo = null
+
+        // Prefill server URL for debug builds on emulator
+        val serverUrl = if (BuildConfig.DEBUG && isEmulator()) {
+            "http://10.0.2.2:8080"
+        } else {
+            ""
         }
+
+        _uiState.value = LoginUiState.ServerInput(serverUrl = serverUrl)
+    }
+
+    private fun isEmulator(): Boolean {
+        return Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.contains("generic")
+            || Build.MODEL.contains("Emulator", ignoreCase = true)
+            || Build.MODEL.contains("Android SDK", ignoreCase = true)
+            || Build.MODEL.contains("sdk_gphone", ignoreCase = true)
     }
 
     private fun handleUpdateServerUrl(url: String) {
@@ -104,6 +123,7 @@ class LoginViewModel @Inject constructor(
                         token = token,
                         user = SessionUser(name = username),
                         isActive = true,
+                        serverUrl = serverUrl,
                     )
                     sessionRepository.saveSession(session)
                     _uiState.value = LoginUiState.Success

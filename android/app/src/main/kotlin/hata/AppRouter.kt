@@ -16,6 +16,7 @@ import hata.data.repositories.SessionRepository
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
+import hata.ui.profile.ProfileScreen
 import kotlinx.serialization.Serializable
 
 
@@ -27,12 +28,16 @@ fun AppRouter(
     val backStack = remember { mutableStateListOf<Any>(Route.Init) }
     val session by sessionRepository.observeSession().collectAsStateWithLifecycle(initialValue = null)
 
-    // Navigate to Home when session becomes available
+    // Navigate to Home when session becomes available, or to Init when session is cleared
     LaunchedEffect(session) {
         val currentRoute = backStack.lastOrNull()
         if (session != null && currentRoute is Route.Login) {
             backStack.clear()
             backStack.add(Route.Home)
+        } else if (session == null && currentRoute !is Route.Init && currentRoute !is Route.Login) {
+            // Session was cleared (logout) - navigate to Init to run all checks
+            backStack.clear()
+            backStack.add(Route.Init)
         }
     }
 
@@ -59,7 +64,15 @@ fun AppRouter(
                 }
 
                 is Route.Home -> NavEntry(key) {
-                    HomeScreen()
+                    HomeScreen(
+                        onNavigateToProfile = { backStack.add(Route.Profile) },
+                    )
+                }
+
+                is Route.Profile -> NavEntry(key) {
+                    ProfileScreen(
+                        onNavigateBack = { backStack.removeLastOrNull() },
+                    )
                 }
 
                 is Route.Mockup -> NavEntry(key) {
@@ -86,4 +99,7 @@ sealed interface Route {
 
     @Serializable
     data object Mockup : Route
+
+    @Serializable
+    data object Profile : Route
 }

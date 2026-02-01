@@ -1,6 +1,7 @@
 package hata.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -35,6 +36,7 @@ import hata.ui.utils.preview
 fun TopBar(
     name: String,
     hasNotifications: Boolean = false,
+    onAvatarClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -49,7 +51,7 @@ fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NotificationsButton(hasNotifications)
-            Avatar()
+            Avatar(onClick = onAvatarClick)
         }
     }
 }
@@ -99,12 +101,13 @@ private fun HomeDropdown(name: String) {
 }
 
 @Composable
-private fun Avatar() {
+private fun Avatar(onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(HataAccentColors.avatarBackground),
+            .background(HataAccentColors.avatarBackground)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

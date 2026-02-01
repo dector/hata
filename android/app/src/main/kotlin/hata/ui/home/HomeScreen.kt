@@ -33,6 +33,7 @@ import hata.ui.utils.preview
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
+    onNavigateToProfile: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -43,6 +44,7 @@ fun HomeScreen(
     HomeScreenUI(
         state = state,
         dispatch = viewModel::onDispatch,
+        onNavigateToProfile = onNavigateToProfile,
     )
 }
 
@@ -51,6 +53,7 @@ fun HomeScreen(
 private fun HomeScreenUI(
     state: HomeUiState,
     dispatch: (HomeUiAction) -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
 ) {
     Scaffold(
 //        bottomBar = { BottomNavigationBar() },
@@ -66,6 +69,7 @@ private fun HomeScreenUI(
             }
             TopBar(
                 name = homeName,
+                onAvatarClick = onNavigateToProfile,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
