@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hata.data.repositories.NotificationsRepository
 import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import hata.integrations.wiz.Result
 import hata.integrations.wiz.WizControl
@@ -19,10 +20,26 @@ private const val TAG = "HomeViewModel"
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val loadRemoteConfigurationUseCase: LoadRemoteConfigurationUseCase,
+    private val notificationsRepository: NotificationsRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState>
         field = MutableStateFlow<HomeUiState>(HomeUiState.Init)
+
+    val hasUnreadNotifications: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
+    init {
+        observeNotifications()
+    }
+
+    private fun observeNotifications() {
+        viewModelScope.launch {
+            notificationsRepository.observeNotifications().collect { notifications ->
+                hasUnreadNotifications.value = notifications.any { !it.isRead }
+            }
+        }
+    }
 
     fun onDispatch(action: HomeUiAction) {
         when (action) {

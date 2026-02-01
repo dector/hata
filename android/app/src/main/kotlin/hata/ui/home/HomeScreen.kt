@@ -34,8 +34,10 @@ import hata.ui.utils.preview
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val hasUnreadNotifications by viewModel.hasUnreadNotifications.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.onDispatch(HomeUiAction.Init)
@@ -43,8 +45,10 @@ fun HomeScreen(
 
     HomeScreenUI(
         state = state,
+        hasUnreadNotifications = hasUnreadNotifications,
         dispatch = viewModel::onDispatch,
         onNavigateToProfile = onNavigateToProfile,
+        onNavigateToNotifications = onNavigateToNotifications,
     )
 }
 
@@ -52,8 +56,10 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun HomeScreenUI(
     state: HomeUiState,
+    hasUnreadNotifications: Boolean = false,
     dispatch: (HomeUiAction) -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     Scaffold(
 //        bottomBar = { BottomNavigationBar() },
@@ -69,7 +75,9 @@ private fun HomeScreenUI(
             }
             TopBar(
                 name = homeName,
+                hasNotifications = hasUnreadNotifications,
                 onAvatarClick = onNavigateToProfile,
+                onNotificationsClick = onNavigateToNotifications,
             )
 
             Spacer(modifier = Modifier.height(16.dp))

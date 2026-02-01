@@ -37,6 +37,7 @@ fun TopBar(
     name: String,
     hasNotifications: Boolean = false,
     onAvatarClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -50,17 +51,24 @@ fun TopBar(
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            NotificationsButton(hasNotifications)
+            NotificationsButton(
+                hasNotifications = hasNotifications,
+                onClick = onNotificationsClick,
+            )
             Avatar(onClick = onAvatarClick)
         }
     }
 }
 
 @Composable
-private fun NotificationsButton(hasNotifications: Boolean) {
+private fun NotificationsButton(
+    hasNotifications: Boolean,
+    onClick: () -> Unit = {},
+) {
     Box(
         modifier = Modifier
-            .size(48.dp),
+            .size(48.dp)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

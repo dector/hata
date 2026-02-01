@@ -7,9 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.BuildConfig
 import hata.core.annotations.IoDispatcher
 import hata.data.api.ServerService
+import hata.data.models.Notification
 import hata.data.models.ServerInfo
 import hata.data.models.Session
 import hata.data.models.SessionUser
+import hata.data.repositories.NotificationsRepository
 import hata.data.repositories.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val serverService: ServerService,
     private val sessionRepository: SessionRepository,
+    private val notificationsRepository: NotificationsRepository,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -126,6 +129,12 @@ class LoginViewModel @Inject constructor(
                         serverUrl = serverUrl,
                     )
                     sessionRepository.saveSession(session)
+
+                    // Add sample notifications on debug builds if none exist
+                    if (BuildConfig.DEBUG) {
+                        addSampleNotificationsIfNeeded()
+                    }
+
                     _uiState.value = LoginUiState.Success
                 }
                 .onFailure { error ->
@@ -142,6 +151,56 @@ class LoginViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    private suspend fun addSampleNotificationsIfNeeded() {
+        val existingNotifications = notificationsRepository.getNotifications()
+        if (existingNotifications.isEmpty()) {
+            val now = System.currentTimeMillis()
+
+            // Add sample notifications: mix of read and unread
+            val sampleNotifications = listOf(
+                Notification(
+                    id = "1",
+                    title = "Welcome to Hata!",
+                    message = "Your home automation system is ready to use.",
+                    timestamp = now - 3600_000, // 1 hour ago
+                    isRead = false,
+                ),
+                Notification(
+                    id = "2",
+                    title = "Device connected",
+                    message = "Living Room Light has been added to your home.",
+                    timestamp = now - 7200_000, // 2 hours ago
+                    isRead = false,
+                ),
+                Notification(
+                    id = "3",
+                    title = "System update",
+                    message = "A new version of Hata is available. Update now for the latest features.",
+                    timestamp = now - 86400_000, // 1 day ago
+                    isRead = true,
+                ),
+                Notification(
+                    id = "4",
+                    title = "Automation triggered",
+                    message = "Good morning! Your morning routine has been activated.",
+                    timestamp = now - 172800_000, // 2 days ago
+                    isRead = true,
+                ),
+                Notification(
+                    id = "5",
+                    title = "Security alert",
+                    message = "Front door was unlocked at 10:30 PM.",
+                    timestamp = now - 259200_000, // 3 days ago
+                    isRead = false,
+                ),
+            )
+
+            sampleNotifications.forEach { notification ->
+                notificationsRepository.addNotification(notification)
+            }
         }
     }
 

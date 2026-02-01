@@ -67,3 +67,21 @@ annotation class IoDispatcher
  */
 @Qualifier
 annotation class AuthPreferences
+
+/**
+ * Qualifier for notifications-related SharedPreferences.
+ *
+ * This annotation marks SharedPreferences instances used for storing notifications data.
+ * Use this qualifier to inject the notifications preferences in classes that need it.
+ *
+ * Example usage in Hilt modules:
+ * ```
+ * @Provides
+ * @NotificationsPreferences
+ * fun notificationsPreferences(@ApplicationContext context: Context): SharedPreferences {
+ *     return context.getSharedPreferences("hata_notifications", Context.MODE_PRIVATE)
+ * }
+ * ```
+ */
+@Qualifier
+annotation class NotificationsPreferences

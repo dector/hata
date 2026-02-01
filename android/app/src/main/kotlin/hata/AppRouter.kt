@@ -16,6 +16,7 @@ import hata.data.repositories.SessionRepository
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
+import hata.ui.notifications.NotificationsScreen
 import hata.ui.profile.ProfileScreen
 import kotlinx.serialization.Serializable
 
@@ -66,11 +67,18 @@ fun AppRouter(
                 is Route.Home -> NavEntry(key) {
                     HomeScreen(
                         onNavigateToProfile = { backStack.add(Route.Profile) },
+                        onNavigateToNotifications = { backStack.add(Route.Notifications) },
                     )
                 }
 
                 is Route.Profile -> NavEntry(key) {
                     ProfileScreen(
+                        onNavigateBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                is Route.Notifications -> NavEntry(key) {
+                    NotificationsScreen(
                         onNavigateBack = { backStack.removeLastOrNull() },
                     )
                 }
@@ -102,4 +110,7 @@ sealed interface Route {
 
     @Serializable
     data object Profile : Route
+
+    @Serializable
+    data object Notifications : Route
 }
