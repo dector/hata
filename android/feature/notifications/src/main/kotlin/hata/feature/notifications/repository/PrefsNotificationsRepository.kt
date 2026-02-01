@@ -2,6 +2,7 @@ package hata.feature.notifications.repository
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import hata.core.annotations.NotificationsPreferences
 import hata.feature.notifications.model.Notification
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
 
 
-internal class NotificationsRepositoryImpl(
+// Early implementation. To be replaced.
+internal class PrefsNotificationsRepository(
+    @param:NotificationsPreferences
     private val sharedPreferences: SharedPreferences,
 ) : NotificationsRepository {
 

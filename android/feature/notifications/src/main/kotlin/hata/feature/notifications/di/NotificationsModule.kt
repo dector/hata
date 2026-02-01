@@ -9,7 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.NotificationsPreferences
 import hata.feature.notifications.repository.NotificationsRepository
-import hata.feature.notifications.repository.NotificationsRepositoryImpl
+import hata.feature.notifications.repository.PrefsNotificationsRepository
 import javax.inject.Singleton
 
 
@@ -21,7 +21,7 @@ object NotificationsModule {
     @Singleton
     @NotificationsPreferences
     fun notificationsPreferences(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SharedPreferences {
         return context.getSharedPreferences("hata_notifications", Context.MODE_PRIVATE)
     }
@@ -29,8 +29,9 @@ object NotificationsModule {
     @Provides
     @Singleton
     fun notificationsRepository(
-        @NotificationsPreferences sharedPreferences: SharedPreferences
+        @NotificationsPreferences
+        sharedPreferences: SharedPreferences,
     ): NotificationsRepository {
-        return NotificationsRepositoryImpl(sharedPreferences)
+        return PrefsNotificationsRepository(sharedPreferences)
     }
 }
