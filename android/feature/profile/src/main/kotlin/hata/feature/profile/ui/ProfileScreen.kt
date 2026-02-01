@@ -1,4 +1,4 @@
-package hata.ui.profile
+package hata.feature.profile.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

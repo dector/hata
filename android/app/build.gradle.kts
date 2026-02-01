@@ -66,6 +66,7 @@ dependencies {
 
     //region Features
     implementation(projects.feature.notifications)
+    implementation(projects.feature.profile)
     //endregion
 
     implementation(projects.integrations.wiz)

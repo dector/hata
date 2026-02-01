@@ -1,11 +1,11 @@
-package hata.ui.profile
+package hata.feature.profile.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import hata.BuildConfig
 import hata.core.annotations.IoDispatcher
-import hata.data.repositories.SessionRepository
+import hata.feature.profile.model.AppInfo
+import hata.feature.profile.repository.ProfileSessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository,
+    private val sessionRepository: ProfileSessionRepository,
+    private val appInfo: AppInfo,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -46,10 +47,10 @@ class ProfileViewModel @Inject constructor(
             val session = sessionRepository.getSession()
             if (session != null) {
                 _uiState.value = ProfileUiState.Loaded(
-                    userName = session.user.name,
+                    userName = session.userName,
                     serverUrl = session.serverUrl,
                     accountStatus = if (session.isActive) "Active" else "Inactive",
-                    appVersion = BuildConfig.VERSION_NAME,
+                    appVersion = appInfo.version,
                 )
             }
         }

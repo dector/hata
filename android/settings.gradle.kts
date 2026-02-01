@@ -27,6 +27,7 @@ include(":core:annotations")
 include(":core:ui")
 
 include(":feature:notifications")
+include(":feature:profile")
 
 include(":integrations:wiz")
 

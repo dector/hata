@@ -17,7 +17,7 @@ import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
 import hata.feature.notifications.ui.NotificationsScreen
-import hata.ui.profile.ProfileScreen
+import hata.feature.profile.ui.ProfileScreen
 import kotlinx.serialization.Serializable
 
 
