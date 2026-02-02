@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
-import hata.di.AppRouterEntryPoint
+import hata.feature.session.di.AppRouterEntryPoint
 import hata.ui.theme.HataTheme
 
 

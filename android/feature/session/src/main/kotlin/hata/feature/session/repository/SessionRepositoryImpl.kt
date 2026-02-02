@@ -1,9 +1,9 @@
-package hata.data.repositories
+package hata.feature.session.repository
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import hata.data.models.Session
-import hata.data.models.SessionUser
+import hata.feature.session.model.Session
+import hata.feature.session.model.SessionUser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

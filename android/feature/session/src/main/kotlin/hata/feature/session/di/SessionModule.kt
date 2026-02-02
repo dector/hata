@@ -1,4 +1,4 @@
-package hata.di
+package hata.feature.session.di
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,8 +9,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.AuthPreferences
-import hata.data.repositories.SessionRepository
-import hata.data.repositories.SessionRepositoryImpl
+import hata.feature.session.repository.SessionRepository
+import hata.feature.session.repository.SessionRepositoryImpl
 import javax.inject.Singleton
 
 
@@ -22,7 +22,7 @@ object SessionModule {
     @Singleton
     @AuthPreferences
     fun authPreferences(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SharedPreferences {
         return context.getSharedPreferences("hata_auth", Context.MODE_PRIVATE)
     }
@@ -30,7 +30,7 @@ object SessionModule {
     @Provides
     @Singleton
     fun sessionRepository(
-        @AuthPreferences sharedPreferences: SharedPreferences
+        @AuthPreferences sharedPreferences: SharedPreferences,
     ): SessionRepository {
         return SessionRepositoryImpl(sharedPreferences)
     }

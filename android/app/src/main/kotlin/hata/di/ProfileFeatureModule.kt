@@ -5,10 +5,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import hata.BuildConfig
-import hata.data.repositories.SessionRepository
 import hata.feature.profile.model.AppInfo
 import hata.feature.profile.model.ProfileSession
 import hata.feature.profile.repository.ProfileSessionRepository
+import hata.feature.session.repository.SessionRepository
 import javax.inject.Singleton
 
 

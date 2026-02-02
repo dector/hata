@@ -29,8 +29,9 @@ includeBuild("gradle/plugins/build-config")
 include(":core:annotations")
 include(":core:ui")
 
-include(":feature:notifications")
+include(":feature:session")
 include(":feature:profile")
+include(":feature:notifications")
 
 include(":integrations:wiz")
 

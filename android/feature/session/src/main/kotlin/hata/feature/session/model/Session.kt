@@ -1,4 +1,4 @@
-package hata.data.models
+package hata.feature.session.model
 
 
 data class Session(

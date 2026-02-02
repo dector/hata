@@ -1,6 +1,6 @@
-package hata.data.repositories
+package hata.feature.session.repository
 
-import hata.data.models.Session
+import hata.feature.session.model.Session
 import kotlinx.coroutines.flow.Flow
 
 

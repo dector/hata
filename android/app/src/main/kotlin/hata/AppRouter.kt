@@ -12,13 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import hata.data.repositories.SessionRepository
+import kotlinx.serialization.Serializable
+import hata.feature.notifications.ui.NotificationsScreen
+import hata.feature.profile.ui.ProfileScreen
+import hata.feature.session.repository.SessionRepository
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
-import hata.feature.notifications.ui.NotificationsScreen
-import hata.feature.profile.ui.ProfileScreen
-import kotlinx.serialization.Serializable
 
 
 @Composable
