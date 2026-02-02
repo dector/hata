@@ -10,3 +10,4 @@ gradle.xml
 migrations.xml
 misc.xml
 runConfigurations.xml
+kotlinc.xml

@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.app)
+    alias(libs.plugins.hata.android.application)
     alias(libs.plugins.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -8,18 +8,11 @@ plugins {
 
 android {
     namespace = "hata"
-    compileSdk {
-        version = release(36)
-    }
 
     defaultConfig {
         applicationId = "space.dector.hata"
-        minSdk = 24
-        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
