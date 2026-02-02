@@ -1,6 +1,9 @@
 package hata.app
 
 import android.util.Log
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,21 +12,44 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import kotlinx.serialization.Serializable
 import hata.feature.notifications.ui.NotificationsScreen
 import hata.feature.profile.ui.ProfileScreen
 import hata.feature.session.repository.SessionRepository
+import hata.navigation.AppNavigator
+import hata.navigation.NavigationCommand
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.serialization.Serializable
 
 
 @Composable
 fun AppRouter(
     sessionRepository: SessionRepository,
+    navigator: AppNavigator,
 ) {
     val backStack = remember { mutableStateListOf<Any>(Route.Init) }
-    val session by sessionRepository.observeSession().collectAsStateWithLifecycle(initialValue = null)
+    val session by sessionRepository.observeSession()
+        .collectAsStateWithLifecycle(initialValue = null)
+
+    fun goBack() {
+        if (backStack.size > 1) {
+            backStack.removeLastOrNull()
+        }
+    }
+
+    // Observe navigation commands from ViewModels
+    LaunchedEffect(Unit) {
+        navigator.navigationCommands.consumeEach { command ->
+            when (command) {
+                is NavigationCommand.ToProfile -> backStack.add(Route.Profile)
+                is NavigationCommand.ToNotifications -> backStack.add(Route.Notifications)
+                is NavigationCommand.Back -> goBack()
+            }
+            navigator.markNavigationHandled()
+        }
+    }
 
     // Navigate to Home when session becomes available, or to Init when session is cleared
     LaunchedEffect(session) {
@@ -40,7 +66,9 @@ fun AppRouter(
 
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
+        onBack = ::goBack,
+        transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+        popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         entryProvider = { key ->
             Log.e("+++", "Router: $key")
             when (key) {
@@ -60,22 +88,15 @@ fun AppRouter(
                 }
 
                 is Route.Home -> NavEntry(key) {
-                    HomeScreen(
-                        onNavigateToProfile = { backStack.add(Route.Profile) },
-                        onNavigateToNotifications = { backStack.add(Route.Notifications) },
-                    )
+                    HomeScreen()
                 }
 
                 is Route.Profile -> NavEntry(key) {
-                    ProfileScreen(
-                        onNavigateBack = { backStack.removeLastOrNull() },
-                    )
+                    ProfileScreen()
                 }
 
                 is Route.Notifications -> NavEntry(key) {
-                    NotificationsScreen(
-                        onNavigateBack = { backStack.removeLastOrNull() },
-                    )
+                    NotificationsScreen()
                 }
 
                 is Route.Mockup -> NavEntry(key) {

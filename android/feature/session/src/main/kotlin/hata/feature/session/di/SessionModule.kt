@@ -11,6 +11,7 @@ import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.AuthPreferences
 import hata.feature.session.repository.SessionRepository
 import hata.feature.session.repository.SessionRepositoryImpl
+import hata.navigation.AppNavigator
 import javax.inject.Singleton
 
 
@@ -40,4 +41,5 @@ object SessionModule {
 @InstallIn(SingletonComponent::class)
 interface AppRouterEntryPoint {
     fun sessionRepository(): SessionRepository
+    fun appNavigator(): AppNavigator
 }

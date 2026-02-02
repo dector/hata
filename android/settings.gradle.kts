@@ -28,6 +28,7 @@ includeBuild("gradle/plugins/build-config")
 
 include(":core:annotations")
 include(":core:ui")
+include(":core:router")
 
 include(":feature:session")
 include(":feature:profile")

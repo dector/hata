@@ -27,16 +27,15 @@ class AppActivity : ComponentActivity() {
 
 @Composable
 fun AppContainer() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val entryPoint = EntryPointAccessors.fromApplication(
-        appContext,
+        LocalContext.current.applicationContext,
         AppRouterEntryPoint::class.java,
     )
 
     HataTheme {
         AppRouter(
             sessionRepository = entryPoint.sessionRepository(),
+            navigator = entryPoint.appNavigator(),
         )
     }
 }

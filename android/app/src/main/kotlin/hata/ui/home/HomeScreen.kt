@@ -32,23 +32,19 @@ import hata.ui.utils.preview
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {},
+    vm: HomeViewModel = viewModel(),
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val hasUnreadNotifications by viewModel.hasUnreadNotifications.collectAsStateWithLifecycle()
+    val state by vm.uiState.collectAsStateWithLifecycle()
+    val hasUnreadNotifications by vm.hasUnreadNotifications.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.onDispatch(HomeUiAction.Init)
+        vm.onDispatch(HomeUiAction.Init)
     }
 
     HomeScreenUI(
         state = state,
         hasUnreadNotifications = hasUnreadNotifications,
-        dispatch = viewModel::onDispatch,
-        onNavigateToProfile = onNavigateToProfile,
-        onNavigateToNotifications = onNavigateToNotifications,
+        dispatch = vm::onDispatch,
     )
 }
 
@@ -58,8 +54,6 @@ private fun HomeScreenUI(
     state: HomeUiState,
     hasUnreadNotifications: Boolean = false,
     dispatch: (HomeUiAction) -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {},
 ) {
     Scaffold(
 //        bottomBar = { BottomNavigationBar() },
@@ -77,8 +71,8 @@ private fun HomeScreenUI(
             TopBar(
                 name = homeName,
                 hasNotifications = hasUnreadNotifications,
-                onAvatarClick = onNavigateToProfile,
-                onNotificationsClick = onNavigateToNotifications,
+                onAvatarClick = { dispatch(HomeUiAction.NavigateToProfile) },
+                onNotificationsClick = { dispatch(HomeUiAction.NavigateToNotifications) },
             )
 
             Spacer(modifier = Modifier.height(16.dp))

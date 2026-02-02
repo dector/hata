@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.core.annotations.IoDispatcher
 import hata.feature.profile.model.AppInfo
 import hata.feature.profile.repository.ProfileSessionRepository
+import hata.navigation.AppNavigator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val sessionRepository: ProfileSessionRepository,
     private val appInfo: AppInfo,
+    private val navigator: AppNavigator,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -25,21 +27,14 @@ class ProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Init)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    private val _navigationEvent = MutableStateFlow<ProfileNavigationEvent?>(null)
-    val navigationEvent: StateFlow<ProfileNavigationEvent?> = _navigationEvent.asStateFlow()
-
     fun onDispatch(action: ProfileUiAction) {
         when (action) {
             is ProfileUiAction.Init -> handleInit()
             is ProfileUiAction.Logout -> handleLogout()
-            is ProfileUiAction.Back -> handleBack()
+            is ProfileUiAction.Back -> navigator.navigateBack()
             is ProfileUiAction.ShowLogoutDialog -> handleShowLogoutDialog()
             is ProfileUiAction.DismissLogoutDialog -> handleDismissLogoutDialog()
         }
-    }
-
-    fun onNavigationEventConsumed() {
-        _navigationEvent.value = null
     }
 
     private fun handleInit() {
@@ -60,10 +55,6 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             sessionRepository.clearSession()
         }
-    }
-
-    private fun handleBack() {
-        _navigationEvent.value = ProfileNavigationEvent.NavigateBack
     }
 
     private fun handleShowLogoutDialog() {
@@ -99,8 +90,4 @@ sealed interface ProfileUiAction {
     data object Back : ProfileUiAction
     data object ShowLogoutDialog : ProfileUiAction
     data object DismissLogoutDialog : ProfileUiAction
-}
-
-sealed interface ProfileNavigationEvent {
-    data object NavigateBack : ProfileNavigationEvent
 }

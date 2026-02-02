@@ -46,24 +46,11 @@ import hata.ui.utils.preview
 @Composable
 fun ProfileScreen(
     vm: ProfileViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    val navigationEvent by vm.navigationEvent.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.onDispatch(ProfileUiAction.Init)
-    }
-
-    LaunchedEffect(navigationEvent) {
-        when (navigationEvent) {
-            is ProfileNavigationEvent.NavigateBack -> {
-                vm.onNavigationEventConsumed()
-                onNavigateBack()
-            }
-
-            null -> {}
-        }
     }
 
     ProfileScreenUI(
@@ -126,7 +113,6 @@ private fun ProfileContent(
     onShowLogoutDialog: () -> Unit,
     onDismissLogoutDialog: () -> Unit,
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()

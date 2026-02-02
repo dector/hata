@@ -55,6 +55,7 @@ dependencies {
     //region Integrations
 
     implementation(projects.core.annotations)
+    implementation(projects.core.router)
     implementation(projects.core.ui)
 
     //region Features

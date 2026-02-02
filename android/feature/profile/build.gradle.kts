@@ -16,6 +16,7 @@ android {
 
 dependencies {
     implementation(projects.core.annotations)
+    implementation(projects.core.router)
     implementation(projects.core.ui)
 
     // AndroidX

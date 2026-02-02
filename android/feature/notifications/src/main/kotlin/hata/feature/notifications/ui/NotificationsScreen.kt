@@ -48,24 +48,11 @@ import java.util.Locale
 @Composable
 fun NotificationsScreen(
     vm: NotificationsViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    val navigationEvent by vm.navigationEvent.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.onDispatch(NotificationsUiAction.Init)
-    }
-
-    LaunchedEffect(navigationEvent) {
-        when (navigationEvent) {
-            is NotificationsNavigationEvent.NavigateBack -> {
-                vm.onNavigationEventConsumed()
-                onNavigateBack()
-            }
-
-            null -> {}
-        }
     }
 
     NotificationsScreenUI(

@@ -9,6 +9,7 @@ import hata.domain.usecases.LoadRemoteConfigurationUseCase
 import hata.integrations.wiz.Result
 import hata.integrations.wiz.WizControl
 import hata.integrations.wiz.WizDevice
+import hata.navigation.AppNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -17,10 +18,12 @@ import javax.inject.Inject
 
 private const val TAG = "HomeViewModel"
 
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val loadRemoteConfigurationUseCase: LoadRemoteConfigurationUseCase,
     private val notificationsRepository: NotificationsRepository,
+    private val navigator: AppNavigator,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState>
@@ -49,7 +52,8 @@ class HomeViewModel @Inject constructor(
                 loadConfiguration()
             }
 
-            else -> {}
+            is HomeUiAction.NavigateToProfile -> navigator.navigateToProfile()
+            is HomeUiAction.NavigateToNotifications -> navigator.navigateToNotifications()
         }
     }
 
