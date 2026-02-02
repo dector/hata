@@ -65,4 +65,3 @@ private fun Preview_DeviceCardsGrid() = preview(
         ),
     )
 }
-
