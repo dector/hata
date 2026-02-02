@@ -67,7 +67,8 @@ private fun HomeScreenUI(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(HataColors.background),
+                .background(HataColors.background)
+                .padding(paddingValues),
         ) {
             val homeName = when (state) {
                 is HomeUiState.WithData -> state.data.home.name

@@ -1,14 +1,11 @@
-package hata
+package hata.app
 
 import android.util.Log
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -23,7 +20,6 @@ import hata.ui.login.LoginScreen
 
 @Composable
 fun AppRouter(
-    innerPadding: PaddingValues,
     sessionRepository: SessionRepository,
 ) {
     val backStack = remember { mutableStateListOf<Any>(Route.Init) }
@@ -43,7 +39,6 @@ fun AppRouter(
     }
 
     NavDisplay(
-        modifier = Modifier.padding(innerPadding),
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
         entryProvider = { key ->
