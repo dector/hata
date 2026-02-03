@@ -27,7 +27,7 @@ func (User) Fields() []ent.Field {
 			Unique().
 			NotEmpty().
 			Comment("Unique username for authentication"),
-		field.String("password_hash").
+		field.String("password").
 			Sensitive().
 			NotEmpty().
 			Comment("Bcrypt hash of the user's password"),
