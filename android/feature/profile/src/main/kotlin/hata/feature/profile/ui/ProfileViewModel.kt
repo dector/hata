@@ -46,6 +46,8 @@ class ProfileViewModel @Inject constructor(
                     serverUrl = session.serverUrl,
                     accountStatus = if (session.isActive) "Active" else "Inactive",
                     appVersion = appInfo.version,
+                    appPackage = appInfo.packageName,
+                    sessionCreatedAt = session.createdAt,
                 )
             }
         }
@@ -80,6 +82,8 @@ sealed interface ProfileUiState {
         val serverUrl: String,
         val accountStatus: String,
         val appVersion: String,
+        val appPackage: String,
+        val sessionCreatedAt: Long,
         val showLogoutDialog: Boolean = false,
     ) : ProfileUiState
 }

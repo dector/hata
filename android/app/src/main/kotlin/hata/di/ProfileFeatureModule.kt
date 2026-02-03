@@ -27,6 +27,7 @@ object ProfileFeatureModule {
     @Provides
     fun appInfo(): AppInfo = AppInfo(
         version = BuildConfig.VERSION_NAME,
+        packageName = BuildConfig.APPLICATION_ID,
     )
 }
 
@@ -41,6 +42,7 @@ class RealProfileSessionRepository(
             userName = session.user.name,
             isActive = session.isActive,
             serverUrl = session.serverUrl,
+            createdAt = session.createdAt,
         )
     }
 

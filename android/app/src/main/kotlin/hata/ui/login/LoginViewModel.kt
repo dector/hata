@@ -127,6 +127,7 @@ class LoginViewModel @Inject constructor(
                         user = SessionUser(name = username),
                         isActive = true,
                         serverUrl = serverUrl,
+                        createdAt = System.currentTimeMillis(),
                     )
                     sessionRepository.saveSession(session)
 

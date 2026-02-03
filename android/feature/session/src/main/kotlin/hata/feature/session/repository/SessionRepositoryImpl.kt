@@ -29,6 +29,7 @@ internal class SessionRepositoryImpl(
             putString(KEY_USER_NAME, session.user.name)
             putBoolean(KEY_IS_ACTIVE, session.isActive)
             putString(KEY_SERVER_URL, session.serverUrl)
+            putLong(KEY_CREATED_AT, session.createdAt)
             apply()
         }
         sessionFlow.value = session
@@ -44,6 +45,7 @@ internal class SessionRepositoryImpl(
         val userName = sharedPreferences.getString(KEY_USER_NAME, null)
         val isActive = sharedPreferences.getBoolean(KEY_IS_ACTIVE, false)
         val serverUrl = sharedPreferences.getString(KEY_SERVER_URL, null)
+        val createdAt = sharedPreferences.getLong(KEY_CREATED_AT, 0L)
 
         return if (token != null && userName != null && serverUrl != null) {
             Session(
@@ -51,6 +53,7 @@ internal class SessionRepositoryImpl(
                 user = SessionUser(name = userName),
                 isActive = isActive,
                 serverUrl = serverUrl,
+                createdAt = if (createdAt == 0L) System.currentTimeMillis() else createdAt,
             )
         } else {
             null
@@ -62,5 +65,6 @@ internal class SessionRepositoryImpl(
         const val KEY_USER_NAME = "session_user_name"
         const val KEY_IS_ACTIVE = "session_is_active"
         const val KEY_SERVER_URL = "session_server_url"
+        const val KEY_CREATED_AT = "session_created_at"
     }
 }

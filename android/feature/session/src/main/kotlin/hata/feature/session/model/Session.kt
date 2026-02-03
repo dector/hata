@@ -6,6 +6,7 @@ data class Session(
     val user: SessionUser,
     val isActive: Boolean,
     val serverUrl: String,
+    val createdAt: Long,
 )
 
 data class SessionUser(
