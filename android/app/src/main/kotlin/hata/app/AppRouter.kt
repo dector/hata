@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import hata.feature.notifications.ui.NotificationsScreen
 import hata.feature.profile.ui.ProfileScreen
@@ -35,43 +35,38 @@ fun AppRouter(
         onBack = navigator::internalGoBack,
         transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-        entryProvider = { key ->
-            Log.e("+++", "Router: $key")
-            when (key) {
-                is Route.Init -> NavEntry(key) {
-                    val session by sessionRepository
-                        .observeSession()
-                        .collectAsStateWithLifecycle(initialValue = null)
-                    InitScreen(session, navigator)
-                }
+        entryProvider = entryProvider {
+            Log.e("+++", "Router: ${navigator.backStack.lastOrNull()}")
 
-                is Route.Login -> NavEntry(key) {
-                    LoginScreen()
-                }
+            entry<Route.Init> {
+                val session by sessionRepository
+                    .observeSession()
+                    .collectAsStateWithLifecycle(initialValue = null)
+                InitScreen(session, navigator)
+            }
 
-                is Route.Home -> NavEntry(key) {
-                    HomeScreen()
-                }
+            entry<Route.Login> {
+                LoginScreen()
+            }
 
-                is Route.Profile -> NavEntry(key) {
-                    ProfileScreen()
-                }
+            entry<Route.Home> {
+                HomeScreen()
+            }
 
-                is Route.Notifications -> NavEntry(key) {
-                    NotificationsScreen()
-                }
+            entry<Route.Profile> {
+                ProfileScreen()
+            }
 
-                is Route.Mockup -> NavEntry(key) {
-                    Mockup1UI()
-                }
+            entry<Route.Notifications> {
+                NotificationsScreen()
+            }
 
-                is Route.Back -> NavEntry(key) {
-                    // ignore
-                }
+            entry<Route.Mockup> {
+                Mockup1UI()
+            }
 
-                else -> {
-                    error("Unknown route: $key")
-                }
+            entry<Route.Back> {
+                // ignore
             }
         },
     )
