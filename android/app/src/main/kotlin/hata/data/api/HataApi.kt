@@ -4,7 +4,9 @@ import hata.data.api.models.LoginRequest
 import hata.data.api.models.LoginResponse
 import hata.data.api.models.PingResponse
 import retrofit2.http.Body
+import okhttp3.ResponseBody
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface HataApi {
@@ -13,4 +15,7 @@ interface HataApi {
 
     @POST("/api/latest/auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @GET("/api/latest/house")
+    suspend fun latestHouse(@Header("Authorization") token: String): ResponseBody
 }

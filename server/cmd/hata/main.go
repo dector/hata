@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 
 	"hata/internal/api"
@@ -15,6 +18,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sqids/sqids-go"
 	"golang.org/x/term"
 )
 
@@ -55,6 +59,7 @@ func startServer(database db.DB, ctx context.Context) {
 	// Create API handlers
 	authHandler := api.NewAuthHandler(database.Repos())
 	serverHandler := api.NewServerHandler()
+	houseHandler := api.NewHouseHandler(database.Repos())
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +75,7 @@ func startServer(database db.DB, ctx context.Context) {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/login", authHandler.Login)
 		})
+		r.Get("/house", houseHandler.List)
 		r.Get("/ping", serverHandler.Ping)
 	})
 
@@ -139,9 +145,29 @@ func handleManageCommand() {
 	switch os.Args[2] {
 	case "user":
 		handleUserCommand()
+	case "house":
+		handleHouseCommand()
 	default:
 		fmt.Printf("Unknown manage command: %s\n", os.Args[2])
 		printManageUsage()
+		os.Exit(1)
+	}
+}
+
+func handleHouseCommand() {
+	if len(os.Args) < 4 {
+		printHouseUsage()
+		os.Exit(1)
+	}
+
+	switch os.Args[3] {
+	case "create":
+		handleHouseCreate()
+	case "assign":
+		handleHouseAssign()
+	default:
+		fmt.Printf("Unknown house command: %s\n", os.Args[3])
+		printHouseUsage()
 		os.Exit(1)
 	}
 }
@@ -291,6 +317,104 @@ func handleUserList() {
 	fmt.Printf("\nUsers: %d/%d\n", len(users), total)
 }
 
+func handleHouseCreate() {
+	createFlags := flag.NewFlagSet("create", flag.ExitOnError)
+	name := createFlags.String("name", "", "House display name")
+
+	createFlags.Usage = func() {
+		printHouseCreateUsage()
+	}
+
+	createFlags.Parse(os.Args[4:])
+
+	if strings.TrimSpace(*name) == "" {
+		fmt.Println("Error: --name flag is required")
+		printHouseCreateUsage()
+		os.Exit(1)
+	}
+
+	houseID, err := generateHouseID()
+	if err != nil {
+		log.Fatalf("Failed to generate house ID: %v", err)
+	}
+
+	database := db.New()
+	ctx := context.Background()
+
+	if err := database.Open(ctx, ""); err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer database.Close()
+
+	if err := database.RunMigrations(ctx); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	house, err := database.Repos().House().Create(ctx, houseID, strings.TrimSpace(*name))
+	if err != nil {
+		log.Fatalf("Failed to create house: %v", err)
+	}
+
+	fmt.Printf("✓ House created successfully!\n")
+	fmt.Printf("  ID: %s\n", house.ID)
+	fmt.Printf("  Display Name: %s\n", house.DisplayName)
+}
+
+func handleHouseAssign() {
+	if len(os.Args) < 7 {
+		fmt.Println("Error: missing arguments")
+		printHouseAssignUsage()
+		os.Exit(1)
+	}
+
+	houseID := os.Args[4]
+	username := os.Args[5]
+	role, ok := normalizeHouseRole(os.Args[6])
+	if !ok {
+		fmt.Printf("Error: invalid role %q\n", os.Args[6])
+		printHouseAssignUsage()
+		os.Exit(1)
+	}
+
+	database := db.New()
+	ctx := context.Background()
+
+	if err := database.Open(ctx, ""); err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer database.Close()
+
+	if err := database.RunMigrations(ctx); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	house, err := database.Repos().House().GetByID(ctx, houseID)
+	if err != nil {
+		log.Fatalf("Failed to fetch house: %v", err)
+	}
+	if house == nil {
+		log.Fatalf("House %q not found", houseID)
+	}
+
+	user, err := database.Repos().User().GetByUsername(ctx, username)
+	if err != nil {
+		log.Fatalf("Failed to fetch user: %v", err)
+	}
+	if user == nil {
+		log.Fatalf("User %q not found", username)
+	}
+
+	assignment, err := database.Repos().HouseRole().Assign(ctx, houseID, user.ID, role)
+	if err != nil {
+		log.Fatalf("Failed to assign house role: %v", err)
+	}
+
+	fmt.Printf("✓ House role assigned successfully!\n")
+	fmt.Printf("  House ID: %s\n", assignment.HouseID)
+	fmt.Printf("  User: %s\n", username)
+	fmt.Printf("  Role: %s\n", assignment.Role)
+}
+
 // Usage functions
 
 func printUsage() {
@@ -306,7 +430,8 @@ func printManageUsage() {
 	fmt.Println("Hata Management Commands")
 	fmt.Println("\nUsage:")
 	fmt.Println("  hata manage user ...    User management commands")
-	fmt.Println("\nRun 'hata manage user' for user-specific commands")
+	fmt.Println("  hata manage house ...   House management commands")
+	fmt.Println("\nRun 'hata manage user' or 'hata manage house' for more information")
 }
 
 func printUserUsage() {
@@ -346,4 +471,69 @@ func printUserListUsage() {
 	fmt.Println("  hata manage user list")
 	fmt.Println("  hata manage user list --limit 20")
 	fmt.Println("  hata manage user list --limit 20 --offset 10")
+}
+
+func printHouseUsage() {
+	fmt.Println("Hata House Management")
+	fmt.Println("\nUsage:")
+	fmt.Println("  hata manage house create --name <display name>")
+	fmt.Println("  hata manage house assign <house-id> <username> <role>")
+	fmt.Println("\nRoles:")
+	fmt.Println("  admin | owner | habitant | guest")
+	fmt.Println("\nExamples:")
+	fmt.Println("  hata manage house create --name \"Main Home\"")
+	fmt.Println("  hata manage house assign H7k1a user@example.com admin")
+}
+
+func printHouseCreateUsage() {
+	fmt.Println("Create a new house")
+	fmt.Println("\nUsage:")
+	fmt.Println("  hata manage house create --name <display name>")
+	fmt.Println("\nFlags:")
+	fmt.Println("  --name     House display name (required)")
+	fmt.Println("\nExamples:")
+	fmt.Println("  hata manage house create --name \"Main Home\"")
+}
+
+func printHouseAssignUsage() {
+	fmt.Println("Assign a user to a house with a role")
+	fmt.Println("\nUsage:")
+	fmt.Println("  hata manage house assign <house-id> <username> <role>")
+	fmt.Println("\nRoles:")
+	fmt.Println("  admin | owner | habitant | guest")
+	fmt.Println("\nExamples:")
+	fmt.Println("  hata manage house assign H7k1a user@example.com owner")
+}
+
+func normalizeHouseRole(role string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "admin", "owner", "habitant", "guest":
+		return strings.ToLower(strings.TrimSpace(role)), true
+	default:
+		return "", false
+	}
+}
+
+func generateHouseID() (string, error) {
+	s, err := sqids.New()
+	if err != nil {
+		return "", fmt.Errorf("failed to create sqids instance: %w", err)
+	}
+
+	var buf [8]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		return "", fmt.Errorf("failed to read random bytes: %w", err)
+	}
+
+	n := binary.BigEndian.Uint64(buf[:])
+	if n == 0 {
+		n = 1
+	}
+
+	id, err := s.Encode([]uint64{n})
+	if err != nil {
+		return "", fmt.Errorf("failed to encode house id: %w", err)
+	}
+
+	return id, nil
 }

@@ -29,7 +29,7 @@ func (r *UserRepo) GetByUsername(ctx context.Context, username string) (*UserDat
 	return &UserData{
 		ID:           u.ID,
 		Username:     u.Username,
-		PasswordHash: u.PasswordHash,
+		PasswordHash: u.Password,
 		DisplayName:  u.DisplayName,
 	}, nil
 }
@@ -38,7 +38,7 @@ func (r *UserRepo) GetByUsername(ctx context.Context, username string) (*UserDat
 func (r *UserRepo) Create(ctx context.Context, username, passwordHash, displayName string) (*UserData, error) {
 	u, err := r.client.User.Create().
 		SetUsername(username).
-		SetPasswordHash(passwordHash).
+		SetPassword(passwordHash).
 		SetDisplayName(displayName).
 		Save(ctx)
 
@@ -53,7 +53,7 @@ func (r *UserRepo) Create(ctx context.Context, username, passwordHash, displayNa
 	return &UserData{
 		ID:           u.ID,
 		Username:     u.Username,
-		PasswordHash: u.PasswordHash,
+		PasswordHash: u.Password,
 		DisplayName:  u.DisplayName,
 	}, nil
 }
@@ -82,7 +82,7 @@ func (r *UserRepo) List(ctx context.Context, limit, offset int) ([]*UserData, in
 		result[i] = &UserData{
 			ID:           u.ID,
 			Username:     u.Username,
-			PasswordHash: u.PasswordHash,
+			PasswordHash: u.Password,
 			DisplayName:  u.DisplayName,
 		}
 	}

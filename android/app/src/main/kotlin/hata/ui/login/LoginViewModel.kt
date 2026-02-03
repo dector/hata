@@ -131,6 +131,8 @@ class LoginViewModel @Inject constructor(
                     )
                     sessionRepository.saveSession(session)
 
+                    serverService.fetchLatestHouse(serverUrl, token)
+
                     // Add sample notifications on debug builds if none exist
                     if (BuildConfig.DEBUG) {
                         addSampleNotificationsIfNeeded()

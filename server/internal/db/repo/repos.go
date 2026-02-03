@@ -6,17 +6,21 @@ import (
 
 // Repos provides access to all repositories.
 type Repos struct {
-	kv      *KVRepo
-	user    *UserRepo
-	session *SessionRepo
+	kv        *KVRepo
+	user      *UserRepo
+	session   *SessionRepo
+	house     *HouseRepo
+	houseRole *HouseRoleRepo
 }
 
 // NewRepos creates a new Repos instance.
 func NewRepos(client *orm.Client) *Repos {
 	return &Repos{
-		kv:      &KVRepo{client: client},
-		user:    &UserRepo{client: client},
-		session: &SessionRepo{client: client},
+		kv:        &KVRepo{client: client},
+		user:      &UserRepo{client: client},
+		session:   &SessionRepo{client: client},
+		house:     &HouseRepo{client: client},
+		houseRole: &HouseRoleRepo{client: client},
 	}
 }
 
@@ -33,4 +37,14 @@ func (r *Repos) User() UserRepository {
 // Session returns the session repository.
 func (r *Repos) Session() SessionRepository {
 	return r.session
+}
+
+// House returns the house repository.
+func (r *Repos) House() HouseRepository {
+	return r.house
+}
+
+// HouseRole returns the house role repository.
+func (r *Repos) HouseRole() HouseRoleRepository {
+	return r.houseRole
 }

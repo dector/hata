@@ -24,10 +24,15 @@ type DB interface {
 
 // Re-export repository interfaces for convenience.
 type (
-	Repositories      = repo.Repositories
-	KVRepository      = repo.KVRepository
-	UserRepository    = repo.UserRepository
-	SessionRepository = repo.SessionRepository
-	UserData          = repo.UserData
-	SessionData       = repo.SessionData
+	Repositories        = repo.Repositories
+	KVRepository        = repo.KVRepository
+	UserRepository      = repo.UserRepository
+	SessionRepository   = repo.SessionRepository
+	HouseRepository     = repo.HouseRepository
+	HouseRoleRepository = repo.HouseRoleRepository
+	UserData            = repo.UserData
+	SessionData         = repo.SessionData
+	HouseData           = repo.HouseData
+	HouseRoleData       = repo.HouseRoleData
+	HouseMembershipData = repo.HouseMembershipData
 )

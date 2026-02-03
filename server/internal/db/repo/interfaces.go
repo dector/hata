@@ -15,6 +15,12 @@ type Repositories interface {
 
 	// Session returns the session repository.
 	Session() SessionRepository
+
+	// House returns the house repository.
+	House() HouseRepository
+
+	// HouseRole returns the house role repository.
+	HouseRole() HouseRoleRepository
 }
 
 // KVRepository provides access to the key-value store.
@@ -58,6 +64,25 @@ type SessionRepository interface {
 	Invalidate(ctx context.Context, token string) error
 }
 
+// HouseRepository provides access to house data.
+type HouseRepository interface {
+	// Create creates a new house with the given ID and display name.
+	Create(ctx context.Context, id, displayName string) (*HouseData, error)
+
+	// GetByID retrieves a house by its ID.
+	// Returns nil, nil if house doesn't exist.
+	GetByID(ctx context.Context, id string) (*HouseData, error)
+}
+
+// HouseRoleRepository provides access to house role data.
+type HouseRoleRepository interface {
+	// Assign assigns a role to a user for a house.
+	Assign(ctx context.Context, houseID string, userID int, role string) (*HouseRoleData, error)
+
+	// ListByUser lists houses and roles for the given user.
+	ListByUser(ctx context.Context, userID int) ([]*HouseMembershipData, error)
+}
+
 // UserData represents user information.
 type UserData struct {
 	ID           int
@@ -74,4 +99,25 @@ type SessionData struct {
 	ValidUntil   time.Time
 	Token        string
 	InvalidSince *time.Time
+}
+
+// HouseData represents house information.
+type HouseData struct {
+	ID          string
+	DisplayName string
+}
+
+// HouseRoleData represents house role information.
+type HouseRoleData struct {
+	ID      int
+	HouseID string
+	UserID  int
+	Role    string
+}
+
+// HouseMembershipData represents a house membership with role.
+type HouseMembershipData struct {
+	HouseID     string
+	DisplayName string
+	Role        string
 }

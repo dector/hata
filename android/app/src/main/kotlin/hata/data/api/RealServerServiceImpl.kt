@@ -89,6 +89,32 @@ internal class RealServerServiceImpl : ServerService {
         }
     }
 
+    override suspend fun fetchLatestHouse(
+        serverUrl: String,
+        token: String,
+    ): Result<Unit> {
+        return try {
+            val retrofit = createRetrofit(serverUrl)
+            val api = retrofit.create(HataApi::class.java)
+
+            api.latestHouse("Bearer $token")
+
+            Result.success(Unit)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(parseErrorMessage(e) ?: "Failed to load latest house"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to load latest house: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
     private fun createRetrofit(baseUrl: String): Retrofit {
         // Ensure baseUrl ends with /
         val normalizedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"

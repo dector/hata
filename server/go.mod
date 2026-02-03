@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.14.5
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/mattn/go-sqlite3 v1.14.17
+	github.com/sqids/sqids-go v0.4.1
 	golang.org/x/crypto v0.47.0
 	golang.org/x/term v0.39.0
 )
