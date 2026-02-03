@@ -21,10 +21,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,42 +68,56 @@ private fun ProfileScreenUI(
     state: ProfileUiState,
     dispatch: (ProfileUiAction) -> Unit = {},
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(HataColors.background),
-    ) {
-        when (state) {
-            is ProfileUiState.Init -> {}
+    Scaffold(
+        topBar = {
+            TopBar(dispatch)
+        },
+        containerColor = HataColors.background,
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            when (state) {
+                is ProfileUiState.Init -> {}
 
-            is ProfileUiState.Loaded -> {
-                ProfileContent(
-                    userName = state.userName,
-                    serverUrl = state.serverUrl,
-                    accountStatus = state.accountStatus,
-                    appVersion = state.appVersion,
-                    showLogoutDialog = state.showLogoutDialog,
-                    onLogout = { dispatch(ProfileUiAction.Logout) },
-                    onShowLogoutDialog = { dispatch(ProfileUiAction.ShowLogoutDialog) },
-                    onDismissLogoutDialog = { dispatch(ProfileUiAction.DismissLogoutDialog) },
-                )
+                is ProfileUiState.Loaded -> {
+                    ProfileContent(
+                        userName = state.userName,
+                        serverUrl = state.serverUrl,
+                        accountStatus = state.accountStatus,
+                        appVersion = state.appVersion,
+                        showLogoutDialog = state.showLogoutDialog,
+                        onLogout = { dispatch(ProfileUiAction.Logout) },
+                        onShowLogoutDialog = { dispatch(ProfileUiAction.ShowLogoutDialog) },
+                        onDismissLogoutDialog = { dispatch(ProfileUiAction.DismissLogoutDialog) },
+                    )
+                }
             }
         }
-
-        // Back button
-        IconButton(
-            onClick = { dispatch(ProfileUiAction.Back) },
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopStart),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White,
-            )
-        }
     }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TopBar(dispatch: (ProfileUiAction) -> Unit) {
+    TopAppBar(
+        title = { Text("Profile") },
+        navigationIcon = {
+            IconButton(onClick = { dispatch(ProfileUiAction.Back) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = HataColors.background,
+            titleContentColor = Color.White,
+            navigationIconContentColor = Color.White,
+        ),
+    )
 }
 
 @Composable
@@ -120,7 +138,7 @@ private fun ProfileContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
