@@ -7,21 +7,19 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import hata.feature.notifications.ui.NotificationsScreen
 import hata.feature.profile.ui.ProfileScreen
+import hata.feature.session.model.Session
 import hata.feature.session.repository.SessionRepository
-import hata.navigation.AppNavigator
-import hata.navigation.NavigationCommand
+import hata.navigation.Route
+import hata.navigation.internal.AppNavigator
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
 import hata.ui.login.LoginScreen
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.serialization.Serializable
 
 
 @Composable
@@ -29,58 +27,22 @@ fun AppRouter(
     sessionRepository: SessionRepository,
     navigator: AppNavigator,
 ) {
-    val backStack = remember { mutableStateListOf<Any>(Route.Init) }
-    val session by sessionRepository.observeSession()
-        .collectAsStateWithLifecycle(initialValue = null)
-
-    fun goBack() {
-        if (backStack.size > 1) {
-            backStack.removeLastOrNull()
-        }
-    }
-
-    // Observe navigation commands from ViewModels
-    LaunchedEffect(Unit) {
-        navigator.navigationCommands.consumeEach { command ->
-            when (command) {
-                is NavigationCommand.ToProfile -> backStack.add(Route.Profile)
-                is NavigationCommand.ToNotifications -> backStack.add(Route.Notifications)
-                is NavigationCommand.Back -> goBack()
-            }
-            navigator.markNavigationHandled()
-        }
-    }
-
-    // Navigate to Home when session becomes available, or to Init when session is cleared
-    LaunchedEffect(session) {
-        val currentRoute = backStack.lastOrNull()
-        if (session != null && currentRoute is Route.Login) {
-            backStack.clear()
-            backStack.add(Route.Home)
-        } else if (session == null && currentRoute !is Route.Init && currentRoute !is Route.Login) {
-            // Session was cleared (logout) - navigate to Init to run all checks
-            backStack.clear()
-            backStack.add(Route.Init)
-        }
-    }
+    LaunchNavigationSideEffects(navigator)
+    LaunchSessionSideEffects(sessionRepository, navigator)
 
     NavDisplay(
-        backStack = backStack,
-        onBack = ::goBack,
+        backStack = navigator.backStack,
+        onBack = navigator::internalGoBack,
         transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         entryProvider = { key ->
             Log.e("+++", "Router: $key")
             when (key) {
                 is Route.Init -> NavEntry(key) {
-                    LaunchedEffect(session) {
-                        backStack.clear()
-                        if (session != null) {
-                            backStack.add(Route.Home)
-                        } else {
-                            backStack.add(Route.Login)
-                        }
-                    }
+                    val session by sessionRepository
+                        .observeSession()
+                        .collectAsStateWithLifecycle(initialValue = null)
+                    InitScreen(session, navigator)
                 }
 
                 is Route.Login -> NavEntry(key) {
@@ -103,6 +65,10 @@ fun AppRouter(
                     Mockup1UI()
                 }
 
+                is Route.Back -> NavEntry(key) {
+                    // ignore
+                }
+
                 else -> {
                     error("Unknown route: $key")
                 }
@@ -111,22 +77,51 @@ fun AppRouter(
     )
 }
 
-sealed interface Route {
-    @Serializable
-    data object Init : Route
+@Composable
+private fun LaunchSessionSideEffects(
+    sessionRepository: SessionRepository,
+    navigator: AppNavigator,
+) {
+    val session by sessionRepository
+        .observeSession()
+        .collectAsStateWithLifecycle(initialValue = null)
+    LaunchedEffect(session) {
+        onSessionUpdated(session, navigator)
+    }
+}
 
-    @Serializable
-    data object Login : Route
+@Composable
+private fun LaunchNavigationSideEffects(navigator: AppNavigator) {
+    LaunchedEffect(Unit) {
+        navigator.updates.consumeEach { route ->
+            navigator.consume(route)
+        }
+    }
+}
 
-    @Serializable
-    data object Home : Route
+@Composable
+private fun InitScreen(
+    session: Session?,
+    navigator: AppNavigator,
+) {
+    LaunchedEffect(session) {
+        val newRoute = when {
+            session != null -> Route.Home
+            else -> Route.Login
+        }
+        navigator.replaceAll(newRoute)
+    }
+}
 
-    @Serializable
-    data object Mockup : Route
-
-    @Serializable
-    data object Profile : Route
-
-    @Serializable
-    data object Notifications : Route
+private fun onSessionUpdated(
+    session: Session?,
+    navigator: AppNavigator,
+) {
+    val currentRoute = navigator.currentRoute()
+    if (session != null && currentRoute is Route.Login) {
+        navigator.replaceAll(Route.Home)
+    } else if (session == null && currentRoute !is Route.Init && currentRoute !is Route.Login) {
+        // Session was cleared (logout) - navigate to Init to run all checks
+        navigator.replaceAll(Route.Init)
+    }
 }

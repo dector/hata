@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.core.annotations.IoDispatcher
 import hata.feature.notifications.model.Notification
 import hata.feature.notifications.repository.NotificationsRepository
-import hata.navigation.AppNavigator
+import hata.navigation.Navigator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
-    private val navigator: AppNavigator,
+    private val navigator: Navigator,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -29,7 +29,7 @@ class NotificationsViewModel @Inject constructor(
     fun onDispatch(action: NotificationsUiAction) {
         when (action) {
             is NotificationsUiAction.Init -> handleInit()
-            is NotificationsUiAction.Back -> navigator.navigateBack()
+            is NotificationsUiAction.Back -> navigator.goBack()
             is NotificationsUiAction.MarkAsRead -> handleMarkAsRead(action.notificationId)
             is NotificationsUiAction.MarkAllAsRead -> handleMarkAllAsRead()
         }

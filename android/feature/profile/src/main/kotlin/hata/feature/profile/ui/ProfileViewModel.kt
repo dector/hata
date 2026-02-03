@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.core.annotations.IoDispatcher
 import hata.feature.profile.model.AppInfo
 import hata.feature.profile.repository.ProfileSessionRepository
-import hata.navigation.AppNavigator
+import hata.navigation.Navigator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val sessionRepository: ProfileSessionRepository,
     private val appInfo: AppInfo,
-    private val navigator: AppNavigator,
+    private val navigator: Navigator,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -31,7 +31,7 @@ class ProfileViewModel @Inject constructor(
         when (action) {
             is ProfileUiAction.Init -> handleInit()
             is ProfileUiAction.Logout -> handleLogout()
-            is ProfileUiAction.Back -> navigator.navigateBack()
+            is ProfileUiAction.Back -> navigator.goBack()
             is ProfileUiAction.ShowLogoutDialog -> handleShowLogoutDialog()
             is ProfileUiAction.DismissLogoutDialog -> handleDismissLogoutDialog()
         }

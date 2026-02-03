@@ -10,7 +10,6 @@ android {
 
 dependencies {
     implementation(projects.core.annotations)
-    implementation(projects.core.router)
 
     // AndroidX
     implementation(libs.androidx.core.ktx)

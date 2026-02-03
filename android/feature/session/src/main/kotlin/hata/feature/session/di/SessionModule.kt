@@ -4,14 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import hata.core.annotations.AuthPreferences
 import hata.feature.session.repository.SessionRepository
 import hata.feature.session.repository.SessionRepositoryImpl
-import hata.navigation.AppNavigator
 import javax.inject.Singleton
 
 
@@ -35,11 +33,4 @@ object SessionModule {
     ): SessionRepository {
         return SessionRepositoryImpl(sharedPreferences)
     }
-}
-
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface AppRouterEntryPoint {
-    fun sessionRepository(): SessionRepository
-    fun appNavigator(): AppNavigator
 }
