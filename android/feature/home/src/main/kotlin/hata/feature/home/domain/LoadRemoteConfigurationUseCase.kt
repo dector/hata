@@ -1,11 +1,11 @@
-package hata.domain.usecases
+package hata.feature.home.domain
 
 import hata.data.api.RemoteConfigurationApi
 import hata.data.models.Device
 import hata.data.models.DeviceType
 import hata.ui.components.DeviceCard
-import hata.ui.home.HomeDisplay
-import hata.ui.home.HomeDisplayData
+import hata.feature.home.ui.HomeDisplay
+import hata.feature.home.ui.HomeDisplayData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

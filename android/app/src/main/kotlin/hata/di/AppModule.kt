@@ -10,7 +10,7 @@ import hata.data.api.RealServerServiceImpl
 import hata.data.api.RemoteConfigurationApi
 import hata.data.api.RemoteConfigurationServiceImpl
 import hata.data.api.ServerService
-import hata.domain.usecases.LoadRemoteConfigurationUseCase
+import hata.feature.home.domain.LoadRemoteConfigurationUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton

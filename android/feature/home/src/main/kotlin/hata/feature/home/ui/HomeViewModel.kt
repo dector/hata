@@ -1,11 +1,11 @@
-package hata.ui.home
+package hata.feature.home.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.feature.notifications.repository.NotificationsRepository
-import hata.domain.usecases.LoadRemoteConfigurationUseCase
+import hata.feature.home.domain.LoadRemoteConfigurationUseCase
 import hata.integrations.wiz.Result
 import hata.integrations.wiz.WizControl
 import hata.integrations.wiz.WizDevice
@@ -13,6 +13,7 @@ import hata.navigation.Navigator
 import hata.navigation.Route
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,11 +28,11 @@ class HomeViewModel @Inject constructor(
     private val navigator: Navigator,
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState>
-        field = MutableStateFlow<HomeUiState>(HomeUiState.Init)
+    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Init)
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    val hasUnreadNotifications: StateFlow<Boolean>
-        field = MutableStateFlow(false)
+    private val _hasUnreadNotifications = MutableStateFlow(false)
+    val hasUnreadNotifications: StateFlow<Boolean> = _hasUnreadNotifications.asStateFlow()
 
     init {
         observeNotifications()
@@ -40,7 +41,7 @@ class HomeViewModel @Inject constructor(
     private fun observeNotifications() {
         viewModelScope.launch {
             notificationsRepository.observeNotifications().collect { notifications ->
-                hasUnreadNotifications.value = notifications.any { !it.isRead }
+                _hasUnreadNotifications.value = notifications.any { !it.isRead }
             }
         }
     }
@@ -48,7 +49,7 @@ class HomeViewModel @Inject constructor(
     fun onDispatch(action: HomeUiAction) {
         when (action) {
             is HomeUiAction.Init -> {
-                if (uiState.value !is HomeUiState.Init) return
+                if (_uiState.value !is HomeUiState.Init) return
 
                 loadConfiguration()
             }
@@ -60,11 +61,11 @@ class HomeViewModel @Inject constructor(
 
     fun loadConfiguration() {
         viewModelScope.launch {
-            uiState.value = HomeUiState.Loading
+            _uiState.value = HomeUiState.Loading
 
             loadRemoteConfigurationUseCase()
                 .onSuccess { data ->
-                    uiState.update {
+                    _uiState.update {
                         HomeUiState.WithData(data = data)
                     }
 
@@ -72,7 +73,7 @@ class HomeViewModel @Inject constructor(
                     checkWizDeviceStatuses()
                 }
                 .onFailure { error ->
-                    uiState.update {
+                    _uiState.update {
                         HomeUiState.Error(
                             error.message ?: "Unknown error occurred",
                         )
@@ -84,7 +85,7 @@ class HomeViewModel @Inject constructor(
     private fun checkWizDeviceStatuses() {
         viewModelScope.launch {
             // Get devices from the current state
-            val currentState = uiState.value
+            val currentState = _uiState.value
             if (currentState !is HomeUiState.WithData) {
                 Log.w(TAG, "Cannot check Wiz devices: state is not WithData")
                 return@launch
@@ -142,7 +143,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun updateDeviceStatus(deviceIndex: Int, isOn: Boolean) {
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             if (currentState is HomeUiState.WithData) {
                 val updatedDevices = currentState.data.devices.toMutableList()
                 val device = updatedDevices[deviceIndex]

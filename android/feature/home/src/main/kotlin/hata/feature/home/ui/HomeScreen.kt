@@ -1,4 +1,4 @@
-package hata.ui.home
+package hata.feature.home.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

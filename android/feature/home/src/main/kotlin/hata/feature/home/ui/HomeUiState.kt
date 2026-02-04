@@ -1,4 +1,4 @@
-package hata.ui.home
+package hata.feature.home.ui
 
 import hata.ui.components.DeviceCard
 

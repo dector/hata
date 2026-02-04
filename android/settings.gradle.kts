@@ -35,6 +35,7 @@ include(":feature:session")
 include(":feature:login")
 include(":feature:profile")
 include(":feature:notifications")
+include(":feature:home")
 
 include(":integrations:wiz")
 

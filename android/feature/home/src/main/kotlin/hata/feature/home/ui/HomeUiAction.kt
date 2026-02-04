@@ -1,4 +1,4 @@
-package hata.ui.home
+package hata.feature.home.ui
 
 
 sealed interface HomeUiAction {

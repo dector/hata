@@ -34,12 +34,6 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
-    }
-}
-
 dependencies {
 
     //region AndroidX
@@ -64,6 +58,7 @@ dependencies {
     implementation(projects.feature.login)
     implementation(projects.feature.notifications)
     implementation(projects.feature.profile)
+    implementation(projects.feature.home)
     //endregion
 
     implementation(projects.integrations.wiz)

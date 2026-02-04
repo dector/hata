@@ -17,8 +17,8 @@ import hata.feature.session.model.Session
 import hata.feature.session.repository.SessionRepository
 import hata.navigation.Route
 import hata.navigation.internal.AppNavigator
-import hata.ui.home.HomeScreen
-import hata.ui.home.Mockup1UI
+import hata.feature.home.ui.HomeScreen
+import hata.feature.home.ui.Mockup1UI
 import kotlinx.coroutines.channels.consumeEach
 
 
