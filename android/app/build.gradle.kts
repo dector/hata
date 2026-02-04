@@ -55,6 +55,7 @@ dependencies {
     //region Integrations
 
     implementation(projects.core.annotations)
+    implementation(projects.core.api)
     implementation(projects.core.router)
     implementation(projects.core.ui)
 
@@ -73,17 +74,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-
-    //endregion
-
-    //region Networking
-
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.moshi)
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
 
     //endregion
 

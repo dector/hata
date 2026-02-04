@@ -2,6 +2,7 @@ package hata.data.api.models
 
 import com.squareup.moshi.JsonClass
 
+
 // Ping response
 @JsonClass(generateAdapter = true)
 data class PingResponse(

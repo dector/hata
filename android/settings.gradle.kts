@@ -27,6 +27,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 includeBuild("gradle/plugins/build-config")
 
 include(":core:annotations")
+include(":core:api")
 include(":core:ui")
 include(":core:router")
 

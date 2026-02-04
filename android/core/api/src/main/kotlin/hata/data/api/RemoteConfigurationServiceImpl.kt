@@ -2,7 +2,6 @@ package hata.data.api
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import hata.BuildConfig
 import hata.data.models.RemoteConfiguration
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -11,9 +10,9 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 
-internal class RemoteConfigurationServiceImpl(
+class RemoteConfigurationServiceImpl(
     baseUrl: String,
-) : RemoteConfigurationService {
+) : RemoteConfigurationApi {
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -43,11 +42,6 @@ internal class RemoteConfigurationServiceImpl(
     private val api = retrofit.create(RemoteConfigurationApi::class.java)
 
     override suspend fun loadConfiguration(): Result<RemoteConfiguration> {
-        return try {
-            val configuration = api.getConfiguration()
-            Result.success(configuration)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return api.loadConfiguration()
     }
 }

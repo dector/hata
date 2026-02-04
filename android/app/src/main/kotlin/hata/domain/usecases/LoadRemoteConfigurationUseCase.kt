@@ -1,6 +1,6 @@
 package hata.domain.usecases
 
-import hata.data.api.RemoteConfigurationService
+import hata.data.api.RemoteConfigurationApi
 import hata.data.models.Device
 import hata.data.models.DeviceType
 import hata.ui.components.DeviceCard
@@ -12,12 +12,13 @@ import kotlinx.coroutines.withContext
 
 
 class LoadRemoteConfigurationUseCase(
-    private val configurationService: RemoteConfigurationService,
+    private val configurationApi: RemoteConfigurationApi,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     suspend operator fun invoke(): Result<HomeDisplayData> = withContext(dispatcher) {
-        configurationService.loadConfiguration()
+        configurationApi
+            .loadConfiguration()
             .mapCatching { configuration ->
                 val home = configuration.homes.firstOrNull()
                 val devices = configuration.homes

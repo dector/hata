@@ -2,7 +2,6 @@ package hata.data.api
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import hata.BuildConfig
 import hata.data.api.models.ErrorResponse
 import hata.data.api.models.LoginRequest
 import hata.data.models.ServerInfo
@@ -14,7 +13,8 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-internal class RealServerServiceImpl : ServerService {
+
+class RealServerServiceImpl : ServerService {
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())

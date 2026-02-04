@@ -5,6 +5,7 @@ import retrofit2.http.GET
 
 
 interface RemoteConfigurationApi {
+
     @GET(".")
-    suspend fun getConfiguration(): RemoteConfiguration
+    suspend fun loadConfiguration(): Result<RemoteConfiguration>
 }
