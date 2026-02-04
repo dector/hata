@@ -73,28 +73,6 @@ fun AppRouter(
 }
 
 @Composable
-private fun LaunchSessionSideEffects(
-    sessionRepository: SessionRepository,
-    navigator: AppNavigator,
-) {
-    val session by sessionRepository
-        .observeSession()
-        .collectAsStateWithLifecycle(initialValue = null)
-    LaunchedEffect(session) {
-        onSessionUpdated(session, navigator)
-    }
-}
-
-@Composable
-private fun LaunchNavigationSideEffects(navigator: AppNavigator) {
-    LaunchedEffect(Unit) {
-        navigator.updates.consumeEach { route ->
-            navigator.consume(route)
-        }
-    }
-}
-
-@Composable
 private fun InitScreen(
     session: Session?,
     navigator: AppNavigator,
@@ -105,6 +83,34 @@ private fun InitScreen(
             else -> Route.Login
         }
         navigator.replaceAll(newRoute)
+    }
+}
+
+//region Navigation
+
+@Composable
+private fun LaunchNavigationSideEffects(navigator: AppNavigator) {
+    LaunchedEffect(Unit) {
+        navigator.updates.consumeEach { route ->
+            navigator.consume(route)
+        }
+    }
+}
+
+//endregion
+
+//region Session Change
+
+@Composable
+private fun LaunchSessionSideEffects(
+    sessionRepository: SessionRepository,
+    navigator: AppNavigator,
+) {
+    val session by sessionRepository
+        .observeSession()
+        .collectAsStateWithLifecycle(initialValue = null)
+    LaunchedEffect(session) {
+        onSessionUpdated(session, navigator)
     }
 }
 
@@ -120,3 +126,5 @@ private fun onSessionUpdated(
         navigator.replaceAll(Route.Init)
     }
 }
+
+//endregion
