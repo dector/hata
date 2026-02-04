@@ -60,9 +60,10 @@ dependencies {
     implementation(projects.core.ui)
 
     //region Features
+    implementation(projects.feature.session)
+    implementation(projects.feature.login)
     implementation(projects.feature.notifications)
     implementation(projects.feature.profile)
-    implementation(projects.feature.session)
     //endregion
 
     implementation(projects.integrations.wiz)

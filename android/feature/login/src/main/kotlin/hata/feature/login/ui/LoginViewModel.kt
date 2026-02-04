@@ -1,24 +1,24 @@
-package hata.ui.login
+package hata.feature.login.ui
 
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hata.core.annotations.IoDispatcher
+import hata.data.api.ServerService
+import hata.data.models.ServerInfo
+import hata.feature.login.BuildConfig
+import hata.feature.notifications.model.Notification
+import hata.feature.notifications.repository.NotificationsRepository
+import hata.feature.session.model.Session
+import hata.feature.session.model.SessionUser
+import hata.feature.session.repository.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import hata.BuildConfig
-import hata.core.annotations.IoDispatcher
-import hata.data.api.ServerService
-import hata.data.models.ServerInfo
-import hata.feature.notifications.model.Notification
-import hata.feature.notifications.repository.NotificationsRepository
-import hata.feature.session.model.Session
-import hata.feature.session.model.SessionUser
-import hata.feature.session.repository.SessionRepository
 
 
 @HiltViewModel

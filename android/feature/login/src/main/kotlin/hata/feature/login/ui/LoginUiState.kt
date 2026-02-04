@@ -1,7 +1,8 @@
-package hata.ui.login
+package hata.feature.login.ui
 
 
 sealed interface LoginUiState {
+
     data object Init : LoginUiState
 
     data class ServerInput(

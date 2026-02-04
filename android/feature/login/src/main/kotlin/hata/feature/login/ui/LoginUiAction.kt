@@ -1,4 +1,4 @@
-package hata.ui.login
+package hata.feature.login.ui
 
 
 sealed interface LoginUiAction {

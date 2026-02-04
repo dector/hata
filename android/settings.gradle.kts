@@ -32,6 +32,7 @@ include(":core:ui")
 include(":core:router")
 
 include(":feature:session")
+include(":feature:login")
 include(":feature:profile")
 include(":feature:notifications")
 

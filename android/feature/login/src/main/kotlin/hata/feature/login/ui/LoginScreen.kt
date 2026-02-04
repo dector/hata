@@ -1,4 +1,4 @@
-package hata.ui.login
+package hata.feature.login.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

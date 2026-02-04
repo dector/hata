@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import hata.feature.login.ui.LoginScreen
 import hata.feature.notifications.ui.NotificationsScreen
 import hata.feature.profile.ui.ProfileScreen
 import hata.feature.session.model.Session
@@ -18,7 +19,6 @@ import hata.navigation.Route
 import hata.navigation.internal.AppNavigator
 import hata.ui.home.HomeScreen
 import hata.ui.home.Mockup1UI
-import hata.ui.login.LoginScreen
 import kotlinx.coroutines.channels.consumeEach
 
 
