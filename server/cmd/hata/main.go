@@ -60,6 +60,7 @@ func startServer(database db.DB, ctx context.Context) {
 	authHandler := api.NewAuthHandler(database.Repos())
 	serverHandler := api.NewServerHandler()
 	houseHandler := api.NewHouseHandler(database.Repos())
+	deviceHandler := api.NewDeviceHandler(database.Repos())
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,8 @@ func startServer(database db.DB, ctx context.Context) {
 			r.Post("/login", authHandler.Login)
 		})
 		r.Get("/house", houseHandler.List)
+		r.Get("/house/{houseId}/device", deviceHandler.ListByHouse)
+		r.Get("/device", deviceHandler.ListByUser)
 		r.Get("/ping", serverHandler.Ping)
 	})
 

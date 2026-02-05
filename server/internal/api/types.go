@@ -42,6 +42,41 @@ type HouseListResponse struct {
 	Houses []HouseInfo `json:"houses"`
 }
 
+// DeviceIntegrationInfo contains integration details.
+type DeviceIntegrationInfo struct {
+	ID   string         `json:"id"`
+	Data map[string]any `json:"data"`
+}
+
+// DeviceInfo contains device details.
+type DeviceInfo struct {
+	ID          string                `json:"id"`
+	Name        string                `json:"name"`
+	Integration DeviceIntegrationInfo `json:"integration"`
+	State       string                `json:"state"`
+}
+
+// HouseRef contains house references for device responses.
+type HouseRef struct {
+	ID string `json:"id"`
+}
+
+// DeviceInfoWithHouse contains device details with house reference.
+type DeviceInfoWithHouse struct {
+	DeviceInfo
+	House HouseRef `json:"house"`
+}
+
+// DeviceListResponse represents the device list endpoint response.
+type DeviceListResponse struct {
+	Devices []DeviceInfoWithHouse `json:"devices"`
+}
+
+// DeviceListByHouseResponse represents the house device list endpoint response.
+type DeviceListByHouseResponse struct {
+	Devices []DeviceInfo `json:"devices"`
+}
+
 // ErrorResponse represents an error response.
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error"`

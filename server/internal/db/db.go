@@ -30,9 +30,11 @@ type (
 	SessionRepository   = repo.SessionRepository
 	HouseRepository     = repo.HouseRepository
 	HouseRoleRepository = repo.HouseRoleRepository
+	DeviceRepository    = repo.DeviceRepository
 	UserData            = repo.UserData
 	SessionData         = repo.SessionData
 	HouseData           = repo.HouseData
 	HouseRoleData       = repo.HouseRoleData
 	HouseMembershipData = repo.HouseMembershipData
+	DeviceData          = repo.DeviceData
 )

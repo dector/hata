@@ -11,6 +11,7 @@ type Repos struct {
 	session   *SessionRepo
 	house     *HouseRepo
 	houseRole *HouseRoleRepo
+	device    *DeviceRepo
 }
 
 // NewRepos creates a new Repos instance.
@@ -21,6 +22,7 @@ func NewRepos(client *orm.Client) *Repos {
 		session:   &SessionRepo{client: client},
 		house:     &HouseRepo{client: client},
 		houseRole: &HouseRoleRepo{client: client},
+		device:    &DeviceRepo{client: client},
 	}
 }
 
@@ -47,4 +49,9 @@ func (r *Repos) House() HouseRepository {
 // HouseRole returns the house role repository.
 func (r *Repos) HouseRole() HouseRoleRepository {
 	return r.houseRole
+}
+
+// Device returns the device repository.
+func (r *Repos) Device() DeviceRepository {
+	return r.device
 }

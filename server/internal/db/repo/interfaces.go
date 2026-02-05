@@ -21,6 +21,9 @@ type Repositories interface {
 
 	// HouseRole returns the house role repository.
 	HouseRole() HouseRoleRepository
+
+	// Device returns the device repository.
+	Device() DeviceRepository
 }
 
 // KVRepository provides access to the key-value store.
@@ -83,6 +86,21 @@ type HouseRoleRepository interface {
 	ListByUser(ctx context.Context, userID int) ([]*HouseMembershipData, error)
 }
 
+// DeviceRepository provides access to device data.
+type DeviceRepository interface {
+	// Create creates a new device for the given house.
+	Create(ctx context.Context, houseID, id, name, integrationID string, integrationData *string, state string) (*DeviceData, error)
+
+	// ListByHouse lists devices for a specific house.
+	ListByHouse(ctx context.Context, houseID string) ([]*DeviceData, error)
+
+	// ListByUser lists devices for all houses the user belongs to.
+	ListByUser(ctx context.Context, userID int) ([]*DeviceData, error)
+
+	// UpdateState updates the device state.
+	UpdateState(ctx context.Context, houseID, id, state string) error
+}
+
 // UserData represents user information.
 type UserData struct {
 	ID           int
@@ -120,4 +138,14 @@ type HouseMembershipData struct {
 	HouseID     string
 	DisplayName string
 	Role        string
+}
+
+// DeviceData represents device information.
+type DeviceData struct {
+	ID              string
+	Name            string
+	IntegrationID   string
+	IntegrationData *string
+	State           string
+	HouseID         string
 }

@@ -37,5 +37,6 @@ func (House) Fields() []ent.Field {
 func (House) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("roles", HouseRole.Type),
+		edge.To("devices", Device.Type),
 	}
 }
