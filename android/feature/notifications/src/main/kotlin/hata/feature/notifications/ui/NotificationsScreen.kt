@@ -20,10 +20,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,25 +70,22 @@ private fun NotificationsScreenUI(
     state: NotificationsUiState,
     dispatch: (NotificationsUiAction) -> Unit = {},
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(HataColors.background),
-    ) {
-        Column(
+    val hasNotifications = state is NotificationsUiState.Loaded && state.notifications.isNotEmpty()
+
+    Scaffold(
+        containerColor = HataColors.background,
+        topBar = {
+            TopBar(
+                hasNotifications = hasNotifications,
+                dispatch = dispatch,
+            )
+        },
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 64.dp),
+                .padding(paddingValues),
         ) {
-            // Header
-            NotificationsHeader(
-                hasNotifications = state is NotificationsUiState.Loaded && state.notifications.isNotEmpty(),
-                onMarkAllAsRead = { dispatch(NotificationsUiAction.MarkAllAsRead) },
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Content
             when (state) {
                 is NotificationsUiState.Init -> {}
 
@@ -104,52 +105,43 @@ private fun NotificationsScreenUI(
                 }
             }
         }
-
-        // Back button
-        IconButton(
-            onClick = { dispatch(NotificationsUiAction.Back) },
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopStart),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White,
-            )
-        }
     }
 }
 
 @Composable
-private fun NotificationsHeader(
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TopBar(
     hasNotifications: Boolean,
-    onMarkAllAsRead: () -> Unit,
+    dispatch: (NotificationsUiAction) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "Notifications",
-            color = Color.White,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-        )
-
-        if (hasNotifications) {
-            TextButton(onClick = onMarkAllAsRead) {
-                Text(
-                    text = "Mark all as read",
-                    color = HataColors.primary,
-                    fontSize = 14.sp,
+    TopAppBar(
+        title = { Text("Notifications") },
+        navigationIcon = {
+            IconButton(onClick = { dispatch(NotificationsUiAction.Back) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
                 )
             }
-        }
-    }
+        },
+        actions = {
+            if (hasNotifications) {
+                TextButton(onClick = { dispatch(NotificationsUiAction.MarkAllAsRead) }) {
+                    Text(
+                        text = "Mark all as read",
+                        color = HataColors.primary,
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = HataColors.background,
+            titleContentColor = Color.White,
+            navigationIconContentColor = Color.White,
+            actionIconContentColor = HataColors.primary,
+        ),
+    )
 }
 
 @Composable
