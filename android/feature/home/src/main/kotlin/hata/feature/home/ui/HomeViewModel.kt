@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.feature.home.domain.LoadDevicesUseCase
+import hata.feature.home.domain.NewState
+import hata.feature.home.domain.ToggleDeviceUseCase
 import hata.feature.notifications.repository.NotificationsRepository
 import hata.navigation.Navigator
 import hata.navigation.Route
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val loadDevicesUseCase: LoadDevicesUseCase,
+    private val toggleDeviceUseCase: ToggleDeviceUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val navigator: Navigator,
 ) : ViewModel() {
@@ -46,9 +49,43 @@ class HomeViewModel @Inject constructor(
             }
 
             is HomeUiAction.UpdateDevicesStatus -> loadDevices()
+            is HomeUiAction.ToggleDevice -> toggleDevice(
+                deviceId = action.deviceId,
+                newState = action.newState,
+            )
 
             is HomeUiAction.NavigateToProfile -> navigator.goTo(Route.Profile)
             is HomeUiAction.NavigateToNotifications -> navigator.goTo(Route.Notifications)
+        }
+    }
+
+    private fun toggleDevice(deviceId: String, newState: NewState) {
+        val previousState = _uiState.value as? HomeUiState.WithData ?: return
+        val desiredIsOn = newState == NewState.On
+
+        _uiState.update { state ->
+            val withData = state as? HomeUiState.WithData ?: return@update state
+            withData.copy(
+                data = withData.data.copy(
+                    devices = withData.data.devices.map { device ->
+                        if (device.id == deviceId) {
+                            device.copy(
+                                isOn = desiredIsOn,
+                                status = device.status.replacePowerState(desiredIsOn),
+                            )
+                        } else {
+                            device
+                        }
+                    },
+                ),
+            )
+        }
+
+        viewModelScope.launch {
+            toggleDeviceUseCase.run(deviceId, newState)
+                .onFailure {
+                    _uiState.value = previousState
+                }
         }
     }
 
@@ -79,4 +116,17 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+}
+
+private fun String.replacePowerState(isOn: Boolean): String {
+    val parts = split(" | ").toMutableList()
+    val stateIndex = parts.indexOfFirst {
+        it.equals("on", ignoreCase = true) ||
+            it.equals("off", ignoreCase = true) ||
+            it.equals("unknown", ignoreCase = true)
+    }
+    if (stateIndex == -1) return this
+
+    parts[stateIndex] = if (isOn) "On" else "Off"
+    return parts.joinToString(" | ")
 }

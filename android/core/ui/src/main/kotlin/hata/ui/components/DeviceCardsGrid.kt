@@ -16,6 +16,7 @@ fun DeviceCardsGrid(
     modifier: Modifier = Modifier,
     devices: List<DeviceCard>,
     columns: Int = 2,
+    onToggleDevice: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     LazyVerticalGrid(
         modifier = modifier,
@@ -25,7 +26,10 @@ fun DeviceCardsGrid(
     ) {
         items(devices) { device ->
             when (device) {
-                is DeviceCard.Generic -> GenericDeviceCard(device)
+                is DeviceCard.Generic -> GenericDeviceCard(
+                    data = device,
+                    onToggle = { checked -> onToggleDevice(device.id, checked) },
+                )
             }
         }
     }
@@ -39,24 +43,28 @@ private fun Preview_DeviceCardsGrid() = preview(
     DeviceCardsGrid(
         devices = listOf(
             DeviceCard.Generic(
+                id = "1",
                 title = "Air Cooler",
                 status = "On",
                 isOn = true,
                 icon = DeviceCard.Icon.AC,
             ),
             DeviceCard.Generic(
+                id = "2",
                 title = "Living Room",
                 status = "3 lights on",
                 isOn = true,
                 icon = DeviceCard.Icon.Light,
             ),
             DeviceCard.Generic(
+                id = "3",
                 title = "Bedroom",
                 status = "Off",
                 isOn = false,
                 icon = DeviceCard.Icon.Light,
             ),
             DeviceCard.Generic(
+                id = "4",
                 title = "Kitchen",
                 status = "2 lights on",
                 isOn = true,

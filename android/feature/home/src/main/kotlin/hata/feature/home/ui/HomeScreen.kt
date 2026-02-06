@@ -27,6 +27,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import hata.feature.home.domain.NewState
 import hata.ui.components.DeviceCard
 import hata.ui.components.DeviceCardsGrid
 import hata.ui.components.TopBar
@@ -97,13 +98,26 @@ private fun HomeScreenUI(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            StateSection(state)
+            StateSection(
+                state = state,
+                onToggleDevice = { deviceId, isEnabled ->
+                    dispatch(
+                        HomeUiAction.ToggleDevice(
+                            deviceId = deviceId,
+                            newState = if (isEnabled) NewState.On else NewState.Off,
+                        ),
+                    )
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun StateSection(state: HomeUiState) {
+private fun StateSection(
+    state: HomeUiState,
+    onToggleDevice: (String, Boolean) -> Unit = { _, _ -> },
+) {
     when (state) {
         is HomeUiState.Init -> {}
 
@@ -121,6 +135,7 @@ private fun StateSection(state: HomeUiState) {
             DeviceCardsGrid(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 devices = state.data.devices,
+                onToggleDevice = onToggleDevice,
             )
         }
 
@@ -243,24 +258,28 @@ private fun Preview_HomeScreen() = preview {
                 home = HomeDisplay(name = "My Home"),
                 devices = listOf(
                     DeviceCard.Generic(
+                        id = "1",
                         title = "Living Room",
                         status = "3 lights on",
                         isOn = true,
                         icon = DeviceCard.Icon.Light,
                     ),
                     DeviceCard.Generic(
+                        id = "2",
                         title = "Bedroom",
                         status = "Off",
                         isOn = false,
                         icon = DeviceCard.Icon.Light,
                     ),
                     DeviceCard.Generic(
+                        id = "3",
                         title = "Air Cooler",
                         status = "On",
                         isOn = true,
                         icon = DeviceCard.Icon.AC,
                     ),
                     DeviceCard.Generic(
+                        id = "4",
                         title = "Kitchen",
                         status = "Ready",
                         isOn = false,

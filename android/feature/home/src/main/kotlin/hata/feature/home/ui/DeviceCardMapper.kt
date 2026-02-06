@@ -17,18 +17,31 @@ internal fun Device.toDeviceCard(showHouseId: Boolean): DeviceCard.Generic {
     }
 
     return DeviceCard.Generic(
+        id = id,
         title = name,
         status = statusParts.joinToString(" | "),
-        isOn = state == DeviceState.ON,
+        isOn = state == DeviceState.On,
+        canControl = isControllable(),
         icon = iconForIntegration(integrationId),
     )
 }
 
+private fun Device.isControllable(): Boolean {
+    if (!integrationId.isWizIntegration()) {
+        return true
+    }
+
+    val type = integrationData?.get("type") as? String
+    val ip = integrationData?.get("ip") as? String
+
+    return type.equals("wifi", ignoreCase = true) && !ip.isNullOrBlank()
+}
+
 private fun Device.stateLabel(): String {
     return when (state) {
-        DeviceState.ON -> "On"
-        DeviceState.OFF -> "Off"
-        DeviceState.UNKNOWN -> "Unknown"
+        DeviceState.On -> "On"
+        DeviceState.Off -> "Off"
+        DeviceState.Unknown -> "Unknown"
     }
 }
 

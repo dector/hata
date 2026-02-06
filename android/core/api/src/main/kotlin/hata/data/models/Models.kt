@@ -2,9 +2,9 @@ package hata.data.models
 
 
 enum class DeviceState {
-    ON,
-    OFF,
-    UNKNOWN,
+    On,
+    Off,
+    Unknown,
 }
 
 data class Device(

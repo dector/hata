@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,9 +40,11 @@ import hata.ui.utils.preview
 sealed interface DeviceCard {
 
     data class Generic(
+        val id: String,
         val title: String,
         val status: String,
         val isOn: Boolean,
+        val canControl: Boolean = true,
         val icon: Icon = Icon.Default,
     ) : DeviceCard
 
@@ -53,12 +56,16 @@ sealed interface DeviceCard {
 }
 
 @Composable
-fun GenericDeviceCard(data: DeviceCard.Generic) {
+fun GenericDeviceCard(
+    data: DeviceCard.Generic,
+    onToggle: (Boolean) -> Unit = {},
+) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = if (data.isOn) HataColors.primary else HataColors.surface,
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(if (data.canControl) 1f else 0.5f)
             .height(192.dp),
     ) {
         Column(
@@ -87,7 +94,8 @@ fun GenericDeviceCard(data: DeviceCard.Generic) {
 
                 Switch(
                     checked = data.isOn,
-                    onCheckedChange = {},
+                    onCheckedChange = onToggle,
+                    enabled = data.canControl,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = HataColors.primaryContainerVariant,
@@ -133,6 +141,7 @@ private fun Preview_GenericDeviceCard() = preview(
     ) {
         GenericDeviceCard(
             DeviceCard.Generic(
+                id = "1",
                 title = "Air Cooler",
                 status = "On",
                 isOn = true,
@@ -141,10 +150,21 @@ private fun Preview_GenericDeviceCard() = preview(
         )
         GenericDeviceCard(
             DeviceCard.Generic(
+                id = "2",
                 title = "Air Cooler",
                 status = "Off",
                 isOn = false,
                 icon = DeviceCard.Icon.AC,
+            ),
+        )
+        GenericDeviceCard(
+            DeviceCard.Generic(
+                id = "2",
+                title = "Air Cooler",
+                status = "Off",
+                isOn = false,
+                icon = DeviceCard.Icon.AC,
+                canControl = false,
             ),
         )
     }

@@ -6,6 +6,7 @@ import hata.data.api.ServerServiceFactory
 import hata.data.api.models.ApiDevice
 import hata.data.models.Device
 import hata.data.models.DeviceState
+import hata.feature.home.domain.NewState
 import hata.feature.session.repository.SessionRepository
 import hata.integrations.wiz.WizControl
 import hata.integrations.wiz.WizDevice
@@ -67,6 +68,51 @@ class DeviceRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> =
+        withContext(dispatcher) {
+            runCatching {
+                val currentDevice = findCachedDevice(deviceId)
+                    ?: throw IllegalArgumentException("Device with id '$deviceId' is not available")
+
+                if (!currentDevice.isWizIntegration()) {
+                    throw UnsupportedOperationException("Local control is only supported for wiz devices")
+                }
+
+                val ip = currentDevice.integrationData?.get("ip") as? String
+                    ?: throw IllegalStateException("Missing wiz device ip")
+                val type = currentDevice.integrationData?.get("type") as? String ?: "unknown"
+                val mac = currentDevice.integrationData?.get("mac") as? String ?: currentDevice.id
+
+                val wizDevice = WizDevice(
+                    name = currentDevice.name,
+                    ip = ip,
+                    type = type,
+                    mac = mac,
+                )
+                val control = WizControl(wizDevice)
+
+                val toggleResult = when (newState) {
+                    NewState.On -> control.turnOn()
+                    NewState.Off -> control.turnOff()
+                }
+
+                when (toggleResult) {
+                    is WizResult.Success -> {
+                        val updatedDevice = currentDevice.copy(
+                            state = when (newState) {
+                                NewState.On -> DeviceState.On
+                                NewState.Off -> DeviceState.Off
+                            },
+                        )
+                        updateCachedDevice(updatedDevice)
+                        updatedDevice
+                    }
+
+                    is WizResult.Error -> throw toggleResult.exception
+                }
+            }
+        }
+
     private suspend fun requireSession() = sessionRepository.getSession()
         ?: throw IllegalStateException("No active session")
 
@@ -77,6 +123,33 @@ class DeviceRepositoryImpl @Inject constructor(
         }
 
         return serverServiceFactory.create(serverUrl).also { serverApi = it }
+    }
+
+    private fun findCachedDevice(deviceId: String): Device? {
+        val fromUserCache = devicesByUser.firstOrNull { it.id == deviceId }
+        if (fromUserCache != null) {
+            return fromUserCache
+        }
+
+        return devicesByHouse.values
+            .asSequence()
+            .flatMap { it.asSequence() }
+            .firstOrNull { it.id == deviceId }
+    }
+
+    private fun updateCachedDevice(device: Device) {
+        devicesByUser = devicesByUser.map { current ->
+            if (current.id == device.id) device else current
+        }
+
+        val updatedByHouse = devicesByHouse.mapValues { (_, houseDevices) ->
+            houseDevices.map { current ->
+                if (current.id == device.id) device else current
+            }
+        }
+
+        devicesByHouse.clear()
+        devicesByHouse.putAll(updatedByHouse)
     }
 
     private suspend fun updateLocalStates(devices: List<Device>): List<Device> {
@@ -100,8 +173,9 @@ class DeviceRepositoryImpl @Inject constructor(
 
             when (val stateResult = WizControl(wizDevice).getState()) {
                 is WizResult.Success -> device.copy(
-                    state = if (stateResult.data.state) DeviceState.ON else DeviceState.OFF,
+                    state = if (stateResult.data.state) DeviceState.On else DeviceState.Off,
                 )
+
                 is WizResult.Error -> device
             }
         }
@@ -114,9 +188,9 @@ private fun Device.isWizIntegration(): Boolean {
 
 private fun ApiDevice.toDevice(): Device {
     val normalizedState = when (state.lowercase()) {
-        "on" -> DeviceState.ON
-        "off" -> DeviceState.OFF
-        else -> DeviceState.UNKNOWN
+        "on" -> DeviceState.On
+        "off" -> DeviceState.Off
+        else -> DeviceState.Unknown
     }
 
     return Device(
