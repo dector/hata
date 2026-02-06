@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.hata.android.library)
     alias(libs.plugins.compose)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -20,9 +19,10 @@ dependencies {
     implementation(projects.core.api)
     implementation(projects.core.router)
     implementation(projects.core.ui)
+    implementation(projects.integrations.wiz)
 
     implementation(projects.feature.notifications)
-    implementation(projects.integrations.wiz)
+    implementation(projects.feature.session)
 
     // AndroidX
     implementation(libs.androidx.core.ktx)
@@ -43,9 +43,6 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(libs.hilt.navigation.compose)
-
-    // Serialization
-    implementation(libs.kotlinx.serialization.json)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

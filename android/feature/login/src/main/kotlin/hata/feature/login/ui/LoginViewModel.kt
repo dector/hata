@@ -5,9 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hata.core.annotations.IoDispatcher
-import hata.data.api.ServerService
 import hata.data.models.ServerInfo
 import hata.feature.login.BuildConfig
+import hata.feature.login.domain.ConnectServerUseCase
+import hata.feature.login.domain.LoginUseCase
 import hata.feature.notifications.model.Notification
 import hata.feature.notifications.repository.NotificationsRepository
 import hata.feature.session.model.Session
@@ -23,7 +24,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val serverService: ServerService,
+    private val connectServerUseCase: ConnectServerUseCase,
+    private val loginUseCase: LoginUseCase,
     private val sessionRepository: SessionRepository,
     private val notificationsRepository: NotificationsRepository,
     @param:IoDispatcher
@@ -85,7 +87,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             _uiState.value = LoginUiState.Connecting
 
-            serverService.connect(serverUrl)
+            connectServerUseCase.run(serverUrl)
                 .onSuccess { serverInfo ->
                     currentServerInfo = serverInfo
                     _uiState.value = LoginUiState.CredentialsInput(
@@ -120,7 +122,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             _uiState.value = LoginUiState.LoggingIn
 
-            serverService.login(serverUrl, username, password)
+            loginUseCase.run(serverUrl, username, password)
                 .onSuccess { token ->
                     val session = Session(
                         token = token,
@@ -130,8 +132,6 @@ class LoginViewModel @Inject constructor(
                         createdAt = System.currentTimeMillis(),
                     )
                     sessionRepository.saveSession(session)
-
-                    serverService.fetchLatestHouse(serverUrl, token)
 
                     // Add sample notifications on debug builds if none exist
                     if (BuildConfig.DEBUG) {

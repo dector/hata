@@ -19,6 +19,10 @@ internal class SessionRepositoryImpl(
         return sessionFlow.asStateFlow()
     }
 
+    override fun currentSession(): Session? {
+        return sessionFlow.value
+    }
+
     override suspend fun getSession(): Session? {
         return sessionFlow.value
     }

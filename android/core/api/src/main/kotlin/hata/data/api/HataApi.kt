@@ -1,13 +1,13 @@
 package hata.data.api
 
+import hata.data.api.models.ApiDeviceListResponse
 import hata.data.api.models.LoginRequest
 import hata.data.api.models.LoginResponse
 import hata.data.api.models.PingResponse
-import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 
 interface HataApi {
@@ -19,5 +19,13 @@ interface HataApi {
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
     @GET("/api/latest/house")
-    suspend fun latestHouse(@Header("Authorization") token: String): ResponseBody
+    suspend fun latestHouse()
+
+    @GET("/api/latest/house/{houseId}/device")
+    suspend fun devicesByHouse(
+        @Path("houseId") houseId: String,
+    ): ApiDeviceListResponse
+
+    @GET("/api/latest/device")
+    suspend fun devicesByUser(): ApiDeviceListResponse
 }
