@@ -3,6 +3,7 @@ package hata.di
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import hata.feature.home.repository.DeviceCacheCleaner
 import hata.feature.session.repository.SessionRepository
 import hata.navigation.internal.AppNavigator
 
@@ -11,5 +12,6 @@ import hata.navigation.internal.AppNavigator
 @InstallIn(SingletonComponent::class)
 interface AppRouterEntryPoint {
     fun sessionRepository(): SessionRepository
+    fun deviceCacheCleaner(): DeviceCacheCleaner
     fun appNavigator(): AppNavigator
 }

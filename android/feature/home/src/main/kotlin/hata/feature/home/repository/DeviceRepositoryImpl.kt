@@ -7,6 +7,9 @@ import hata.data.api.models.ApiDevice
 import hata.data.models.Device
 import hata.data.models.DeviceState
 import hata.feature.home.domain.NewState
+import hata.feature.home.repository.local.toDomain
+import hata.feature.home.repository.local.toEntity
+import hata.feature.home.repository.local.UserDevicesDatabaseProvider
 import hata.feature.session.repository.SessionRepository
 import hata.integrations.wiz.WizControl
 import hata.integrations.wiz.WizDevice
@@ -21,57 +24,44 @@ import javax.inject.Singleton
 class DeviceRepositoryImpl @Inject constructor(
     private val serverServiceFactory: ServerServiceFactory,
     private val sessionRepository: SessionRepository,
+    private val userDevicesDatabaseProvider: UserDevicesDatabaseProvider,
     @param:IoDispatcher
     private val dispatcher: CoroutineDispatcher,
 ) : DeviceRepository {
 
-    private val devicesByHouse = mutableMapOf<String, List<Device>>()
-    private var devicesByUser: List<Device> = emptyList()
     private var serverApi: ServerApi? = null
 
     override suspend fun listByHouse(houseId: String): List<Device> = withContext(dispatcher) {
-        val session = requireSession()
-        val service = getServerService(session.serverUrl)
-        val result = service.fetchDevicesByHouse(houseId)
-
-        result.fold(
-            onSuccess = { apiDevices ->
-                val devices = updateLocalStates(apiDevices.map { it.toDevice() })
-                devicesByHouse[houseId] = devices
-                devices
-            },
-            onFailure = { error ->
-                devicesByHouse[houseId]?.takeIf { it.isNotEmpty() } ?: throw error
-            },
-        )
+        val deviceDao = userDevicesDatabaseProvider.deviceDao()
+        deviceDao
+            .listByHouse(houseId)
+            .map { it.toDomain() }
     }
 
     override suspend fun listByUser(): List<Device> = withContext(dispatcher) {
-        val session = requireSession()
-        val service = getServerService(session.serverUrl)
-        val result = service.fetchDevicesByUser()
+        val deviceDao = userDevicesDatabaseProvider.deviceDao()
+        deviceDao
+            .listByUser()
+            .map { it.toDomain() }
+    }
 
-        result.fold(
-            onSuccess = { apiDevices ->
-                val devices = updateLocalStates(apiDevices.map { it.toDevice() })
-                devicesByUser = devices
-                devices.groupBy { it.houseId }.forEach { (houseId, items) ->
-                    if (houseId != null) {
-                        devicesByHouse[houseId] = items
-                    }
-                }
-                devices
-            },
-            onFailure = { error ->
-                devicesByUser.takeIf { it.isNotEmpty() } ?: throw error
-            },
-        )
+    override suspend fun syncByUser(): Result<Unit> = withContext(dispatcher) {
+        runCatching {
+            val session = requireSession()
+            val service = getServerService(session.serverUrl)
+            val apiDevices = service.fetchDevicesByUser().getOrThrow()
+            val devices = updateLocalStates(apiDevices.map { it.toDevice() })
+
+            val deviceDao = userDevicesDatabaseProvider.deviceDao()
+            deviceDao.replaceAll(devices.map { it.toEntity() })
+        }
     }
 
     override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> =
         withContext(dispatcher) {
             runCatching {
-                val currentDevice = findCachedDevice(deviceId)
+                val deviceDao = userDevicesDatabaseProvider.deviceDao()
+                val currentDevice = deviceDao.findById(deviceId)?.toDomain()
                     ?: throw IllegalArgumentException("Device with id '$deviceId' is not available")
 
                 if (!currentDevice.isWizIntegration()) {
@@ -104,7 +94,7 @@ class DeviceRepositoryImpl @Inject constructor(
                                 NewState.Off -> DeviceState.Off
                             },
                         )
-                        updateCachedDevice(updatedDevice)
+                        deviceDao.upsert(updatedDevice.toEntity())
                         updatedDevice
                     }
 
@@ -123,33 +113,6 @@ class DeviceRepositoryImpl @Inject constructor(
         }
 
         return serverServiceFactory.create(serverUrl).also { serverApi = it }
-    }
-
-    private fun findCachedDevice(deviceId: String): Device? {
-        val fromUserCache = devicesByUser.firstOrNull { it.id == deviceId }
-        if (fromUserCache != null) {
-            return fromUserCache
-        }
-
-        return devicesByHouse.values
-            .asSequence()
-            .flatMap { it.asSequence() }
-            .firstOrNull { it.id == deviceId }
-    }
-
-    private fun updateCachedDevice(device: Device) {
-        devicesByUser = devicesByUser.map { current ->
-            if (current.id == device.id) device else current
-        }
-
-        val updatedByHouse = devicesByHouse.mapValues { (_, houseDevices) ->
-            houseDevices.map { current ->
-                if (current.id == device.id) device else current
-            }
-        }
-
-        devicesByHouse.clear()
-        devicesByHouse.putAll(updatedByHouse)
     }
 
     private suspend fun updateLocalStates(devices: List<Device>): List<Device> {

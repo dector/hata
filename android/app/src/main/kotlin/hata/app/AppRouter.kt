@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import hata.feature.home.repository.DeviceCacheCleaner
 import hata.feature.login.ui.LoginScreen
 import hata.feature.notifications.ui.NotificationsScreen
 import hata.feature.profile.ui.ProfileScreen
@@ -25,10 +26,15 @@ import kotlinx.coroutines.channels.consumeEach
 @Composable
 fun AppRouter(
     sessionRepository: SessionRepository,
+    deviceCacheCleaner: DeviceCacheCleaner,
     navigator: AppNavigator,
 ) {
     LaunchNavigationSideEffects(navigator)
-    LaunchSessionSideEffects(sessionRepository, navigator)
+    LaunchSessionSideEffects(
+        sessionRepository = sessionRepository,
+        deviceCacheCleaner = deviceCacheCleaner,
+        navigator = navigator,
+    )
 
     NavDisplay(
         backStack = navigator.backStack,
@@ -104,12 +110,16 @@ private fun LaunchNavigationSideEffects(navigator: AppNavigator) {
 @Composable
 private fun LaunchSessionSideEffects(
     sessionRepository: SessionRepository,
+    deviceCacheCleaner: DeviceCacheCleaner,
     navigator: AppNavigator,
 ) {
     val session by sessionRepository
         .observeSession()
         .collectAsStateWithLifecycle(initialValue = null)
     LaunchedEffect(session) {
+        if (session == null) {
+            deviceCacheCleaner.clearCurrentUserCache()
+        }
         onSessionUpdated(session, navigator)
     }
 }

@@ -72,9 +72,7 @@ private fun HomeScreenUI(
     hasUnreadNotifications: Boolean = false,
     dispatch: (HomeUiAction) -> Unit = {},
 ) {
-    Scaffold(
-//        bottomBar = { BottomNavigationBar() },
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

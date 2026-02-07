@@ -12,6 +12,7 @@ import hata.navigation.Route
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,7 +46,7 @@ class HomeViewModel @Inject constructor(
                 if (_uiState.value !is HomeUiState.Init) return
 
                 observeNotifications()
-                onDispatch(HomeUiAction.UpdateDevicesStatus)
+                loadDevices()
             }
 
             is HomeUiAction.UpdateDevicesStatus -> loadDevices()
@@ -94,7 +95,8 @@ class HomeViewModel @Inject constructor(
             _uiState.value = HomeUiState.Loading
 
             try {
-                val devices = loadDevicesUseCase.run()
+                val result = loadDevicesUseCase.run()
+                val devices = result.devices
                 val showHouseId = devices.mapNotNull { it.houseId }.distinct().size > 1
                 val cards = devices.map { device ->
                     device.toDeviceCard(showHouseId = showHouseId)

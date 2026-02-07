@@ -35,6 +35,7 @@ fun AppContainer() {
     HataTheme {
         AppRouter(
             sessionRepository = entryPoint.sessionRepository(),
+            deviceCacheCleaner = entryPoint.deviceCacheCleaner(),
             navigator = entryPoint.appNavigator(),
         )
     }
