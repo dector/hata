@@ -17,12 +17,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +54,7 @@ enum class ConnectionStatus(
 fun TopBar(
     name: String,
     connectionStatus: ConnectionStatus = ConnectionStatus.Unknown,
+    isSyncing: Boolean = false,
     hasNotifications: Boolean = false,
     onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -56,10 +66,16 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        HomeDropdown(
-            name = name,
-            connectionStatus = connectionStatus,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            HomeDropdown(
+                name = name,
+                connectionStatus = connectionStatus,
+            )
+            SyncingIndicator(isSyncing = isSyncing)
+        }
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -69,6 +85,34 @@ fun TopBar(
                 onClick = onNotificationsClick,
             )
             Avatar(onClick = onAvatarClick)
+        }
+    }
+}
+
+@Composable
+private fun SyncingIndicator(isSyncing: Boolean) {
+    Box(
+        modifier = Modifier.size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isSyncing) {
+            val transition = rememberInfiniteTransition(label = "syncIconRotation")
+            val rotation by transition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 900, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
+                label = "syncIconRotationDegrees",
+            )
+
+            Icon(
+                imageVector = Icons.Default.Sync,
+                contentDescription = "Syncing",
+                tint = Color.White,
+                modifier = Modifier.graphicsLayer(rotationZ = rotation),
+            )
         }
     }
 }
@@ -180,6 +224,7 @@ fun TopBarPreview() = preview {
     TopBar(
         name = "My Home",
         connectionStatus = ConnectionStatus.Online,
+        isSyncing = true,
         hasNotifications = true,
     )
 }

@@ -87,6 +87,7 @@ private fun HomeScreenUI(
             TopBar(
                 name = homeName,
                 connectionStatus = state.toTopBarConnectionStatus(),
+                isSyncing = (state as? HomeUiState.WithData)?.isSyncing ?: false,
                 hasNotifications = hasUnreadNotifications,
                 onAvatarClick = { dispatch(HomeUiAction.NavigateToProfile) },
                 onNotificationsClick = { dispatch(HomeUiAction.NavigateToNotifications) },
