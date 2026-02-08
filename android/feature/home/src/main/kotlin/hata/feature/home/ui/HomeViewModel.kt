@@ -3,6 +3,7 @@ package hata.feature.home.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hata.feature.home.domain.LoadCachedDevicesUseCase
 import hata.feature.home.domain.LoadDevicesUseCase
 import hata.feature.home.domain.NewState
 import hata.feature.home.domain.ToggleDeviceUseCase
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val loadCachedDevicesUseCase: LoadCachedDevicesUseCase,
     private val loadDevicesUseCase: LoadDevicesUseCase,
     private val toggleDeviceUseCase: ToggleDeviceUseCase,
     private val notificationsRepository: NotificationsRepository,
@@ -92,38 +94,67 @@ class HomeViewModel @Inject constructor(
 
     private fun loadDevices() {
         viewModelScope.launch {
-            _uiState.value = HomeUiState.Loading
+            val previousState = _uiState.value as? HomeUiState.WithData
+            val cachedDevices = loadCachedDevicesUseCase.run()
 
-            try {
-                val result = loadDevicesUseCase.run()
-                val devices = result.devices
-                val showHouseId = devices.mapNotNull { it.houseId }.distinct().size > 1
-                val connectionStatus = when (result.syncError) {
-                    null -> ServerConnectionStatus.Online
-                    else -> ServerConnectionStatus.Offline
-                }
-                val cards = devices.map { device ->
-                    device.toDeviceCard(showHouseId = showHouseId)
-                }
-                _uiState.update {
-                    HomeUiState.WithData(
-                        data = HomeDisplayData(
-                            home = HomeDisplay(name = "Home"),
-                            devices = cards,
-                            connectionStatus = connectionStatus,
-                        ),
+            when {
+                cachedDevices.isNotEmpty() -> {
+                    _uiState.value = cachedDevices.toUiState(
+                        connectionStatus = previousState?.data?.connectionStatus ?: ServerConnectionStatus.Unknown,
+                        isSyncing = true,
                     )
                 }
-            } catch (error: Exception) {
-                _uiState.update {
-                    HomeUiState.Error(
-                        error.message ?: "Failed to load devices",
-                        connectionStatus = ServerConnectionStatus.Offline,
-                    )
+
+                previousState != null -> {
+                    _uiState.value = previousState.copy(isSyncing = true)
+                }
+
+                else -> {
+                    _uiState.value = HomeUiState.Loading
                 }
             }
+
+            loadDevicesUseCase.run()
+                .onSuccess { result ->
+                    val connectionStatus = when (result.syncError) {
+                        null -> ServerConnectionStatus.Online
+                        else -> ServerConnectionStatus.Offline
+                    }
+
+                    val devices = result.devices.ifEmpty { cachedDevices }
+                    _uiState.value = devices.toUiState(connectionStatus = connectionStatus)
+                }
+                .onFailure { error ->
+                    _uiState.value = if (cachedDevices.isNotEmpty()) {
+                        cachedDevices.toUiState(connectionStatus = ServerConnectionStatus.Offline)
+                    } else {
+                        HomeUiState.Error(
+                            error.message ?: "Failed to load devices",
+                            connectionStatus = ServerConnectionStatus.Offline,
+                        )
+                    }
+                }
         }
     }
+}
+
+private fun List<hata.data.models.Device>.toUiState(
+    connectionStatus: ServerConnectionStatus,
+    isSyncing: Boolean = false,
+): HomeUiState.WithData {
+    val showHouseId = mapNotNull { it.houseId }.distinct().size > 1
+    val cards = map { device ->
+        device.toDeviceCard(showHouseId = showHouseId)
+    }
+
+    return HomeUiState.WithData(
+        data = HomeDisplayData(
+            home = HomeDisplay(name = "Home"),
+            devices = cards,
+            connectionStatus = connectionStatus,
+        ),
+        isSyncing = isSyncing,
+    )
 }
 
 private fun String.replacePowerState(isOn: Boolean): String {

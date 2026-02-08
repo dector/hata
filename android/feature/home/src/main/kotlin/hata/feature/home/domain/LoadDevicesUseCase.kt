@@ -9,18 +9,21 @@ class LoadDevicesUseCase @Inject constructor(
     private val deviceRepository: DeviceRepository,
 ) {
 
-    suspend fun run(): LoadDevicesResult {
-        val cachedDevices = deviceRepository.listByUser()
+    suspend fun run(): Result<LoadDevicesResult> {
         val syncResult = deviceRepository.syncByUser()
         val latestDevices = deviceRepository.listByUser()
 
         if (latestDevices.isEmpty() && syncResult.isFailure) {
-            throw (syncResult.exceptionOrNull() ?: IllegalStateException("Failed to sync devices"))
+            return Result.failure(
+                syncResult.exceptionOrNull() ?: IllegalStateException("Failed to sync devices"),
+            )
         }
 
-        return LoadDevicesResult(
-            devices = latestDevices.ifEmpty { cachedDevices },
-            syncError = syncResult.exceptionOrNull(),
+        return Result.success(
+            LoadDevicesResult(
+                devices = latestDevices,
+                syncError = syncResult.exceptionOrNull(),
+            ),
         )
     }
 }
