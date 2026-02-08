@@ -2,6 +2,7 @@ package hata.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ fun DeviceCardsGrid(
     modifier: Modifier = Modifier,
     devices: List<DeviceCard>,
     columns: Int = 2,
+    header: (@Composable () -> Unit)? = null,
     onToggleDevice: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     LazyVerticalGrid(
@@ -24,6 +26,12 @@ fun DeviceCardsGrid(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (header != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                header()
+            }
+        }
+
         items(devices) { device ->
             when (device) {
                 is DeviceCard.Generic -> GenericDeviceCard(

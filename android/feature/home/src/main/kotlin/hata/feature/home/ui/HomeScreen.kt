@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -28,9 +31,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hata.feature.home.domain.NewState
+import hata.ui.components.ConnectionStatus
 import hata.ui.components.DeviceCard
 import hata.ui.components.DeviceCardsGrid
-import hata.ui.components.ConnectionStatus
 import hata.ui.components.TopBar
 import hata.ui.theme.HataColors
 import hata.ui.utils.preview
@@ -73,6 +76,13 @@ private fun HomeScreenUI(
     hasUnreadNotifications: Boolean = false,
     dispatch: (HomeUiAction) -> Unit = {},
 ) {
+    val isRefreshing = when (state) {
+        is HomeUiState.WithData -> state.isSyncing
+        HomeUiState.Loading -> true
+        HomeUiState.Init, is HomeUiState.Error -> false
+    }
+    val pullToRefreshState = rememberPullToRefreshState()
+
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -93,23 +103,59 @@ private fun HomeScreenUI(
                 onNotificationsClick = { dispatch(HomeUiAction.NavigateToNotifications) },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            PullToRefreshBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                onRefresh = { dispatch(HomeUiAction.UpdateDevicesStatus) },
+                indicator = {},
+            ) {
+                val revealFraction = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
+                val revealHeight = if (isRefreshing) 32.dp else 32.dp * revealFraction
+                val revealTextAlpha = if (isRefreshing) 1f else revealFraction
+                val pullHintText = if (pullToRefreshState.distanceFraction >= 1f) {
+                    "Release to sync"
+                } else {
+                    "Pull to sync"
+                }
 
-            WelcomeSection()
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(revealHeight),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = pullHintText,
+                            color = Color.White.copy(alpha = revealTextAlpha),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            StateSection(
-                state = state,
-                onToggleDevice = { deviceId, isEnabled ->
-                    dispatch(
-                        HomeUiAction.ToggleDevice(
-                            deviceId = deviceId,
-                            newState = if (isEnabled) NewState.On else NewState.Off,
-                        ),
+                    StateSection(
+                        state = state,
+                        header = {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            WelcomeSection()
+                            Spacer(modifier = Modifier.height(32.dp))
+                        },
+                        onToggleDevice = { deviceId, isEnabled ->
+                            dispatch(
+                                HomeUiAction.ToggleDevice(
+                                    deviceId = deviceId,
+                                    newState = if (isEnabled) NewState.On else NewState.Off,
+                                ),
+                            )
+                        },
                     )
-                },
-            )
+                }
+            }
         }
     }
 }
@@ -117,17 +163,23 @@ private fun HomeScreenUI(
 @Composable
 private fun StateSection(
     state: HomeUiState,
+    header: @Composable () -> Unit = {},
     onToggleDevice: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     when (state) {
         is HomeUiState.Init -> {}
 
         is HomeUiState.Loading -> {
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = Color.White)
+                header()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
 
             }
         }
@@ -136,20 +188,26 @@ private fun StateSection(
             DeviceCardsGrid(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 devices = state.data.devices,
+                header = header,
                 onToggleDevice = onToggleDevice,
             )
         }
 
         is HomeUiState.Error -> {
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = "Error: ${state.message}",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp),
-                )
+                header()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Error: ${state.message}",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
             }
         }
     }
