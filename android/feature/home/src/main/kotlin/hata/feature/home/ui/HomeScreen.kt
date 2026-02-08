@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hata.feature.home.domain.NewState
 import hata.ui.components.DeviceCard
 import hata.ui.components.DeviceCardsGrid
+import hata.ui.components.ConnectionStatus
 import hata.ui.components.TopBar
 import hata.ui.theme.HataColors
 import hata.ui.utils.preview
@@ -85,6 +86,7 @@ private fun HomeScreenUI(
             }
             TopBar(
                 name = homeName,
+                connectionStatus = state.toTopBarConnectionStatus(),
                 hasNotifications = hasUnreadNotifications,
                 onAvatarClick = { dispatch(HomeUiAction.NavigateToProfile) },
                 onNotificationsClick = { dispatch(HomeUiAction.NavigateToNotifications) },
@@ -284,7 +286,23 @@ private fun Preview_HomeScreen() = preview {
                         icon = DeviceCard.Icon.Default,
                     ),
                 ),
+                connectionStatus = ServerConnectionStatus.Online,
             ),
         ),
     )
 }
+
+private fun HomeUiState.toTopBarConnectionStatus(): ConnectionStatus =
+    when (this) {
+        is HomeUiState.WithData -> data.connectionStatus.toTopBarConnectionStatus()
+        is HomeUiState.Error -> connectionStatus.toTopBarConnectionStatus()
+        HomeUiState.Loading -> ServerConnectionStatus.Unknown.toTopBarConnectionStatus()
+        HomeUiState.Init -> ServerConnectionStatus.Unknown.toTopBarConnectionStatus()
+    }
+
+private fun ServerConnectionStatus.toTopBarConnectionStatus(): ConnectionStatus =
+    when (this) {
+        ServerConnectionStatus.Unknown -> ConnectionStatus.Unknown
+        ServerConnectionStatus.Online -> ConnectionStatus.Online
+        ServerConnectionStatus.Offline -> ConnectionStatus.Offline
+    }

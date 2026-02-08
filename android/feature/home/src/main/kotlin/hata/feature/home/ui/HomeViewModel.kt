@@ -98,6 +98,10 @@ class HomeViewModel @Inject constructor(
                 val result = loadDevicesUseCase.run()
                 val devices = result.devices
                 val showHouseId = devices.mapNotNull { it.houseId }.distinct().size > 1
+                val connectionStatus = when (result.syncError) {
+                    null -> ServerConnectionStatus.Online
+                    else -> ServerConnectionStatus.Offline
+                }
                 val cards = devices.map { device ->
                     device.toDeviceCard(showHouseId = showHouseId)
                 }
@@ -106,6 +110,7 @@ class HomeViewModel @Inject constructor(
                         data = HomeDisplayData(
                             home = HomeDisplay(name = "Home"),
                             devices = cards,
+                            connectionStatus = connectionStatus,
                         ),
                     )
                 }
@@ -113,6 +118,7 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     HomeUiState.Error(
                         error.message ?: "Failed to load devices",
+                        connectionStatus = ServerConnectionStatus.Offline,
                     )
                 }
             }

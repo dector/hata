@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,9 +33,18 @@ import hata.ui.theme.HataColors
 import hata.ui.utils.preview
 
 
+enum class ConnectionStatus(
+    val label: String,
+) {
+    Unknown("Unknown"),
+    Online("Online"),
+    Offline("Offline"),
+}
+
 @Composable
 fun TopBar(
     name: String,
+    connectionStatus: ConnectionStatus = ConnectionStatus.Unknown,
     hasNotifications: Boolean = false,
     onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -46,7 +56,10 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        HomeDropdown(name)
+        HomeDropdown(
+            name = name,
+            connectionStatus = connectionStatus,
+        )
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -89,21 +102,56 @@ private fun NotificationsButton(
 }
 
 @Composable
-private fun HomeDropdown(name: String) {
+private fun HomeDropdown(
+    name: String,
+    connectionStatus: ConnectionStatus,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = "Dropdown",
+                tint = Color.White,
+            )
+        }
+        ConnectionStatusRow(connectionStatus)
+    }
+}
+
+@Composable
+private fun ConnectionStatusRow(connectionStatus: ConnectionStatus) {
+    val indicatorColor = when (connectionStatus) {
+        ConnectionStatus.Unknown -> Color(0xFFFFA726)
+        ConnectionStatus.Online -> HataColors.primary
+        ConnectionStatus.Offline -> HataColors.errorVariant
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            text = name,
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(indicatorColor),
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = "Dropdown",
-            tint = Color.White,
+        Text(
+            text = connectionStatus.label,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -131,6 +179,7 @@ private fun Avatar(onClick: () -> Unit = {}) {
 fun TopBarPreview() = preview {
     TopBar(
         name = "My Home",
+        connectionStatus = ConnectionStatus.Online,
         hasNotifications = true,
     )
 }
