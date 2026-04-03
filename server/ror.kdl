@@ -4,7 +4,7 @@ task build {
     cmd "go build -o out/hata ./cmd/hata/"
 }
 
-task dev {
+task dev:server {
     description "Run project (live reload, no Air proxy)"
 
     env AIR=1
@@ -21,25 +21,14 @@ task dev {
     """#
 }
 
-task dev:proxy {
-    description "Run project (live reload with Air proxy 4500 -> 4501)"
+task dev {
+    description "Run project (live reload with localhost proxy 4500 -> 4501)"
 
     env AIR=1
     env AIR_PROXY=1
+    env AIR_PROXY_PORT=4500
 
-    cmd #"""go tool \
-      air \
-        -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
-        -build.full_bin="./out/hata.air" \
-        -proxy.enabled=true \
-        -proxy.proxy_port=4500 \
-        -proxy.app_port=4501 \
-        -build.include_dir="cmd,internal,pkg" \
-        -build.include_ext="go,templ" \
-        -build.exclude_regex="_templ.go" \
-        -build.delay=100 \
-        -tmp_dir=out \
-    """#
+    cmd "bash ./scripts/dev_with_local_proxy.sh"
 }
 
 //region LLM-context
