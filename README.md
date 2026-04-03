@@ -7,7 +7,7 @@ Minimalist home automation hub written in Go.
 ## Links
 
 - **Sources:** https://github.com/dector/hata
-- **YT videos (building in public):** [here](https://www.youtube.com/playlist?list=PL8DPygpcWgCJ_xVC5t-NxpUqQNv2QRRI2)
+- **YT videos (rare):** [here](https://www.youtube.com/playlist?list=PL8DPygpcWgCJ_xVC5t-NxpUqQNv2QRRI2)
 
 ## Roadmap
 
