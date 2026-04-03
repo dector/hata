@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"hata/internal/db/repo"
 	"hata/internal/orm"
@@ -30,6 +32,12 @@ func (d *dbImpl) Open(ctx context.Context, profilePath string) error {
 	if profilePath == "" {
 		// TODO use top-level constant
 		profilePath = "data/hata.db"
+	}
+
+	if dir := filepath.Dir(profilePath); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed creating database directory %q: %w", dir, err)
+		}
 	}
 
 	// TODO wtf is cache shared?

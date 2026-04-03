@@ -1,13 +1,11 @@
-default task=run
-
 task build {
     description "Build project"
 
     cmd "go build -o out/hata ./cmd/hata/"
 }
 
-task run {
-    description "Run project"
+task dev {
+    description "Run project (live reload, no Air proxy)"
 
     env AIR=1
 
@@ -15,9 +13,27 @@ task run {
       air \
         -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
         -build.full_bin="./out/hata.air" \
+        -build.include_dir="cmd,internal,pkg" \
+        -build.include_ext="go,templ" \
+        -build.exclude_regex="_templ.go" \
+        -build.delay=100 \
+        -tmp_dir=out \
+    """#
+}
+
+task dev:proxy {
+    description "Run project (live reload with Air proxy 4500 -> 4501)"
+
+    env AIR=1
+    env AIR_PROXY=1
+
+    cmd #"""go tool \
+      air \
+        -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
+        -build.full_bin="./out/hata.air" \
         -proxy.enabled=true \
-        -proxy.proxy_port=3000 \
-        -proxy.app_port=8080 \
+        -proxy.proxy_port=4500 \
+        -proxy.app_port=4501 \
         -build.include_dir="cmd,internal,pkg" \
         -build.include_ext="go,templ" \
         -build.exclude_regex="_templ.go" \

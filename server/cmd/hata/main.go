@@ -83,11 +83,11 @@ func startServer(database db.DB, ctx context.Context) {
 	})
 
 	host := "http://localhost"
-	port := "8080"
+	port := "4501"
 
 	portAccess := port
-	if os.Getenv("AIR") == "1" {
-		portAccess = "3000"
+	if os.Getenv("AIR_PROXY") == "1" {
+		portAccess = "4500"
 	}
 
 	// Start server
