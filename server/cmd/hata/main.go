@@ -86,10 +86,12 @@ func startServer(database db.DB, ctx context.Context) {
 	// API UI routes (dev-only)
 	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {
 		authUIHandler := apiui.NewAuthUIHandler()
+		houseUIHandler := apiui.NewHouseUIHandler()
 		apiUIIndexHandler := apiui.NewIndexHandler()
 		r.Get("/apiui", apiUIIndexHandler.Index)
 		r.Get("/apiui/", apiUIIndexHandler.Index)
 		r.Get("/apiui/latest/auth/login", authUIHandler.LoginPage)
+		r.Get("/apiui/latest/house", houseUIHandler.ListPage)
 	}
 
 	host := "localhost"

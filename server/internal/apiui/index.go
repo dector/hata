@@ -65,17 +65,34 @@ const indexPageHTML = `<!doctype html>
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
     code { color: #c7d2df; }
+    .back-btn {
+      display: inline-block;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      text-decoration: none;
+      background: #0d141d;
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .back-btn:hover { border-color: var(--accent); text-decoration: none; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="panel">
       <h1>Hata API UI</h1>
+      <a class="back-btn" href="/">← Back</a>
       <p>Available browser test pages under <code>/apiui</code>.</p>
       <ul>
         <li>
           <a href="/apiui/latest/auth/login">/apiui/latest/auth/login</a>
           — interactive login tester for <code>POST /api/latest/auth/login</code>
+        </li>
+        <li>
+          <a href="/apiui/latest/house">/apiui/latest/house</a>
+          — interactive house list tester for <code>GET /api/latest/house</code>
         </li>
       </ul>
     </section>

@@ -1,34 +1,32 @@
 package apiui
 
-import (
-	"net/http"
-)
+import "net/http"
 
-// AuthUIHandler serves minimal browser UI pages for auth endpoints.
-type AuthUIHandler struct{}
+// HouseUIHandler serves minimal browser UI pages for house endpoints.
+type HouseUIHandler struct{}
 
-// NewAuthUIHandler creates a new AuthUIHandler.
-func NewAuthUIHandler() *AuthUIHandler {
-	return &AuthUIHandler{}
+// NewHouseUIHandler creates a new HouseUIHandler.
+func NewHouseUIHandler() *HouseUIHandler {
+	return &HouseUIHandler{}
 }
 
-// LoginPage serves a small UI for POST /api/latest/auth/login.
-func (h *AuthUIHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
+// ListPage serves a small UI for GET /api/latest/house.
+func (h *HouseUIHandler) ListPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write([]byte(loginPageHTML))
+	_, _ = w.Write([]byte(houseListPageHTML))
 }
 
-const loginPageHTML = `<!doctype html>
+const houseListPageHTML = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hata API UI — Login</title>
+  <title>Hata API UI — House list</title>
   <style>
     :root {
       --bg: #0b0f14;
@@ -49,7 +47,7 @@ const loginPageHTML = `<!doctype html>
       line-height: 1.45;
     }
     .wrap {
-      max-width: 860px;
+      max-width: 900px;
       margin: 32px auto;
       padding: 0 16px;
     }
@@ -62,30 +60,22 @@ const loginPageHTML = `<!doctype html>
     }
     h1 { font-size: 20px; margin: 0 0 6px 0; }
     p { margin: 6px 0; color: var(--muted); }
-    a { color: var(--accent); }
-    .back-btn {
-      display: inline-block;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 10px;
-      text-decoration: none;
-      background: #0d141d;
-      color: var(--text);
-      font-size: 13px;
-    }
-    .back-btn:hover { border-color: var(--accent); }
     label { display: block; margin: 12px 0 6px; font-size: 13px; color: var(--muted); }
-    input {
+    textarea {
       width: 100%;
+      min-height: 96px;
       padding: 10px 12px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: #0d141d;
       color: var(--text);
       outline: none;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
     }
-    input:focus { border-color: var(--accent); }
-    .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+    textarea:focus { border-color: var(--accent); }
+    .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
     button {
       border: 0;
       border-radius: 8px;
@@ -116,57 +106,59 @@ const loginPageHTML = `<!doctype html>
       font-size: 13px;
     }
     code { color: #c7d2df; }
-    .token {
-      margin-top: 10px;
+    a { color: var(--accent); }
+    .back-btn {
+      display: inline-block;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      text-decoration: none;
+      background: #0d141d;
+      color: var(--text);
       font-size: 13px;
-      color: var(--muted);
-      word-break: break-all;
     }
+    .back-btn:hover { border-color: var(--accent); }
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="panel">
-      <h1>Hata API UI · Login</h1>
+      <h1>Hata API UI · House list</h1>
       <p><a class="back-btn" href="/apiui">← Back</a></p>
-      <p>Interactive test page for <code>POST /api/latest/auth/login</code>.</p>
-      <p>Page path: <code>/apiui/latest/auth/login</code></p>
+      <p>Interactive test page for <code>GET /api/latest/house</code>.</p>
+      <p>Page path: <code>/apiui/latest/house</code></p>
+      <p>If you need a token, use <a href="/apiui/latest/auth/login">/apiui/latest/auth/login</a>.</p>
     </section>
 
     <section class="panel">
-      <form id="loginForm">
-        <label for="username">Username (email)</label>
-        <input id="username" name="username" type="text" autocomplete="username" placeholder="user@example.com" required />
+      <label for="token">Bearer token</label>
+      <textarea id="token" spellcheck="false" placeholder="Paste token or login on auth page to auto-fill"></textarea>
 
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required />
-
-        <div class="row">
-          <button type="submit">Send login request</button>
-          <button id="copyToken" type="button" class="secondary">Copy token</button>
-          <span id="status" class="status">idle</span>
-        </div>
-      </form>
+      <div class="row">
+        <button id="sendBtn" type="button">Request houses</button>
+        <button id="saveBtn" type="button" class="secondary">Save token</button>
+        <button id="clearBtn" type="button" class="secondary">Clear token</button>
+        <span id="status" class="status">idle</span>
+      </div>
     </section>
 
     <section class="panel">
       <p style="margin-top:0">Response</p>
       <pre id="response"><code>{
-  "hint": "Submit credentials to see response"
+  "hint": "Click 'Request houses' to call /api/latest/house"
 }</code></pre>
-      <div id="token" class="token"></div>
     </section>
   </main>
 
   <script>
-    const form = document.getElementById('loginForm');
+    const TOKEN_KEY = 'hata_apiui_token';
+
+    const tokenEl = document.getElementById('token');
+    const sendBtn = document.getElementById('sendBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const statusEl = document.getElementById('status');
     const responseEl = document.getElementById('response');
-    const tokenEl = document.getElementById('token');
-    const copyBtn = document.getElementById('copyToken');
-
-    const TOKEN_KEY = 'hata_apiui_token';
-    let lastToken = '';
 
     function setStatus(text, kind) {
       statusEl.textContent = text;
@@ -190,39 +182,61 @@ const loginPageHTML = `<!doctype html>
       try {
         localStorage.setItem(TOKEN_KEY, token);
       } catch {
-        // Ignore localStorage errors (privacy mode, disabled storage, etc.)
+        // Ignore localStorage errors
+      }
+    }
+
+    function clearToken() {
+      try {
+        localStorage.removeItem(TOKEN_KEY);
+      } catch {
+        // Ignore localStorage errors
       }
     }
 
     const savedToken = loadSavedToken();
     if (savedToken) {
-      lastToken = savedToken;
-      tokenEl.textContent = 'Saved token: ' + savedToken;
+      tokenEl.value = savedToken;
       setStatus('saved token loaded', 'ok');
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      setStatus('loading...');
-      tokenEl.textContent = '';
-      lastToken = '';
+    saveBtn.addEventListener('click', () => {
+      const token = tokenEl.value.trim();
+      if (!token) {
+        setStatus('token is empty', 'err');
+        return;
+      }
+      saveToken(token);
+      setStatus('token saved', 'ok');
+    });
 
-      const payload = {
-        username: form.username.value,
-        password: form.password.value,
-      };
+    clearBtn.addEventListener('click', () => {
+      tokenEl.value = '';
+      clearToken();
+      setStatus('token cleared', 'ok');
+    });
+
+    sendBtn.addEventListener('click', async () => {
+      const token = tokenEl.value.trim();
+      if (!token) {
+        setStatus('token is required', 'err');
+        return;
+      }
+
+      setStatus('loading...');
+      saveToken(token);
 
       try {
-        const res = await fetch('/api/latest/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+        const res = await fetch('/api/latest/house', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
         });
 
         const raw = await res.text();
-        let data;
         try {
-          data = JSON.parse(raw);
+          const data = JSON.parse(raw);
           setResponseText(JSON.stringify(data, null, 2));
         } catch {
           setResponseText(raw || '<empty response>');
@@ -230,31 +244,12 @@ const loginPageHTML = `<!doctype html>
 
         if (res.ok) {
           setStatus('success · ' + res.status, 'ok');
-          const token = data && data.session && data.session.token ? data.session.token : '';
-          if (token) {
-            lastToken = token;
-            saveToken(token);
-            tokenEl.textContent = 'Token (saved): ' + token;
-          }
         } else {
           setStatus('error · ' + res.status, 'err');
         }
       } catch (err) {
         setStatus('network error', 'err');
         setResponseText(String(err));
-      }
-    });
-
-    copyBtn.addEventListener('click', async () => {
-      if (!lastToken) {
-        setStatus('no token yet', 'err');
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(lastToken);
-        setStatus('token copied', 'ok');
-      } catch {
-        setStatus('copy failed', 'err');
       }
     });
   </script>
