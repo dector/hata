@@ -24,6 +24,15 @@ Why this setup exists:
 - On this machine, port `4500` is exposed by Tailscale, so wildcard bind causes conflicts.
 - Workaround: use Air only for rebuild/restart and run a tiny custom reverse proxy (`cmd/devproxy`) bound to `127.0.0.1:4500`.
 
+### API UI (dev-only)
+
+Browser API test pages are available only in dev mode (`ror dev` / `ror dev:server`):
+
+- `/apiui`
+- `/apiui/latest/auth/login`
+
+In non-dev runs (for example `go run ./cmd/hata` or `./out/hata serve`), `/apiui*` routes are not mounted.
+
 ## Roadmap
 
 - [ ] Role-based access

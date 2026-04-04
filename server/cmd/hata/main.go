@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"hata/internal/api"
+	"hata/internal/apiui"
 	"hata/internal/db"
 	"hata/internal/util"
 
@@ -81,6 +82,15 @@ func startServer(database db.DB, ctx context.Context) {
 		r.Get("/device", deviceHandler.ListByUser)
 		r.Get("/ping", serverHandler.Ping)
 	})
+
+	// API UI routes (dev-only)
+	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {
+		authUIHandler := apiui.NewAuthUIHandler()
+		apiUIIndexHandler := apiui.NewIndexHandler()
+		r.Get("/apiui", apiUIIndexHandler.Index)
+		r.Get("/apiui/", apiUIIndexHandler.Index)
+		r.Get("/apiui/latest/auth/login", authUIHandler.LoginPage)
+	}
 
 	host := "localhost"
 	port := "4501"

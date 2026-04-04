@@ -14,7 +14,7 @@ trap cleanup EXIT INT TERM
 go tool \
   air \
     -build.cmd="go build -o ./out/hata.air ./cmd/hata" \
-    -build.full_bin="./out/hata.air" \
+    -build.full_bin="HATA_DEV=1 ./out/hata.air" \
     -build.include_dir="cmd,internal,pkg" \
     -build.include_ext="go,templ" \
     -build.exclude_regex="_templ.go" \
