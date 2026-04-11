@@ -2,7 +2,7 @@ package webui
 
 import "strings"
 
-const LocalHTMXScriptPath = "/js/htmx-2.0.4.min.js"
+const LocalHTMXScriptPath = "/assets/js/htmx-2.0.4.min.js"
 
 type LoginPageData struct {
 	Then          string
