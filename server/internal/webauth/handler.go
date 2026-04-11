@@ -140,11 +140,24 @@ func sanitizeThen(then string) string {
 	if v == "" {
 		return defaultThenPath
 	}
+	if strings.ContainsAny(v, "\\\r\n") {
+		return defaultThenPath
+	}
 	if !strings.HasPrefix(v, "/") || strings.HasPrefix(v, "//") {
 		return defaultThenPath
 	}
-	u, err := url.Parse(v)
-	if err != nil || u == nil || u.IsAbs() || u.Host != "" {
+
+	u, err := url.ParseRequestURI(v)
+	if err != nil || u == nil {
+		return defaultThenPath
+	}
+	if u.IsAbs() || u.Host != "" || u.Scheme != "" {
+		return defaultThenPath
+	}
+	if !strings.HasPrefix(u.Path, "/") || strings.HasPrefix(u.Path, "//") {
+		return defaultThenPath
+	}
+	if _, err := url.ParseQuery(u.RawQuery); err != nil {
 		return defaultThenPath
 	}
 	return u.RequestURI()

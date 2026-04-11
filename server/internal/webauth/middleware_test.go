@@ -34,6 +34,28 @@ func TestRequirePageAuth_RedirectsAnonymousUser(t *testing.T) {
 	}
 }
 
+func TestRequirePageAuth_RedirectsAnonymousUser_WithQuery(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	mw := RequirePageAuth(repos)
+	h := mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/me?tab=devices", nil)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+	if got := w.Header().Get("Location"); got != "/auth/login?then=%2Fme%3Ftab%3Ddevices" {
+		t.Fatalf("expected redirect with encoded query in then, got %q", got)
+	}
+}
+
 func TestRequirePageAuth_AllowsValidCookie(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()

@@ -158,6 +158,9 @@ func TestSanitizeThen(t *testing.T) {
 		{name: "relative", in: "/me?a=1", want: "/me?a=1"},
 		{name: "double-slash", in: "//evil.com", want: "/me"},
 		{name: "absolute", in: "https://evil.com", want: "/me"},
+		{name: "malformed-escape", in: "/me?x=%zz", want: "/me"},
+		{name: "backslash", in: "/\\evil", want: "/me"},
+		{name: "newline", in: "/me\nfoo", want: "/me"},
 	}
 
 	for _, tt := range tests {
