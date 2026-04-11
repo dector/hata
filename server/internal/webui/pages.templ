@@ -1,83 +1,71 @@
 package webui
 
-templ LoginPage(data LoginPageData) {
+templ WebPage(title string, htmxScriptSrc string) {
 	<!doctype html>
 	<html lang="en">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>Sign in · Hata</title>
-			<script src={ scriptSrcOrDefault(data.HTMXScriptSrc) } defer></script>
+			<title>{ title }</title>
+			<script src={ scriptSrcOrDefault(htmxScriptSrc) } defer></script>
 		</head>
 		<body>
-			<main>
-				<h1>Sign in</h1>
-				<p>Use your credentials to start a browser session.</p>
-				<div id="login-shell">
-					<form id="login-form" method="post" action="/auth/login" hx-post="/auth/login" hx-target="#login-shell" hx-swap="outerHTML">
-						<label for="username">Username</label>
-						<input id="username" name="username" type="text" autocomplete="username" required/>
-
-						<label for="password">Password</label>
-						<input id="password" name="password" type="password" autocomplete="current-password" required/>
-
-						<input type="hidden" name="then" value={ data.Then }/>
-						<button type="submit">Sign in</button>
-					</form>
-					if data.Error != "" {
-						<p role="alert">{ data.Error }</p>
-					}
-				</div>
-			</main>
+			{ children... }
 		</body>
 	</html>
+}
+
+templ LoginPage(data LoginPageData) {
+	@WebPage("Sign in · Hata", data.HTMXScriptSrc) {
+		<main>
+			<h1>Sign in</h1>
+			<p>Use your credentials to start a browser session.</p>
+			<div id="login-shell">
+				<form id="login-form" method="post" action="/auth/login" hx-post="/auth/login" hx-target="#login-shell" hx-swap="outerHTML">
+					<label for="username">Username</label>
+					<input id="username" name="username" type="text" autocomplete="username" required/>
+
+					<label for="password">Password</label>
+					<input id="password" name="password" type="password" autocomplete="current-password" required/>
+
+					<input type="hidden" name="then" value={ data.Then }/>
+					<button type="submit">Sign in</button>
+				</form>
+				if data.Error != "" {
+					<p role="alert">{ data.Error }</p>
+				}
+			</div>
+		</main>
+	}
 }
 
 templ LogoutPage(data LogoutPageData) {
-	<!doctype html>
-	<html lang="en">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>Sign out · Hata</title>
-			<script src={ scriptSrcOrDefault(data.HTMXScriptSrc) } defer></script>
-		</head>
-		<body>
-			<main id="logout-shell">
-				<h1>Sign out</h1>
-				<p>This clears your auth cookie for this browser.</p>
-				<form method="post" action="/auth/logout" hx-post="/auth/logout" hx-target="#logout-shell" hx-swap="outerHTML">
-					<button type="submit">Sign out</button>
-				</form>
-			</main>
-		</body>
-	</html>
+	@WebPage("Sign out · Hata", data.HTMXScriptSrc) {
+		<main id="logout-shell">
+			<h1>Sign out</h1>
+			<p>This clears your auth cookie for this browser.</p>
+			<form method="post" action="/auth/logout" hx-post="/auth/logout" hx-target="#logout-shell" hx-swap="outerHTML">
+				<button type="submit">Sign out</button>
+			</form>
+		</main>
+	}
 }
 
 templ MePage(data MePageData) {
-	<!doctype html>
-	<html lang="en">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>Me · Hata</title>
-			<script src={ scriptSrcOrDefault(data.HTMXScriptSrc) } defer></script>
-		</head>
-		<body>
-			<main>
-				<h1>My session</h1>
-				<p>Authenticated page.</p>
-				<ul>
-					<li>User ID: { data.UserID }</li>
-					<li>Username: { data.Username }</li>
-					if data.HasSessionToken {
-						<li>Session token: present</li>
-					} else {
-						<li>Session token: missing</li>
-					}
-				</ul>
-				<p><a href="/auth/logout">Sign out</a></p>
-			</main>
-		</body>
-	</html>
+	@WebPage("Me · Hata", data.HTMXScriptSrc) {
+		<main>
+			<h1>My session</h1>
+			<p>Authenticated page.</p>
+			<ul>
+				<li>User ID: { data.UserID }</li>
+				<li>Username: { data.Username }</li>
+				if data.HasSessionToken {
+					<li>Session token: present</li>
+				} else {
+					<li>Session token: missing</li>
+				}
+			</ul>
+			<p><a href="/auth/logout">Sign out</a></p>
+		</main>
+	}
 }
