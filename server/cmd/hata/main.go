@@ -16,6 +16,7 @@ import (
 	"hata/internal/apiui"
 	"hata/internal/db"
 	"hata/internal/util"
+	"hata/internal/webauth"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -65,6 +66,7 @@ func startServer(database db.DB, ctx context.Context) {
 
 	// Static assets
 	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("public"))))
+	r.Handle("/js/*", http.StripPrefix("/js/", http.FileServer(http.Dir("public/js"))))
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +76,8 @@ func startServer(database db.DB, ctx context.Context) {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
+	webAuthHandler := webauth.NewHandler(authHandler)
 
 	// API routes
 	r.Route("/api/latest", func(r chi.Router) {
@@ -85,6 +89,16 @@ func startServer(database db.DB, ctx context.Context) {
 		r.Get("/device", deviceHandler.ListByUser)
 		r.Get("/ping", serverHandler.Ping)
 	})
+
+	// Browser auth routes
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/login", webAuthHandler.LoginPage)
+		r.Post("/login", webAuthHandler.Login)
+		r.Get("/logout", webAuthHandler.LogoutPage)
+		r.Post("/logout", webAuthHandler.Logout)
+	})
+
+	r.With(webauth.RequirePageAuth(database.Repos())).Get("/me", webAuthHandler.MePage)
 
 	// API UI routes (dev-only)
 	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {
