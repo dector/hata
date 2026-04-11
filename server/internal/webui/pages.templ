@@ -181,7 +181,9 @@ templ MePage(data MePageData) {
 					<li>Session token: missing</li>
 				}
 			</ul>
-			<p><a href="/auth/logout">Sign out</a></p>
+			<form method="post" action="/auth/logout">
+				<button type="submit">Sign out</button>
+			</form>
 		</main>
 	}
 }

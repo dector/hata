@@ -71,11 +71,8 @@ func (h *Handler) LogoutPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := webui.LogoutPage(webui.LogoutPageData{}).Render(r.Context(), w); err != nil {
-		http.Error(w, "failed to render logout page", http.StatusInternalServerError)
-		return
-	}
+	api.ClearAuthTokenCookie(w)
+	http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {

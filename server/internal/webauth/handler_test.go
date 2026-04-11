@@ -123,6 +123,23 @@ func TestLogout_ClearsCookieAndRedirects(t *testing.T) {
 
 	h.Logout(w, req)
 
+	assertLogoutRedirectAndCookieCleared(t, w)
+}
+
+func TestLogoutPage_AutoSubmitsOnGet(t *testing.T) {
+	h := NewHandler(api.NewAuthHandler(nil))
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/logout", nil)
+	w := httptest.NewRecorder()
+
+	h.LogoutPage(w, req)
+
+	assertLogoutRedirectAndCookieCleared(t, w)
+}
+
+func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseRecorder) {
+	t.Helper()
+
 	if w.Code != http.StatusSeeOther {
 		t.Fatalf("expected 303, got %d", w.Code)
 	}
