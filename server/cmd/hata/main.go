@@ -87,11 +87,16 @@ func startServer(database db.DB, ctx context.Context) {
 	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {
 		authUIHandler := apiui.NewAuthUIHandler()
 		houseUIHandler := apiui.NewHouseUIHandler()
+		deviceUIHandler := apiui.NewDeviceUIHandler()
+		pingUIHandler := apiui.NewPingUIHandler()
 		apiUIIndexHandler := apiui.NewIndexHandler()
 		r.Get("/apiui", apiUIIndexHandler.Index)
 		r.Get("/apiui/", apiUIIndexHandler.Index)
 		r.Get("/apiui/latest/auth/login", authUIHandler.LoginPage)
 		r.Get("/apiui/latest/house", houseUIHandler.ListPage)
+		r.Get("/apiui/latest/device", deviceUIHandler.ListPage)
+		r.Get("/apiui/latest/house/{houseId}/device", houseUIHandler.HouseDevicePage)
+		r.Get("/apiui/latest/ping", pingUIHandler.PingPage)
 	}
 
 	host := "localhost"
