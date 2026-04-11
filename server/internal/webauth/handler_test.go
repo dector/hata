@@ -29,7 +29,7 @@ func setupAuthWebTest(t *testing.T) (db.Repositories, func()) {
 }
 
 func TestLoginPage_Renders(t *testing.T) {
-	h := NewHandler(api.NewAuthHandler(nil))
+	h := NewHandler(api.NewAuthHandler(nil), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/login?then=%2Fme", nil)
 	w := httptest.NewRecorder()
@@ -60,7 +60,7 @@ func TestLogin_SetsCookieAndRedirects(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 
-	h := NewHandler(api.NewAuthHandler(repos))
+	h := NewHandler(api.NewAuthHandler(repos), repos)
 
 	form := strings.NewReader("username=user@example.com&password=secret&then=%2Fme%3Fx%3D1")
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", form)
@@ -95,7 +95,7 @@ func TestLogin_InvalidCredentials_NoCookie(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()
 
-	h := NewHandler(api.NewAuthHandler(repos))
+	h := NewHandler(api.NewAuthHandler(repos), repos)
 
 	form := strings.NewReader("username=nope&password=bad")
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", form)
@@ -116,7 +116,7 @@ func TestLogin_InvalidCredentials_NoCookie(t *testing.T) {
 }
 
 func TestLogout_ClearsCookieAndRedirects(t *testing.T) {
-	h := NewHandler(api.NewAuthHandler(nil))
+	h := NewHandler(api.NewAuthHandler(nil), nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
 	w := httptest.NewRecorder()
@@ -127,7 +127,7 @@ func TestLogout_ClearsCookieAndRedirects(t *testing.T) {
 }
 
 func TestLogoutPage_AutoSubmitsOnGet(t *testing.T) {
-	h := NewHandler(api.NewAuthHandler(nil))
+	h := NewHandler(api.NewAuthHandler(nil), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/logout", nil)
 	w := httptest.NewRecorder()
@@ -135,6 +135,60 @@ func TestLogoutPage_AutoSubmitsOnGet(t *testing.T) {
 	h.LogoutPage(w, req)
 
 	assertLogoutRedirectAndCookieCleared(t, w)
+}
+
+func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house H1: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H2", "Garage"); err != nil {
+		t.Fatalf("create house H2: %v", err)
+	}
+
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role H1: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H2", user.ID, "guest"); err != nil {
+		t.Fatalf("assign house role H2: %v", err)
+	}
+
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Bedroom Lamp", "dummy", nil, "on"); err != nil {
+		t.Fatalf("create device: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	req := httptest.NewRequest(http.MethodGet, "/app", nil)
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	h.AppPage(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "Main Home") || !strings.Contains(body, "Garage") {
+		t.Fatalf("expected both houses on page")
+	}
+	if !strings.Contains(body, "Bedroom Lamp") {
+		t.Fatalf("expected house devices on page")
+	}
+	if !strings.Contains(body, "No devices in this house") {
+		t.Fatalf("expected empty house message")
+	}
 }
 
 func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseRecorder) {

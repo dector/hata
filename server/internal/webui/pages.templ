@@ -117,6 +117,33 @@ templ WebPage(title string, htmxScriptSrc string) {
 					color: var(--danger);
 					font-weight: 600;
 				}
+
+				.house {
+					border: 1px solid var(--border);
+					border-radius: 0.5rem;
+					padding: 0.75rem;
+					margin-top: 0.75rem;
+				}
+
+				.house h2 {
+					margin: 0 0 0.5rem 0;
+					font-size: 1rem;
+				}
+
+				.house ul {
+					margin: 0;
+					padding-left: 1.25rem;
+				}
+
+				.house-role {
+					color: var(--muted);
+					font-size: 0.9rem;
+				}
+
+				.device-empty {
+					color: var(--muted);
+					font-style: italic;
+				}
 			</style>
 			<script src={ scriptSrcOrDefault(htmxScriptSrc) } defer></script>
 		</head>
@@ -143,6 +170,7 @@ templ HomePage(data HomePageData) {
 					<li><a href="/auth/login">Sign in</a></li>
 				}
 				<li><a href="/me">My session</a></li>
+				<li><a href="/app">App</a></li>
 				<li><a href="/health">Health check</a></li>
 				<li><a href="/apiui">API UI</a></li>
 			</ul>
@@ -203,6 +231,34 @@ templ MePage(data MePageData) {
 			<form method="post" action="/auth/logout">
 				<button type="submit">Sign out</button>
 			</form>
+		</main>
+	}
+}
+
+templ AppPage(data AppPageData) {
+	@WebPage("App · Hata", data.HTMXScriptSrc) {
+		<main>
+			<h1>My devices</h1>
+			<p>Devices grouped by houses.</p>
+			if len(data.Houses) == 0 {
+				<p>You don't have access to any houses yet.</p>
+			} else {
+				for _, house := range data.Houses {
+					<section class="house">
+						<h2>{ house.DisplayName }</h2>
+						<p class="house-role">House ID: { house.ID } · Role: { house.Role }</p>
+						if len(house.Devices) == 0 {
+							<p class="device-empty">No devices in this house.</p>
+						} else {
+							<ul>
+								for _, device := range house.Devices {
+									<li>{ device.Name } ({ device.ID }) · { device.State }</li>
+								}
+							</ul>
+						}
+					</section>
+				}
+			}
 		</main>
 	}
 }

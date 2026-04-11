@@ -27,6 +27,25 @@ type MePageData struct {
 	HTMXScriptSrc   string
 }
 
+type AppPageData struct {
+	Houses        []AppHouseData
+	HTMXScriptSrc string
+}
+
+type AppHouseData struct {
+	ID          string
+	DisplayName string
+	Role        string
+	Devices     []AppDeviceData
+}
+
+type AppDeviceData struct {
+	ID            string
+	Name          string
+	IntegrationID string
+	State         string
+}
+
 func scriptSrcOrDefault(src string) string {
 	if strings.TrimSpace(src) == "" {
 		return LocalHTMXScriptPath

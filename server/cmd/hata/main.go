@@ -96,7 +96,7 @@ func startServer(database db.DB, ctx context.Context) {
 		w.Write([]byte("OK"))
 	})
 
-	webAuthHandler := webauth.NewHandler(authHandler)
+	webAuthHandler := webauth.NewHandler(authHandler, database.Repos())
 
 	// API routes
 	r.Route("/api/latest", func(r chi.Router) {
@@ -118,6 +118,7 @@ func startServer(database db.DB, ctx context.Context) {
 	})
 
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/me", webAuthHandler.MePage)
+	r.With(webauth.RequirePageAuth(database.Repos())).Get("/app", webAuthHandler.AppPage)
 
 	// API UI routes (dev-only)
 	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {
