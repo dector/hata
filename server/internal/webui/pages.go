@@ -4,6 +4,10 @@ import "strings"
 
 const LocalHTMXScriptPath = "/assets/js/htmx-2.0.4.min.js"
 
+type HomePageData struct {
+	HTMXScriptSrc string
+}
+
 type LoginPageData struct {
 	Then          string
 	Error         string

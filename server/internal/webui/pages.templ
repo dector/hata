@@ -116,6 +116,21 @@ templ WebPage(title string, htmxScriptSrc string) {
 	</html>
 }
 
+templ HomePage(data HomePageData) {
+	@WebPage("Hata", data.HTMXScriptSrc) {
+		<main>
+			<h1>Hata</h1>
+			<p>Smart home backend.</p>
+			<ul>
+				<li><a href="/auth/login">Sign in</a></li>
+				<li><a href="/me">My session</a></li>
+				<li><a href="/health">Health check</a></li>
+				<li><a href="/apiui">API UI</a></li>
+			</ul>
+		</main>
+	}
+}
+
 templ LoginPage(data LoginPageData) {
 	@WebPage("Sign in · Hata", data.HTMXScriptSrc) {
 		<main>

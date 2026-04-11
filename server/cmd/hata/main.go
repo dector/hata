@@ -17,6 +17,7 @@ import (
 	"hata/internal/db"
 	"hata/internal/util"
 	"hata/internal/webauth"
+	"hata/internal/webui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -70,7 +71,11 @@ func startServer(database db.DB, ctx context.Context) {
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to Hata!"))
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := webui.HomePage(webui.HomePageData{}).Render(r.Context(), w); err != nil {
+			http.Error(w, "failed to render home page", http.StatusInternalServerError)
+			return
+		}
 	})
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
