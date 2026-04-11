@@ -13,6 +13,27 @@ type UserRepo struct {
 	client *orm.Client
 }
 
+// GetByID retrieves a user by ID.
+func (r *UserRepo) GetByID(ctx context.Context, id int) (*UserData, error) {
+	u, err := r.client.User.Query().
+		Where(user.IDEQ(id)).
+		Only(ctx)
+
+	if err != nil {
+		if orm.IsNotFound(err) {
+			return nil, nil // User not found is not an error
+		}
+		return nil, fmt.Errorf("failed querying user by id %d: %w", id, err)
+	}
+
+	return &UserData{
+		ID:           u.ID,
+		Username:     u.Username,
+		PasswordHash: u.Password,
+		DisplayName:  u.DisplayName,
+	}, nil
+}
+
 // GetByUsername retrieves a user by username.
 func (r *UserRepo) GetByUsername(ctx context.Context, username string) (*UserData, error) {
 	u, err := r.client.User.Query().

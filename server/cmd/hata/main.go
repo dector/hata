@@ -71,8 +71,22 @@ func startServer(database db.DB, ctx context.Context) {
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		homeData := webui.HomePageData{}
+		auth, ok, err := webauth.TryAuthFromRequest(r, database.Repos())
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		if ok {
+			homeData.IsLoggedIn = true
+			homeData.DisplayName = strings.TrimSpace(auth.DisplayName)
+			if homeData.DisplayName == "" {
+				homeData.DisplayName = auth.Username
+			}
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err := webui.HomePage(webui.HomePageData{}).Render(r.Context(), w); err != nil {
+		if err := webui.HomePage(homeData).Render(r.Context(), w); err != nil {
 			http.Error(w, "failed to render home page", http.StatusInternalServerError)
 			return
 		}

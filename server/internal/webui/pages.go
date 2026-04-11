@@ -5,6 +5,8 @@ import "strings"
 const LocalHTMXScriptPath = "/assets/js/htmx-2.0.4.min.js"
 
 type HomePageData struct {
+	IsLoggedIn    bool
+	DisplayName   string
 	HTMXScriptSrc string
 }
 

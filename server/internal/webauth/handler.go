@@ -100,7 +100,7 @@ func (h *Handler) MePage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := webui.MePage(webui.MePageData{
 		UserID:          auth.UserID,
-		Username:        "",
+		Username:        auth.Username,
 		HasSessionToken: auth.Token != "",
 	}).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render me page", http.StatusInternalServerError)

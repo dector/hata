@@ -41,6 +41,10 @@ type KVRepository interface {
 
 // UserRepository provides access to user data.
 type UserRepository interface {
+	// GetByID retrieves a user by ID.
+	// Returns nil, nil if user doesn't exist.
+	GetByID(ctx context.Context, id int) (*UserData, error)
+
 	// GetByUsername retrieves a user by username.
 	// Returns nil, nil if user doesn't exist.
 	GetByUsername(ctx context.Context, username string) (*UserData, error)
