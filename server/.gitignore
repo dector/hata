@@ -6,3 +6,4 @@ out/
 
 # Generated code
 internal/orm/
+**/*_templ.go

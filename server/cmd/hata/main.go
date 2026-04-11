@@ -63,6 +63,9 @@ func startServer(database db.DB, ctx context.Context) {
 	houseHandler := api.NewHouseHandler(database.Repos())
 	deviceHandler := api.NewDeviceHandler(database.Repos())
 
+	// Static assets
+	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("public"))))
+
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to Hata!"))
