@@ -61,7 +61,7 @@ fun HomeScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                vm.onDispatch(HomeUiAction.UpdateDevicesStatus)
+                vm.onDispatch(HomeUiAction.UpdateDevicesStatus())
             }
         }
 
@@ -116,7 +116,7 @@ private fun HomeScreenUI(
                     .weight(1f),
                 state = pullToRefreshState,
                 isRefreshing = isRefreshing,
-                onRefresh = { dispatch(HomeUiAction.UpdateDevicesStatus) },
+                onRefresh = { dispatch(HomeUiAction.UpdateDevicesStatus(showSyncFeedback = true)) },
                 indicator = {},
             ) {
                 val revealFraction = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)

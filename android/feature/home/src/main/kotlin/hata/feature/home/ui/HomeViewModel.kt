@@ -48,10 +48,10 @@ class HomeViewModel @Inject constructor(
                 if (_uiState.value !is HomeUiState.Init) return
 
                 observeNotifications()
-                loadDevices()
+                loadDevices(showSyncFeedback = false)
             }
 
-            is HomeUiAction.UpdateDevicesStatus -> loadDevices()
+            is HomeUiAction.UpdateDevicesStatus -> loadDevices(showSyncFeedback = action.showSyncFeedback)
             is HomeUiAction.ToggleDevice -> toggleDevice(
                 deviceId = action.deviceId,
                 newState = action.newState,
@@ -92,7 +92,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadDevices() {
+    private fun loadDevices(showSyncFeedback: Boolean) {
         viewModelScope.launch {
             val previousState = _uiState.value as? HomeUiState.WithData
             val cachedDevices = loadCachedDevicesUseCase.run()
@@ -101,12 +101,12 @@ class HomeViewModel @Inject constructor(
                 cachedDevices.isNotEmpty() -> {
                     _uiState.value = cachedDevices.toUiState(
                         connectionStatus = previousState?.data?.connectionStatus ?: ServerConnectionStatus.Unknown,
-                        isSyncing = true,
+                        isSyncing = showSyncFeedback,
                     )
                 }
 
                 previousState != null -> {
-                    _uiState.value = previousState.copy(isSyncing = true)
+                    _uiState.value = previousState.copy(isSyncing = showSyncFeedback)
                 }
 
                 else -> {
@@ -114,7 +114,9 @@ class HomeViewModel @Inject constructor(
                 }
             }
 
-            delay(1_000)
+            if (showSyncFeedback) {
+                delay(1_000)
+            }
 
             loadDevicesUseCase.run()
                 .onSuccess { result ->
