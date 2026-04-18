@@ -1,5 +1,11 @@
 package hata.feature.home.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -115,10 +122,11 @@ private fun HomeScreenUI(
                 val revealFraction = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
                 val revealHeight = if (isRefreshing) 32.dp else 32.dp * revealFraction
                 val revealTextAlpha = if (isRefreshing) 1f else revealFraction
-                val pullHintText = if (pullToRefreshState.distanceFraction >= 1f) {
-                    "Release to sync"
-                } else {
-                    "Pull to sync"
+                val isReadyToRefresh = pullToRefreshState.distanceFraction >= 1f
+                val pullHintText = when {
+                    isRefreshing -> "Syncing"
+                    isReadyToRefresh -> "Release to sync"
+                    else -> "Pull to sync"
                 }
 
                 Column(
@@ -130,12 +138,19 @@ private fun HomeScreenUI(
                             .height(revealHeight),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = pullHintText,
-                            color = Color.White.copy(alpha = revealTextAlpha),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
+                        if (isRefreshing) {
+                            SyncingTextAnimatedDots(
+                                color = Color.White,
+                                alpha = revealTextAlpha,
+                            )
+                        } else {
+                            Text(
+                                text = pullHintText,
+                                color = Color.White.copy(alpha = revealTextAlpha),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
 
                     StateSection(
@@ -158,6 +173,35 @@ private fun HomeScreenUI(
             }
         }
     }
+}
+
+@Composable
+private fun SyncingTextAnimatedDots(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White,
+    alpha: Float = 1f,
+) {
+    val transition = rememberInfiniteTransition(label = "syncing_text_dots")
+    val dotsProgress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "syncing_text_dots_count",
+    )
+    val dotsCount = (dotsProgress.toInt() % 3) + 1
+    val dotsText = ".".repeat(dotsCount).padEnd(3, ' ')
+
+    Text(
+        modifier = modifier,
+        text = "Syncing $dotsText",
+        color = color.copy(alpha = alpha),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        fontFamily = FontFamily.Monospace,
+    )
 }
 
 @Composable
