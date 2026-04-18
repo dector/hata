@@ -1,0 +1,7 @@
+task pi:android {
+  cmd "pij -d android"
+}
+
+task pi:server {
+  cmd "pij -d server"
+}
