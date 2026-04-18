@@ -1,0 +1,11 @@
+task device:launch {
+    description "Launch app on a connected Android device/emulator"
+
+    cmd "adb shell am start -n space.dector.hata/hata.app.AppActivity"
+}
+
+task device:install-and-launch {
+    description "Install debug build and launch app on connected Android device/emulator"
+
+    cmd "bash -lc './gradlew installDebug && adb shell am start -n space.dector.hata/hata.app.AppActivity'"
+}
