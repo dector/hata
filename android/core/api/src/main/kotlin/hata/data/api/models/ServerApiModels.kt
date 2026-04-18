@@ -47,3 +47,47 @@ data class ErrorDetail(
     val message: String,
     val code: String,
 )
+
+// House response
+@JsonClass(generateAdapter = true)
+data class ApiHouseListResponse(
+    val houses: List<ApiHouseInfo> = emptyList(),
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiHouseInfo(
+    val id: String,
+    val displayName: String,
+    val role: String,
+)
+
+// Shopping list responses
+@JsonClass(generateAdapter = true)
+data class ApiShoppingListListResponse(
+    val shoppingLists: List<ApiShoppingListInfo> = emptyList(),
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingListInfo(
+    val uid: String,
+    val name: String,
+    val createdAt: String,
+    val updatedAt: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingItemListResponse(
+    val items: List<ApiShoppingItemInfo> = emptyList(),
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingItemInfo(
+    val uid: String,
+    val name: String,
+    val position: Int,
+    val checkedAt: String? = null,
+    val checkedByUserId: Int? = null,
+    val deletedAt: String? = null,
+    val createdAt: String,
+    val updatedAt: String,
+)

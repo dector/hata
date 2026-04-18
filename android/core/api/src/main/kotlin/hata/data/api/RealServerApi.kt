@@ -2,6 +2,9 @@ package hata.data.api
 
 import hata.data.api.models.ApiDevice
 import hata.data.api.models.ApiDeviceSetStateRequest
+import hata.data.api.models.ApiHouseInfo
+import hata.data.api.models.ApiShoppingItemInfo
+import hata.data.api.models.ApiShoppingListInfo
 import hata.data.api.models.LoginRequest
 import retrofit2.HttpException
 import java.io.IOException
@@ -60,6 +63,26 @@ class RealServerApi(
         } catch (e: Exception) {
             Result.failure(
                 Exception("Failed to load latest house: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    override suspend fun fetchHouses(): Result<List<ApiHouseInfo>> {
+        return try {
+            val response = api.latestHouse()
+
+            Result.success(response.houses)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to load houses"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to load houses: ${e.message ?: "Unknown error"}"),
             )
         }
     }
@@ -136,4 +159,89 @@ class RealServerApi(
             )
         }
     }
+
+    override suspend fun fetchShoppingListsByHouse(
+        houseId: String,
+    ): Result<List<ApiShoppingListInfo>> {
+        return try {
+            val response = api.shoppingListsByHouse(houseId = houseId)
+
+            Result.success(response.shoppingLists)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to load shopping lists"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to load shopping lists: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    override suspend fun fetchShoppingItemsByList(
+        houseId: String,
+        listId: String,
+    ): Result<List<ApiShoppingItemInfo>> {
+        return try {
+            val response = api.shoppingItemsByList(
+                houseId = houseId,
+                listId = listId,
+            )
+
+            Result.success(response.items)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to load shopping items"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to load shopping items: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    override suspend fun fetchDefaultShoppingListItems(): Result<List<ApiShoppingItemInfo>> {
+        return try {
+            val houses = api.latestHouse().houses
+            val houseId = houses.firstOrNull()?.id
+                ?: return Result.success(emptyList())
+
+            val lists = api.shoppingListsByHouse(houseId = houseId).shoppingLists
+            val listId = lists.firstOrNull { it.uid == DEFAULT_SHOPPING_LIST_UID }?.uid
+                ?: lists.firstOrNull()?.uid
+                ?: return Result.success(emptyList())
+
+            val items = api.shoppingItemsByList(
+                houseId = houseId,
+                listId = listId,
+            ).items
+
+            Result.success(items)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to load default shopping list"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to load default shopping list: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    private companion object {
+        const val DEFAULT_SHOPPING_LIST_UID = "default"
+    }
 }
+

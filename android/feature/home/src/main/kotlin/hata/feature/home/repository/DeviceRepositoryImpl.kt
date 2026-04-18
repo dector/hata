@@ -7,6 +7,7 @@ import hata.data.api.models.ApiDevice
 import hata.data.models.Device
 import hata.data.models.DeviceState
 import hata.feature.home.domain.NewState
+import hata.feature.home.domain.ShoppingItem
 import hata.feature.home.repository.local.toDomain
 import hata.feature.home.repository.local.toEntity
 import hata.feature.home.repository.local.UserDevicesDatabaseProvider
@@ -54,6 +55,16 @@ class DeviceRepositoryImpl @Inject constructor(
 
             val deviceDao = userDevicesDatabaseProvider.deviceDao()
             deviceDao.replaceAll(devices.map { it.toEntity() })
+        }
+    }
+
+    override suspend fun getDefaultShoppingList(): Result<List<ShoppingItem>> = withContext(dispatcher) {
+        runCatching {
+            val session = requireSession()
+            val service = getServerService(session.serverUrl)
+            service.fetchDefaultShoppingListItems()
+                .getOrThrow()
+                .map { it.toShoppingItem() }
         }
     }
 
