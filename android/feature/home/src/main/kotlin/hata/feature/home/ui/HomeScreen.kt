@@ -3,19 +3,31 @@ package hata.feature.home.ui
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -24,14 +36,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -93,7 +113,11 @@ private fun HomeScreenUI(
     }
     val pullToRefreshState = rememberPullToRefreshState()
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButtonContainer()
+        },
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -177,6 +201,91 @@ private fun HomeScreenUI(
             }
         }
     }
+}
+
+@Composable
+private fun FloatingActionButtonContainer() {
+    var isFabMenuExpanded by remember { mutableStateOf(false) }
+    val fabIconRotation by animateFloatAsState(
+        targetValue = if (isFabMenuExpanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 150, easing = LinearEasing),
+        label = "fab_rotation",
+    )
+    val density = LocalDensity.current
+    val menuOffset = remember(density) {
+        IntOffset(
+            x = 0,
+            y = with(density) { (-72).dp.roundToPx() },
+        )
+    }
+
+    fun setFabExpanded(expanded: Boolean) {
+        isFabMenuExpanded = expanded
+    }
+
+    Box {
+        FloatingActionButton(onClick = { setFabExpanded(!isFabMenuExpanded) }) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowUp,
+                contentDescription = "Toggle menu",
+                modifier = Modifier.graphicsLayer { rotationZ = fabIconRotation },
+            )
+        }
+
+        if (isFabMenuExpanded) {
+            Popup(
+                alignment = Alignment.BottomEnd,
+                offset = menuOffset,
+                onDismissRequest = { setFabExpanded(false) },
+                properties = PopupProperties(focusable = true),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .width(220.dp)
+                        .background(
+                            color = HataColors.surface,
+                            shape = RoundedCornerShape(20.dp),
+                        ),
+                ) {
+                    FabMenuItem(
+                        text = "Shopping",
+                        dotColor = Color(0xFF4CAF50),
+                        onClick = { setFabExpanded(false) },
+                    )
+//                    HorizontalDivider(
+//                        modifier = Modifier.padding(horizontal = 16.dp),
+//                        color = HataColors.surfaceVariant.copy(alpha = 0.7f),
+//                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FabMenuItem(
+    text: String,
+    dotColor: Color,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        },
+        leadingIcon = {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(color = dotColor, shape = CircleShape),
+            )
+        },
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -416,3 +525,4 @@ private fun ServerConnectionStatus.toTopBarConnectionStatus(): ConnectionStatus 
         ServerConnectionStatus.Online -> ConnectionStatus.Online
         ServerConnectionStatus.Offline -> ConnectionStatus.Offline
     }
+
