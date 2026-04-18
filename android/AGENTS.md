@@ -27,10 +27,13 @@ This document provides essential information for AI coding agents working on the
 ./gradlew bundle                   # Create app bundle (AAB)
 ```
 
-### Install & Run
+### Install, Deploy & Run
 ```bash
-./gradlew installDebug             # Install debug build on device
+./gradlew installDebug             # Build + install debug APK on connected device/emulator
 ./gradlew uninstallDebug           # Uninstall debug build
+adb devices                        # List connected devices
+adb shell am start -n space.dector.hata/hata.app.AppActivity   # Launch app activity
+adb shell monkey -p space.dector.hata -c android.intent.category.LAUNCHER 1  # Launch via launcher intent
 ```
 
 ## Test Commands
