@@ -52,6 +52,7 @@ fun HomeScreen(
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val hasUnreadNotifications by vm.hasUnreadNotifications.collectAsStateWithLifecycle()
+    val userName by vm.userName.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
@@ -72,6 +73,7 @@ fun HomeScreen(
     HomeScreenUI(
         state = state,
         hasUnreadNotifications = hasUnreadNotifications,
+        userName = userName,
         dispatch = vm::onDispatch,
     )
 }
@@ -81,6 +83,7 @@ fun HomeScreen(
 private fun HomeScreenUI(
     state: HomeUiState,
     hasUnreadNotifications: Boolean = false,
+    userName: String? = null,
     dispatch: (HomeUiAction) -> Unit = {},
 ) {
     val isRefreshing = when (state) {
@@ -103,6 +106,7 @@ private fun HomeScreenUI(
             }
             TopBar(
                 name = homeName,
+                userName = userName,
                 connectionStatus = state.toTopBarConnectionStatus(),
                 isSyncing = (state as? HomeUiState.WithData)?.isSyncing ?: false,
                 hasNotifications = hasUnreadNotifications,
@@ -157,7 +161,7 @@ private fun HomeScreenUI(
                         state = state,
                         header = {
                             Spacer(modifier = Modifier.height(16.dp))
-                            WelcomeSection()
+                            WelcomeSection(userName = userName)
                             Spacer(modifier = Modifier.height(32.dp))
                         },
                         onToggleDevice = { deviceId, isEnabled ->
@@ -258,10 +262,12 @@ private fun StateSection(
 }
 
 @Composable
-private fun WelcomeSection() {
+private fun WelcomeSection(userName: String? = null) {
+    val displayName = userName?.trim().takeUnless { it.isNullOrBlank() } ?: "there"
+
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = "Welcome home,\nDan",
+        text = "Welcome home,\n$displayName",
         color = Color.White,
         fontSize = 36.sp,
         fontWeight = FontWeight.Bold,
@@ -356,6 +362,7 @@ private fun BottomNavigationBar() {
 @Composable
 private fun Preview_HomeScreen() = preview {
     HomeScreenUI(
+        userName = "Dan",
         state = HomeUiState.WithData(
             data = HomeDisplayData(
                 home = HomeDisplay(name = "My Home"),

@@ -8,6 +8,7 @@ import hata.feature.home.domain.LoadDevicesUseCase
 import hata.feature.home.domain.NewState
 import hata.feature.home.domain.ToggleDeviceUseCase
 import hata.feature.notifications.repository.NotificationsRepository
+import hata.feature.session.repository.SessionRepository
 import hata.navigation.Navigator
 import hata.navigation.Route
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ class HomeViewModel @Inject constructor(
     private val loadDevicesUseCase: LoadDevicesUseCase,
     private val toggleDeviceUseCase: ToggleDeviceUseCase,
     private val notificationsRepository: NotificationsRepository,
+    private val sessionRepository: SessionRepository,
     private val navigator: Navigator,
 ) : ViewModel() {
 
@@ -34,10 +36,21 @@ class HomeViewModel @Inject constructor(
     private val _hasUnreadNotifications = MutableStateFlow(false)
     val hasUnreadNotifications: StateFlow<Boolean> = _hasUnreadNotifications.asStateFlow()
 
+    private val _userName = MutableStateFlow<String?>(null)
+    val userName: StateFlow<String?> = _userName.asStateFlow()
+
     private fun observeNotifications() {
         viewModelScope.launch {
             notificationsRepository.observeNotifications().collect { notifications ->
                 _hasUnreadNotifications.value = notifications.any { !it.isRead }
+            }
+        }
+    }
+
+    private fun observeUser() {
+        viewModelScope.launch {
+            sessionRepository.observeSession().collect { session ->
+                _userName.value = session?.user?.name
             }
         }
     }
@@ -48,6 +61,7 @@ class HomeViewModel @Inject constructor(
                 if (_uiState.value !is HomeUiState.Init) return
 
                 observeNotifications()
+                observeUser()
                 loadDevices(showSyncFeedback = false)
             }
 

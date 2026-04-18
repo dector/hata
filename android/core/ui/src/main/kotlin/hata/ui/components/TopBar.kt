@@ -53,6 +53,7 @@ enum class ConnectionStatus(
 @Composable
 fun TopBar(
     name: String,
+    userName: String? = null,
     connectionStatus: ConnectionStatus = ConnectionStatus.Unknown,
     isSyncing: Boolean = false,
     hasNotifications: Boolean = false,
@@ -84,7 +85,10 @@ fun TopBar(
                 hasNotifications = hasNotifications,
                 onClick = onNotificationsClick,
             )
-            Avatar(onClick = onAvatarClick)
+            Avatar(
+                userName = userName,
+                onClick = onAvatarClick,
+            )
         }
     }
 }
@@ -201,7 +205,16 @@ private fun ConnectionStatusRow(connectionStatus: ConnectionStatus) {
 }
 
 @Composable
-private fun Avatar(onClick: () -> Unit = {}) {
+private fun Avatar(
+    userName: String? = null,
+    onClick: () -> Unit = {},
+) {
+    val avatarLetter = userName
+        ?.trim()
+        ?.firstOrNull { !it.isWhitespace() }
+        ?.uppercaseChar()
+        ?.toString()
+
     Box(
         modifier = Modifier
             .size(48.dp)
@@ -210,11 +223,20 @@ private fun Avatar(onClick: () -> Unit = {}) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = "Profile",
-            tint = HataAccentColors.avatarIcon,
-        )
+        if (avatarLetter != null) {
+            Text(
+                text = avatarLetter,
+                color = HataAccentColors.avatarIcon,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Profile",
+                tint = HataAccentColors.avatarIcon,
+            )
+        }
     }
 }
 
@@ -223,6 +245,7 @@ private fun Avatar(onClick: () -> Unit = {}) {
 fun TopBarPreview() = preview {
     TopBar(
         name = "My Home",
+        userName = "Dan",
         connectionStatus = ConnectionStatus.Online,
         isSyncing = true,
         hasNotifications = true,
