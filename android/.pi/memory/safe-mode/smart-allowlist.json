@@ -1,0 +1,8 @@
+{
+  "allow": [
+    "./gradlew :feature:home:compileDebugKotlin",
+    "./gradlew installDebug",
+    "adb shell am start -n space.dector.hata/hata.app.AppActivity"
+  ],
+  "deny": []
+}
