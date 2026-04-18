@@ -115,7 +115,9 @@ private fun HomeScreenUI(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButtonContainer()
+            FloatingActionButtonContainer(
+                onShoppingClick = { dispatch(HomeUiAction.NavigateToShopping) },
+            )
         },
     ) { paddingValues ->
         Column(
@@ -204,7 +206,9 @@ private fun HomeScreenUI(
 }
 
 @Composable
-private fun FloatingActionButtonContainer() {
+private fun FloatingActionButtonContainer(
+    onShoppingClick: () -> Unit = {},
+) {
     var isFabMenuExpanded by remember { mutableStateOf(false) }
     val fabIconRotation by animateFloatAsState(
         targetValue = if (isFabMenuExpanded) 180f else 0f,
@@ -250,7 +254,10 @@ private fun FloatingActionButtonContainer() {
                     FabMenuItem(
                         text = "Shopping",
                         dotColor = Color(0xFF4CAF50),
-                        onClick = { setFabExpanded(false) },
+                        onClick = {
+                            setFabExpanded(false)
+                            onShoppingClick()
+                        },
                     )
 //                    HorizontalDivider(
 //                        modifier = Modifier.padding(horizontal = 16.dp),

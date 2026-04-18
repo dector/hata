@@ -11,6 +11,7 @@ sealed interface HomeUiAction {
     ) : HomeUiAction
     data object NavigateToProfile : HomeUiAction
     data object NavigateToNotifications : HomeUiAction
+    data object NavigateToShopping : HomeUiAction
 
     data class ToggleDevice(
         val deviceId: String,

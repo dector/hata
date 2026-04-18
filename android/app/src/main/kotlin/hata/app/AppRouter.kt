@@ -20,6 +20,7 @@ import hata.navigation.Route
 import hata.navigation.internal.AppNavigator
 import hata.feature.home.ui.HomeScreen
 import hata.feature.home.ui.Mockup1UI
+import hata.feature.home.ui.ShoppingScreen
 import kotlinx.coroutines.channels.consumeEach
 
 
@@ -65,6 +66,10 @@ fun AppRouter(
 
             entry<Route.Notifications> {
                 NotificationsScreen()
+            }
+
+            entry<Route.Shopping> {
+                ShoppingScreen()
             }
 
             entry<Route.Mockup> {

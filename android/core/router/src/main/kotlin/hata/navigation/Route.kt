@@ -23,5 +23,8 @@ sealed interface Route {
     data object Notifications : Route
 
     @Serializable
+    data object Shopping : Route
+
+    @Serializable
     data object Back : Route
 }

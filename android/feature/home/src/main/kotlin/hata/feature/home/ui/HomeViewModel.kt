@@ -73,6 +73,7 @@ class HomeViewModel @Inject constructor(
 
             is HomeUiAction.NavigateToProfile -> navigator.goTo(Route.Profile)
             is HomeUiAction.NavigateToNotifications -> navigator.goTo(Route.Notifications)
+            is HomeUiAction.NavigateToShopping -> navigator.goTo(Route.Shopping)
         }
     }
 
