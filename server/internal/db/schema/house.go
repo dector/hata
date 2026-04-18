@@ -38,5 +38,6 @@ func (House) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("roles", HouseRole.Type),
 		edge.To("devices", Device.Type),
+		edge.To("shopping_lists", ShoppingList.Type),
 	}
 }
