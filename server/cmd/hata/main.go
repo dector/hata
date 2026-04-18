@@ -64,6 +64,7 @@ func startServer(database db.DB, ctx context.Context) {
 	serverHandler := api.NewServerHandler()
 	houseHandler := api.NewHouseHandler(database.Repos())
 	deviceHandler := api.NewDeviceHandler(database.Repos())
+	shoppingListHandler := api.NewShoppingListHandler(database.Repos())
 
 	// Static assets
 	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("public"))))
@@ -106,6 +107,13 @@ func startServer(database db.DB, ctx context.Context) {
 		r.Get("/house", houseHandler.List)
 		r.Get("/house/{houseId}/device", deviceHandler.ListByHouse)
 		r.Patch("/house/{houseId}/device/{deviceId}/state", deviceHandler.SetState)
+		r.Get("/house/{houseId}/shopping-list", shoppingListHandler.ListByHouse)
+		r.Get("/house/{houseId}/shopping-list/{listId}", shoppingListHandler.GetByHouseAndUID)
+		r.Get("/house/{houseId}/shopping-list/{listId}/item", shoppingListHandler.ListItems)
+		r.Post("/house/{houseId}/shopping-list/{listId}/item", shoppingListHandler.CreateItem)
+		r.Patch("/house/{houseId}/shopping-list/{listId}/item/{itemId}", shoppingListHandler.UpdateItem)
+		r.Patch("/house/{houseId}/shopping-list/{listId}/item/{itemId}/check", shoppingListHandler.SetItemChecked)
+		r.Delete("/house/{houseId}/shopping-list/{listId}/item/{itemId}", shoppingListHandler.DeleteItem)
 		r.Get("/device", deviceHandler.ListByUser)
 		r.Get("/ping", serverHandler.Ping)
 	})
