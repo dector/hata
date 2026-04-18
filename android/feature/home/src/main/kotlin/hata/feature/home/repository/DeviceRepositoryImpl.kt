@@ -60,46 +60,30 @@ class DeviceRepositoryImpl @Inject constructor(
     override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> =
         withContext(dispatcher) {
             runCatching {
+                val session = requireSession()
+                val service = getServerService(session.serverUrl)
                 val deviceDao = userDevicesDatabaseProvider.deviceDao()
                 val currentDevice = deviceDao.findById(deviceId)?.toDomain()
                     ?: throw IllegalArgumentException("Device with id '$deviceId' is not available")
+                val houseId = currentDevice.houseId
+                    ?: throw IllegalStateException("Device with id '$deviceId' has no house ID")
 
-                if (!currentDevice.isWizIntegration()) {
-                    throw UnsupportedOperationException("Local control is only supported for wiz devices")
+                val requestedState = when (newState) {
+                    NewState.On -> "on"
+                    NewState.Off -> "off"
                 }
 
-                val ip = currentDevice.integrationData?.get("ip") as? String
-                    ?: throw IllegalStateException("Missing wiz device ip")
-                val type = currentDevice.integrationData?.get("type") as? String ?: "unknown"
-                val mac = currentDevice.integrationData?.get("mac") as? String ?: currentDevice.id
+                val serverState = service.setDeviceState(
+                    houseId = houseId,
+                    deviceId = deviceId,
+                    newState = requestedState,
+                ).getOrThrow()
 
-                val wizDevice = WizDevice(
-                    name = currentDevice.name,
-                    ip = ip,
-                    type = type,
-                    mac = mac,
+                val updatedDevice = currentDevice.copy(
+                    state = serverState.toDeviceState(),
                 )
-                val control = WizControl(wizDevice)
-
-                val toggleResult = when (newState) {
-                    NewState.On -> control.turnOn()
-                    NewState.Off -> control.turnOff()
-                }
-
-                when (toggleResult) {
-                    is WizResult.Success -> {
-                        val updatedDevice = currentDevice.copy(
-                            state = when (newState) {
-                                NewState.On -> DeviceState.On
-                                NewState.Off -> DeviceState.Off
-                            },
-                        )
-                        deviceDao.upsert(updatedDevice.toEntity())
-                        updatedDevice
-                    }
-
-                    is WizResult.Error -> throw toggleResult.exception
-                }
+                deviceDao.upsert(updatedDevice.toEntity())
+                updatedDevice
             }
         }
 
@@ -150,18 +134,20 @@ private fun Device.isWizIntegration(): Boolean {
 }
 
 private fun ApiDevice.toDevice(): Device {
-    val normalizedState = when (state.lowercase()) {
-        "on" -> DeviceState.On
-        "off" -> DeviceState.Off
-        else -> DeviceState.Unknown
-    }
-
     return Device(
         id = id,
         name = name,
         integrationId = integration?.id ?: "unknown",
         integrationData = integration?.data,
-        state = normalizedState,
+        state = state.toDeviceState(),
         houseId = house?.id,
     )
+}
+
+private fun String.toDeviceState(): DeviceState {
+    return when (lowercase()) {
+        "on" -> DeviceState.On
+        "off" -> DeviceState.Off
+        else -> DeviceState.Unknown
+    }
 }

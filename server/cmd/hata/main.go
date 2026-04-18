@@ -105,6 +105,7 @@ func startServer(database db.DB, ctx context.Context) {
 		})
 		r.Get("/house", houseHandler.List)
 		r.Get("/house/{houseId}/device", deviceHandler.ListByHouse)
+		r.Patch("/house/{houseId}/device/{deviceId}/state", deviceHandler.SetState)
 		r.Get("/device", deviceHandler.ListByUser)
 		r.Get("/ping", serverHandler.Ping)
 	})

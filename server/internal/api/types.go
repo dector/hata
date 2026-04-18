@@ -77,6 +77,18 @@ type DeviceListByHouseResponse struct {
 	Devices []DeviceInfo `json:"devices"`
 }
 
+// DeviceSetStateRequest represents a request to set the desired state for a device.
+type DeviceSetStateRequest struct {
+	State string `json:"state"`
+}
+
+// DeviceSetStateResponse represents the result of setting a device state.
+type DeviceSetStateResponse struct {
+	DeviceID string   `json:"deviceId"`
+	House    HouseRef `json:"house"`
+	State    string   `json:"state"`
+}
+
 // ErrorResponse represents an error response.
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error"`

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"hata/internal/orm"
@@ -9,6 +10,8 @@ import (
 	"hata/internal/orm/house"
 	"hata/internal/orm/houserole"
 )
+
+var ErrDeviceNotFound = errors.New("device not found")
 
 // DeviceRepo implements the DeviceRepository interface.
 type DeviceRepo struct {
@@ -87,7 +90,7 @@ func (r *DeviceRepo) UpdateState(ctx context.Context, houseID, id, state string)
 		return fmt.Errorf("failed updating device state: %w", err)
 	}
 	if count == 0 {
-		return fmt.Errorf("device %q not found in house %q", id, houseID)
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
 	}
 	return nil
 }

@@ -14,4 +14,10 @@ interface ServerApi {
     ): Result<List<ApiDevice>>
 
     suspend fun fetchDevicesByUser(): Result<List<ApiDevice>>
+
+    suspend fun setDeviceState(
+        houseId: String,
+        deviceId: String,
+        newState: String,
+    ): Result<String>
 }

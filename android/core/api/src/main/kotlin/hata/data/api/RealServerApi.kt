@@ -1,6 +1,7 @@
 package hata.data.api
 
 import hata.data.api.models.ApiDevice
+import hata.data.api.models.ApiDeviceSetStateRequest
 import hata.data.api.models.LoginRequest
 import retrofit2.HttpException
 import java.io.IOException
@@ -104,6 +105,34 @@ class RealServerApi(
         } catch (e: Exception) {
             Result.failure(
                 Exception("Failed to load devices: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    override suspend fun setDeviceState(
+        houseId: String,
+        deviceId: String,
+        newState: String,
+    ): Result<String> {
+        return try {
+            val response = api.setDeviceState(
+                houseId = houseId,
+                deviceId = deviceId,
+                request = ApiDeviceSetStateRequest(state = newState),
+            )
+
+            Result.success(response.state)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to set device state"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to set device state: ${e.message ?: "Unknown error"}"),
             )
         }
     }

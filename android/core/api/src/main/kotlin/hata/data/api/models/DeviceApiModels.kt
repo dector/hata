@@ -27,3 +27,15 @@ data class ApiDeviceIntegration(
 data class ApiHouseRef(
     val id: String,
 )
+
+@JsonClass(generateAdapter = true)
+data class ApiDeviceSetStateRequest(
+    val state: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiDeviceSetStateResponse(
+    val deviceId: String,
+    val house: ApiHouseRef,
+    val state: String,
+)
