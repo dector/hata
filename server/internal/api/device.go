@@ -8,19 +8,30 @@ import (
 	"strings"
 
 	"hata/internal/db"
-	dbrepo "hata/internal/db/repo"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // DeviceHandler provides device endpoints.
 type DeviceHandler struct {
-	repos db.Repositories
+	repos      db.Repositories
+	controller DeviceController
 }
 
 // NewDeviceHandler creates a new DeviceHandler.
 func NewDeviceHandler(repos db.Repositories) *DeviceHandler {
-	return &DeviceHandler{repos: repos}
+	return &DeviceHandler{
+		repos:      repos,
+		controller: NewRealDeviceController(),
+	}
+}
+
+// NewDeviceHandlerWithController creates a new DeviceHandler with explicit device controller.
+func NewDeviceHandlerWithController(repos db.Repositories, controller DeviceController) *DeviceHandler {
+	if controller == nil {
+		controller = NewRealDeviceController()
+	}
+	return &DeviceHandler{repos: repos, controller: controller}
 }
 
 // ListByHouse handles GET /api/latest/house/{houseId}/device
@@ -151,11 +162,32 @@ func (h *DeviceHandler) SetState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repos.Device().UpdateState(r.Context(), houseID, deviceID, newState); err != nil {
-		if errors.Is(err, dbrepo.ErrDeviceNotFound) {
-			WriteError(w, http.StatusNotFound, "Device not found", "not-found")
+	device, err := h.repos.Device().GetByHouseAndID(r.Context(), houseID, deviceID)
+	if err != nil {
+		fmt.Printf("Error loading device %q in house %q: %v\n", deviceID, houseID, err)
+		WriteError(w, http.StatusInternalServerError, "Internal server error", "internal-error")
+		return
+	}
+	if device == nil {
+		WriteError(w, http.StatusNotFound, "Device not found", "not-found")
+		return
+	}
+
+	if err := h.controller.SetState(r.Context(), device, newState); err != nil {
+		if errors.Is(err, errUnsupportedIntegration) {
+			WriteError(w, http.StatusUnprocessableEntity, "Device integration is not supported", "unsupported-integration")
 			return
 		}
+		if errors.Is(err, errInvalidIntegrationData) {
+			WriteError(w, http.StatusInternalServerError, "Device integration data is invalid", "invalid-integration-data")
+			return
+		}
+		fmt.Printf("Error controlling device %q in house %q: %v\n", deviceID, houseID, err)
+		WriteError(w, http.StatusBadGateway, "Failed to control physical device", "device-control-failed")
+		return
+	}
+
+	if err := h.repos.Device().UpdateState(r.Context(), houseID, deviceID, newState); err != nil {
 		fmt.Printf("Error updating state for device %q in house %q: %v\n", deviceID, houseID, err)
 		WriteError(w, http.StatusInternalServerError, "Internal server error", "internal-error")
 		return

@@ -1,9 +1,10 @@
 module hata
 
-go 1.25.5
+go 1.26.2
 
 require (
 	entgo.io/ent v0.14.5
+	github.com/dector/go-devices v0.0.0-20260413000523-d2f647587e44
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/sqids/sqids-go v0.4.1

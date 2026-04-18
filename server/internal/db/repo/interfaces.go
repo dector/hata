@@ -101,6 +101,10 @@ type DeviceRepository interface {
 	// ListByUser lists devices for all houses the user belongs to.
 	ListByUser(ctx context.Context, userID int) ([]*DeviceData, error)
 
+	// GetByHouseAndID retrieves a device by house and device ID.
+	// Returns nil, nil if device doesn't exist.
+	GetByHouseAndID(ctx context.Context, houseID, id string) (*DeviceData, error)
+
 	// UpdateState updates the device state.
 	UpdateState(ctx context.Context, houseID, id, state string) error
 }

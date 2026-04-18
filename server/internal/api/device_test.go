@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -383,12 +384,14 @@ func TestDeviceSetState_OK(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to assign role: %v", err)
 	}
-	_, err = repos.Device().Create(ctx, house.ID, "lamp-1", "Lamp", "wiz", nil, "off")
+	integrationData := `{"ip":"192.168.1.41"}`
+	_, err = repos.Device().Create(ctx, house.ID, "lamp-1", "Lamp", "wiz", &integrationData, "off")
 	if err != nil {
 		t.Fatalf("Failed to create device: %v", err)
 	}
 
-	handler := NewDeviceHandler(repos)
+	controller := &fakeDeviceController{}
+	handler := NewDeviceHandlerWithController(repos, controller)
 	router := chi.NewRouter()
 	router.Patch("/api/latest/house/{houseId}/device/{deviceId}/state", handler.SetState)
 
@@ -416,6 +419,15 @@ func TestDeviceSetState_OK(t *testing.T) {
 	if resp.State != "on" {
 		t.Fatalf("Expected state on, got %q", resp.State)
 	}
+	if controller.calls != 1 {
+		t.Fatalf("Expected controller to be called once, got %d", controller.calls)
+	}
+	if controller.lastDeviceID != "lamp-1" {
+		t.Fatalf("Expected controller device lamp-1, got %q", controller.lastDeviceID)
+	}
+	if controller.lastState != "on" {
+		t.Fatalf("Expected controller state on, got %q", controller.lastState)
+	}
 
 	devices, err := repos.Device().ListByHouse(ctx, house.ID)
 	if err != nil {
@@ -427,6 +439,70 @@ func TestDeviceSetState_OK(t *testing.T) {
 	if devices[0].State != "on" {
 		t.Fatalf("Expected persisted state on, got %q", devices[0].State)
 	}
+}
+
+func TestDeviceSetState_ControlFailure_DoesNotPersist(t *testing.T) {
+	repos, cleanup := setupAuthTest(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	user := createTestUser(t, repos, "user@example.com")
+	token := createTestSession(t, repos, user.ID, strings.Repeat("h", 40))
+
+	house, err := repos.House().Create(ctx, "house-1", "Main House")
+	if err != nil {
+		t.Fatalf("Failed to create house: %v", err)
+	}
+	_, err = repos.HouseRole().Assign(ctx, house.ID, user.ID, "owner")
+	if err != nil {
+		t.Fatalf("Failed to assign role: %v", err)
+	}
+	integrationData := `{"ip":"192.168.1.41"}`
+	_, err = repos.Device().Create(ctx, house.ID, "lamp-1", "Lamp", "wiz", &integrationData, "off")
+	if err != nil {
+		t.Fatalf("Failed to create device: %v", err)
+	}
+
+	controller := &fakeDeviceController{err: errors.New("udp timeout")}
+	handler := NewDeviceHandlerWithController(repos, controller)
+	router := chi.NewRouter()
+	router.Patch("/api/latest/house/{houseId}/device/{deviceId}/state", handler.SetState)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/latest/house/house-1/device/lamp-1/state", strings.NewReader(`{"state":"on"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadGateway {
+		t.Fatalf("Expected status 502, got %d", w.Code)
+	}
+
+	devices, err := repos.Device().ListByHouse(ctx, house.ID)
+	if err != nil {
+		t.Fatalf("Failed listing devices: %v", err)
+	}
+	if len(devices) != 1 {
+		t.Fatalf("Expected 1 device, got %d", len(devices))
+	}
+	if devices[0].State != "off" {
+		t.Fatalf("Expected persisted state to remain off, got %q", devices[0].State)
+	}
+}
+
+type fakeDeviceController struct {
+	calls        int
+	lastDeviceID string
+	lastState    string
+	err          error
+}
+
+func (f *fakeDeviceController) SetState(ctx context.Context, device *db.DeviceData, state string) error {
+	f.calls++
+	f.lastDeviceID = device.ID
+	f.lastState = state
+	return f.err
 }
 
 func createTestUser(t *testing.T, repos db.Repositories, username string) *db.UserData {

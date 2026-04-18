@@ -80,6 +80,20 @@ func (r *DeviceRepo) ListByUser(ctx context.Context, userID int) ([]*DeviceData,
 	return results, nil
 }
 
+// GetByHouseAndID retrieves a device by house and device ID.
+func (r *DeviceRepo) GetByHouseAndID(ctx context.Context, houseID, id string) (*DeviceData, error) {
+	d, err := r.client.Device.Query().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id)).
+		Only(ctx)
+	if err != nil {
+		if orm.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed fetching device %q in house %q: %w", id, houseID, err)
+	}
+	return deviceDataFromEnt(d), nil
+}
+
 // UpdateState updates the device state.
 func (r *DeviceRepo) UpdateState(ctx context.Context, houseID, id, state string) error {
 	count, err := r.client.Device.Update().
