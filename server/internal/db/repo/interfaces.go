@@ -24,6 +24,12 @@ type Repositories interface {
 
 	// Device returns the device repository.
 	Device() DeviceRepository
+
+	// ShoppingList returns the shopping list repository.
+	ShoppingList() ShoppingListRepository
+
+	// ShoppingItem returns the shopping item repository.
+	ShoppingItem() ShoppingItemRepository
 }
 
 // KVRepository provides access to the key-value store.
@@ -109,6 +115,42 @@ type DeviceRepository interface {
 	UpdateState(ctx context.Context, houseID, id, state string) error
 }
 
+// ShoppingListRepository provides access to shopping list data.
+type ShoppingListRepository interface {
+	// Create creates a shopping list in a house.
+	Create(ctx context.Context, houseID, uid, name string) (*ShoppingListData, error)
+
+	// ListByHouse lists shopping lists for a house.
+	ListByHouse(ctx context.Context, houseID string) ([]*ShoppingListData, error)
+
+	// GetByHouseAndUID retrieves a shopping list by house and list UID.
+	// Returns nil, nil if list doesn't exist.
+	GetByHouseAndUID(ctx context.Context, houseID, uid string) (*ShoppingListData, error)
+}
+
+// ShoppingItemRepository provides access to shopping item data.
+type ShoppingItemRepository interface {
+	// Create creates a shopping item in the specified list and appends it to the end.
+	Create(ctx context.Context, houseID, listUID, itemUID, name string) (*ShoppingItemData, error)
+
+	// ListByHouseAndListUID lists shopping items for a list.
+	ListByHouseAndListUID(ctx context.Context, houseID, listUID string, includeDeleted bool) ([]*ShoppingItemData, error)
+
+	// GetByHouseAndListAndUID retrieves a shopping item by house/list/item UIDs.
+	// Returns nil, nil if item doesn't exist.
+	GetByHouseAndListAndUID(ctx context.Context, houseID, listUID, itemUID string) (*ShoppingItemData, error)
+
+	// UpdateName updates shopping item name.
+	UpdateName(ctx context.Context, houseID, listUID, itemUID, name string) error
+
+	// SetChecked sets checked state fields.
+	// To uncheck, pass checkedAt=nil and checkedByUserID=nil.
+	SetChecked(ctx context.Context, houseID, listUID, itemUID string, checkedAt *time.Time, checkedByUserID *int) error
+
+	// SoftDelete marks shopping item as deleted.
+	SoftDelete(ctx context.Context, houseID, listUID, itemUID string, deletedAt time.Time) error
+}
+
 // UserData represents user information.
 type UserData struct {
 	ID           int
@@ -156,4 +198,28 @@ type DeviceData struct {
 	IntegrationData *string
 	State           string
 	HouseID         string
+}
+
+// ShoppingListData represents shopping list information.
+type ShoppingListData struct {
+	ID        int
+	HouseID   string
+	UID       string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// ShoppingItemData represents shopping item information.
+type ShoppingItemData struct {
+	ID              int
+	ListID          int
+	UID             string
+	Name            string
+	Position        int
+	CheckedAt       *time.Time
+	CheckedByUserID *int
+	DeletedAt       *time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

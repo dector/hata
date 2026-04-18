@@ -15,16 +15,35 @@ type HouseRepo struct {
 
 // Create creates a new house with the given ID and display name.
 func (r *HouseRepo) Create(ctx context.Context, id, displayName string) (*HouseData, error) {
-	h, err := r.client.House.Create().
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed starting transaction for house creation: %w", err)
+	}
+
+	h, err := tx.House.Create().
 		SetID(id).
 		SetDisplayName(displayName).
 		Save(ctx)
-
 	if err != nil {
+		_ = tx.Rollback()
 		if orm.IsConstraintError(err) {
 			return nil, fmt.Errorf("house %q already exists", id)
 		}
 		return nil, fmt.Errorf("failed creating house: %w", err)
+	}
+
+	_, err = tx.ShoppingList.Create().
+		SetHouseID(h.ID).
+		SetUID(DefaultShoppingListUID).
+		SetName(DefaultShoppingListName).
+		Save(ctx)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("failed creating default shopping list for house %q: %w", id, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed committing house creation transaction: %w", err)
 	}
 
 	return &HouseData{

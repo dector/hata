@@ -31,10 +31,14 @@ type (
 	HouseRepository     = repo.HouseRepository
 	HouseRoleRepository = repo.HouseRoleRepository
 	DeviceRepository    = repo.DeviceRepository
+	ShoppingListRepository = repo.ShoppingListRepository
+	ShoppingItemRepository = repo.ShoppingItemRepository
 	UserData            = repo.UserData
 	SessionData         = repo.SessionData
 	HouseData           = repo.HouseData
 	HouseRoleData       = repo.HouseRoleData
 	HouseMembershipData = repo.HouseMembershipData
 	DeviceData          = repo.DeviceData
+	ShoppingListData    = repo.ShoppingListData
+	ShoppingItemData    = repo.ShoppingItemData
 )
