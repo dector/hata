@@ -1,5 +1,11 @@
 package hata.feature.home.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,50 +73,130 @@ fun ShoppingScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShoppingScreenUI(
     state: ShoppingUiState,
     dispatch: (ShoppingUiAction) -> Unit = {},
 ) {
+    val isRefreshing = when (state) {
+        ShoppingUiState.Loading -> true
+        is ShoppingUiState.Loaded -> state.isRefreshing
+        ShoppingUiState.Init, is ShoppingUiState.Error -> false
+    }
+    val pullToRefreshState = rememberPullToRefreshState()
+
     Scaffold(
         containerColor = HataColors.background,
         topBar = {
             ShoppingTopBar(onBack = { dispatch(ShoppingUiAction.Back) })
         },
     ) { paddingValues ->
-        Box(
+        PullToRefreshBox(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
+            state = pullToRefreshState,
+            isRefreshing = isRefreshing,
+            onRefresh = { dispatch(ShoppingUiAction.Refresh) },
+            indicator = {},
         ) {
-            when (state) {
-                ShoppingUiState.Init,
-                ShoppingUiState.Loading,
-                -> ShoppingLoadingState()
+            val revealFraction = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
+            val revealHeight = if (isRefreshing) 32.dp else 32.dp * revealFraction
+            val revealTextAlpha = if (isRefreshing) 1f else revealFraction
+            val isReadyToRefresh = pullToRefreshState.distanceFraction >= 1f
+            val pullHintText = when {
+                isRefreshing -> "Syncing"
+                isReadyToRefresh -> "Release to sync"
+                else -> "Pull to sync"
+            }
 
-                is ShoppingUiState.Loaded -> {
-                    if (state.items.isEmpty()) {
-                        ShoppingEmptyState()
+            Column(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(revealHeight),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isRefreshing) {
+                        SyncingTextAnimatedDots(
+                            color = Color.White,
+                            alpha = revealTextAlpha,
+                        )
                     } else {
-                        ShoppingItemsList(
-                            items = state.items,
-                            errorMessage = state.errorMessage,
-                            onMarkPurchased = { itemId ->
-                                dispatch(ShoppingUiAction.MarkPurchased(itemId))
-                            },
+                        Text(
+                            text = pullHintText,
+                            color = Color.White.copy(alpha = revealTextAlpha),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
 
-                is ShoppingUiState.Error -> {
-                    ShoppingErrorState(
-                        message = state.message,
-                        onRetry = { dispatch(ShoppingUiAction.Retry) },
-                    )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    when (state) {
+                        ShoppingUiState.Init,
+                        ShoppingUiState.Loading,
+                        -> ShoppingLoadingState()
+
+                        is ShoppingUiState.Loaded -> {
+                            if (state.items.isEmpty()) {
+                                ShoppingEmptyState()
+                            } else {
+                                ShoppingItemsList(
+                                    items = state.items,
+                                    errorMessage = state.errorMessage,
+                                    onMarkPurchased = { itemId ->
+                                        dispatch(ShoppingUiAction.MarkPurchased(itemId))
+                                    },
+                                )
+                            }
+                        }
+
+                        is ShoppingUiState.Error -> {
+                            ShoppingErrorState(
+                                message = state.message,
+                                onRetry = { dispatch(ShoppingUiAction.Retry) },
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SyncingTextAnimatedDots(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White,
+    alpha: Float = 1f,
+) {
+    val transition = rememberInfiniteTransition(label = "syncing_text_dots")
+    val dotsProgress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "syncing_text_dots_count",
+    )
+    val dotsCount = (dotsProgress.toInt() % 3) + 1
+    val dotsText = ".".repeat(dotsCount).padEnd(3, ' ')
+
+    Text(
+        modifier = modifier,
+        text = "Syncing $dotsText",
+        color = color.copy(alpha = alpha),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        fontFamily = FontFamily.Monospace,
+    )
 }
 
 @Composable

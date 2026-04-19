@@ -27,27 +27,56 @@ class ShoppingViewModel @Inject constructor(
         when (action) {
             ShoppingUiAction.Init -> {
                 if (_uiState.value !is ShoppingUiState.Init) return
-                loadShoppingList()
+                loadShoppingList(showLoadingState = true)
             }
 
-            ShoppingUiAction.Retry -> loadShoppingList()
+            ShoppingUiAction.Retry -> loadShoppingList(showLoadingState = true)
+            ShoppingUiAction.Refresh -> refreshShoppingList()
             ShoppingUiAction.Back -> navigator.goBack()
             is ShoppingUiAction.MarkPurchased -> markItemPurchased(action.itemId)
         }
     }
 
-    private fun loadShoppingList() {
+    private fun refreshShoppingList() {
+        val state = _uiState.value
+        when (state) {
+            ShoppingUiState.Loading -> return
+            is ShoppingUiState.Loaded -> {
+                if (state.isRefreshing) return
+                loadShoppingList(showLoadingState = false)
+            }
+            else -> loadShoppingList(showLoadingState = true)
+        }
+    }
+
+    private fun loadShoppingList(showLoadingState: Boolean) {
         viewModelScope.launch {
-            _uiState.value = ShoppingUiState.Loading
+            val previousLoadedState = _uiState.value as? ShoppingUiState.Loaded
+
+            if (!showLoadingState && previousLoadedState != null) {
+                _uiState.value = previousLoadedState.copy(
+                    isRefreshing = true,
+                    errorMessage = null,
+                )
+            } else {
+                _uiState.value = ShoppingUiState.Loading
+            }
 
             loadDefaultShoppingListUseCase.run()
                 .onSuccess { items ->
                     _uiState.value = ShoppingUiState.Loaded(items = items)
                 }
                 .onFailure { error ->
-                    _uiState.value = ShoppingUiState.Error(
-                        message = error.message ?: "Failed to load shopping list",
-                    )
+                    if (!showLoadingState && previousLoadedState != null) {
+                        _uiState.value = previousLoadedState.copy(
+                            isRefreshing = false,
+                            errorMessage = error.message ?: "Failed to refresh shopping list",
+                        )
+                    } else {
+                        _uiState.value = ShoppingUiState.Error(
+                            message = error.message ?: "Failed to load shopping list",
+                        )
+                    }
                 }
         }
     }
@@ -85,6 +114,7 @@ sealed interface ShoppingUiState {
     data class Loaded(
         val items: List<ShoppingItem>,
         val errorMessage: String? = null,
+        val isRefreshing: Boolean = false,
     ) : ShoppingUiState
 
     data class Error(
@@ -95,6 +125,7 @@ sealed interface ShoppingUiState {
 sealed interface ShoppingUiAction {
     data object Init : ShoppingUiAction
     data object Retry : ShoppingUiAction
+    data object Refresh : ShoppingUiAction
     data object Back : ShoppingUiAction
     data class MarkPurchased(val itemId: String) : ShoppingUiAction
 }
