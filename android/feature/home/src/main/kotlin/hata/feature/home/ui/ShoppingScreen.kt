@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -24,9 +25,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,7 +89,13 @@ private fun ShoppingScreenUI(
                     if (state.items.isEmpty()) {
                         ShoppingEmptyState()
                     } else {
-                        ShoppingItemsList(items = state.items)
+                        ShoppingItemsList(
+                            items = state.items,
+                            errorMessage = state.errorMessage,
+                            onMarkPurchased = { itemId ->
+                                dispatch(ShoppingUiAction.MarkPurchased(itemId))
+                            },
+                        )
                     }
                 }
 
@@ -159,49 +170,98 @@ private fun ShoppingErrorState(
 @Composable
 private fun ShoppingItemsList(
     items: List<ShoppingItem>,
+    errorMessage: String?,
+    onMarkPurchased: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (!errorMessage.isNullOrBlank()) {
+            item {
+                Text(
+                    text = errorMessage,
+                    color = HataColors.error,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
+
         items(items, key = { it.id }) { item ->
-            ShoppingItemRow(item = item)
+            ShoppingItemRow(
+                item = item,
+                onMarkPurchased = { onMarkPurchased(item.id) },
+            )
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ShoppingItemRow(item: ShoppingItem) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = HataColors.surface,
-        ),
+private fun ShoppingItemRow(
+    item: ShoppingItem,
+    onMarkPurchased: () -> Unit,
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.StartToEnd && !item.isChecked) {
+                onMarkPurchased()
+            }
+            false
+        },
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = !item.isChecked,
+        enableDismissFromEndToStart = false,
+        backgroundContent = {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Done,
+                    contentDescription = null,
+                    tint = HataColors.primary,
+                )
+            }
+        },
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = HataColors.surface,
+            ),
         ) {
-            Icon(
-                imageVector = if (item.isChecked) {
-                    Icons.Default.CheckCircle
-                } else {
-                    Icons.Default.RadioButtonUnchecked
-                },
-                contentDescription = null,
-                tint = if (item.isChecked) HataColors.primary else HataColors.onSurfaceVariant,
-            )
-            Text(
-                text = item.name,
-                color = Color.White,
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = if (item.isChecked) {
+                        Icons.Default.CheckCircle
+                    } else {
+                        Icons.Default.RadioButtonUnchecked
+                    },
+                    contentDescription = null,
+                    tint = if (item.isChecked) HataColors.primary else HataColors.onSurfaceVariant,
+                )
+                Text(
+                    text = item.name,
+                    color = if (item.isChecked) HataColors.onSurfaceVariant else Color.White,
+                    textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None,
+                )
+            }
         }
     }
 }

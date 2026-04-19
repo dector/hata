@@ -35,4 +35,9 @@ interface ServerApi {
     ): Result<List<ApiShoppingItemInfo>>
 
     suspend fun fetchDefaultShoppingListItems(): Result<List<ApiShoppingItemInfo>>
+
+    suspend fun setDefaultShoppingItemChecked(
+        itemId: String,
+        checked: Boolean,
+    ): Result<ApiShoppingItemInfo>
 }

@@ -91,3 +91,13 @@ data class ApiShoppingItemInfo(
     val createdAt: String,
     val updatedAt: String,
 )
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingItemResponse(
+    val item: ApiShoppingItemInfo,
+)
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingItemCheckRequest(
+    val checked: Boolean,
+)

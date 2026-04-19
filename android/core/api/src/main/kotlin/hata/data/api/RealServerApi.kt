@@ -3,6 +3,7 @@ package hata.data.api
 import hata.data.api.models.ApiDevice
 import hata.data.api.models.ApiDeviceSetStateRequest
 import hata.data.api.models.ApiHouseInfo
+import hata.data.api.models.ApiShoppingItemCheckRequest
 import hata.data.api.models.ApiShoppingItemInfo
 import hata.data.api.models.ApiShoppingListInfo
 import hata.data.api.models.LoginRequest
@@ -210,13 +211,7 @@ class RealServerApi(
 
     override suspend fun fetchDefaultShoppingListItems(): Result<List<ApiShoppingItemInfo>> {
         return try {
-            val houses = api.latestHouse().houses
-            val houseId = houses.firstOrNull()?.id
-                ?: return Result.success(emptyList())
-
-            val lists = api.shoppingListsByHouse(houseId = houseId).shoppingLists
-            val listId = lists.firstOrNull { it.uid == DEFAULT_SHOPPING_LIST_UID }?.uid
-                ?: lists.firstOrNull()?.uid
+            val (houseId, listId) = resolveDefaultShoppingListIds()
                 ?: return Result.success(emptyList())
 
             val items = api.shoppingItemsByList(
@@ -238,6 +233,49 @@ class RealServerApi(
                 Exception("Failed to load default shopping list: ${e.message ?: "Unknown error"}"),
             )
         }
+    }
+
+    override suspend fun setDefaultShoppingItemChecked(
+        itemId: String,
+        checked: Boolean,
+    ): Result<ApiShoppingItemInfo> {
+        return try {
+            val (houseId, listId) = resolveDefaultShoppingListIds()
+                ?: return Result.failure(Exception("Default shopping list is not available"))
+
+            val item = api.setShoppingItemChecked(
+                houseId = houseId,
+                listId = listId,
+                itemId = itemId,
+                request = ApiShoppingItemCheckRequest(checked = checked),
+            ).item
+
+            Result.success(item)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to update shopping item"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to update shopping item: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    private suspend fun resolveDefaultShoppingListIds(): Pair<String, String>? {
+        val houses = api.latestHouse().houses
+        val houseId = houses.firstOrNull()?.id ?: return null
+
+        val lists = api.shoppingListsByHouse(houseId = houseId).shoppingLists
+        val listId = lists.firstOrNull { it.uid == DEFAULT_SHOPPING_LIST_UID }?.uid
+            ?: lists.firstOrNull()?.uid
+            ?: return null
+
+        return houseId to listId
     }
 
     private companion object {
