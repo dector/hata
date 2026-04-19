@@ -12,12 +12,5 @@
 - `androidx-activity-compose`: `1.12.3` → `1.13.0`
 - `androidx-core`: `1.17.0` → `1.18.0`
 
-## 3) Navigation
-- `androidx-navigation3`: `1.0.0` → `1.1.0`
-
-## 4) Data / persistence
-- `androidx-room`: `2.8.0` → `2.8.4`
-
-## 5) Serialization / DI ✅
-- `kotlinx-serialization`: `1.10.0` → `1.11.0` _(updated)_
-- `hilt`: `2.59.1` → `2.59.2` _(updated)_
+## 3) Navigation ✅
+- `androidx-navigation3`: `1.0.0` → `1.1.0` _(updated)_
