@@ -67,7 +67,7 @@ class ShoppingViewModel @Inject constructor(
 
             loadDefaultShoppingListUseCase.run()
                 .onSuccess { items ->
-                    _uiState.value = ShoppingUiState.Loaded(items = items)
+                    _uiState.value = ShoppingUiState.Loaded(items = items.sortedForDisplay())
                 }
                 .onFailure { error ->
                     if (!showLoadingState && previousLoadedState != null) {
@@ -97,9 +97,9 @@ class ShoppingViewModel @Inject constructor(
                 .onSuccess { updatedItem ->
                     val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onSuccess
                     _uiState.value = latestState.copy(
-                        items = latestState.items.map { item ->
-                            if (item.id == itemId) updatedItem else item
-                        },
+                        items = latestState.items
+                            .map { item -> if (item.id == itemId) updatedItem else item }
+                            .sortedForDisplay(),
                         errorMessage = null,
                     )
                 }
@@ -111,6 +111,12 @@ class ShoppingViewModel @Inject constructor(
                 }
         }
     }
+}
+
+private fun List<ShoppingItem>.sortedForDisplay(): List<ShoppingItem> {
+    return sortedWith(
+        compareBy<ShoppingItem>({ it.isChecked }, { it.name.lowercase() }, { it.id }),
+    )
 }
 
 sealed interface ShoppingUiState {

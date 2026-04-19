@@ -49,6 +49,37 @@ class ShoppingViewModelTest {
     }
 
     @Test
+    fun `init sorts items by unchecked first and name alphabetically`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(
+                listOf(
+                    ShoppingItem(id = "4", name = "Bread", isChecked = true),
+                    ShoppingItem(id = "2", name = "Apple", isChecked = false),
+                    ShoppingItem(id = "1", name = "milk", isChecked = false),
+                    ShoppingItem(id = "3", name = "Cheese", isChecked = true),
+                ),
+            ),
+        )
+        val vm = ShoppingViewModel(
+            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
+            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
+            navigator = FakeNavigator(),
+        )
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = listOf(
+                ShoppingItem(id = "2", name = "Apple", isChecked = false),
+                ShoppingItem(id = "1", name = "milk", isChecked = false),
+                ShoppingItem(id = "4", name = "Bread", isChecked = true),
+                ShoppingItem(id = "3", name = "Cheese", isChecked = true),
+            ),
+        )
+    }
+
+    @Test
     fun `init load failure updates state to error`() = runTest {
         val repository = FakeDeviceRepository(
             shoppingListResult = Result.failure(IllegalStateException("Boom")),
@@ -120,6 +151,39 @@ class ShoppingViewModelTest {
         vm.uiState.value shouldBe ShoppingUiState.Loaded(
             items = listOf(
                 ShoppingItem(id = "1", name = "Milk", isChecked = false),
+            ),
+            errorMessage = null,
+        )
+    }
+
+    @Test
+    fun `set checked success resorts list`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(
+                listOf(
+                    ShoppingItem(id = "1", name = "Apple", isChecked = false),
+                    ShoppingItem(id = "2", name = "Banana", isChecked = false),
+                ),
+            ),
+            setCheckedResult = Result.success(
+                ShoppingItem(id = "1", name = "Apple", isChecked = true),
+            ),
+        )
+        val vm = ShoppingViewModel(
+            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
+            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
+            navigator = FakeNavigator(),
+        )
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+        vm.onDispatch(ShoppingUiAction.SetChecked(itemId = "1", checked = true))
+        advanceUntilIdle()
+
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = listOf(
+                ShoppingItem(id = "2", name = "Banana", isChecked = false),
+                ShoppingItem(id = "1", name = "Apple", isChecked = true),
             ),
             errorMessage = null,
         )
