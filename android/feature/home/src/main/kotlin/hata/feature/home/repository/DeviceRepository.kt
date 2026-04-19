@@ -12,5 +12,6 @@ interface DeviceRepository {
     suspend fun syncByUser(): Result<Unit>
     suspend fun getDefaultShoppingList(): Result<List<ShoppingItem>>
     suspend fun setShoppingItemChecked(itemId: String, checked: Boolean): Result<ShoppingItem>
+    suspend fun addDefaultShoppingItem(name: String): Result<ShoppingItem>
     suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device>
 }

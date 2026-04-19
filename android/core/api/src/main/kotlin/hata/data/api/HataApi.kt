@@ -5,6 +5,7 @@ import hata.data.api.models.ApiDeviceSetStateRequest
 import hata.data.api.models.ApiDeviceSetStateResponse
 import hata.data.api.models.ApiHouseListResponse
 import hata.data.api.models.ApiShoppingItemCheckRequest
+import hata.data.api.models.ApiShoppingItemCreateRequest
 import hata.data.api.models.ApiShoppingItemListResponse
 import hata.data.api.models.ApiShoppingItemResponse
 import hata.data.api.models.ApiShoppingListListResponse
@@ -61,5 +62,12 @@ interface HataApi {
         @Path("listId") listId: String,
         @Path("itemId") itemId: String,
         @Body request: ApiShoppingItemCheckRequest,
+    ): ApiShoppingItemResponse
+
+    @POST("/api/latest/house/{houseId}/shopping-list/{listId}/item")
+    suspend fun createShoppingItem(
+        @Path("houseId") houseId: String,
+        @Path("listId") listId: String,
+        @Body request: ApiShoppingItemCreateRequest,
     ): ApiShoppingItemResponse
 }

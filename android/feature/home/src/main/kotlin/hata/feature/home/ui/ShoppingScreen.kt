@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,16 +23,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -136,6 +141,16 @@ private fun ShoppingScreenUI(
         topBar = {
             ShoppingTopBar(onBack = { dispatch(ShoppingUiAction.Back) })
         },
+        floatingActionButton = {
+            if (state is ShoppingUiState.Loaded) {
+                FloatingActionButton(onClick = { dispatch(ShoppingUiAction.OpenAddDialog) }) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add item",
+                    )
+                }
+            }
+        },
         snackbarHost = {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -207,7 +222,7 @@ private fun ShoppingScreenUI(
 
                         is ShoppingUiState.Loaded -> {
                             if (state.items.isEmpty()) {
-                                ShoppingEmptyState()
+                                ShoppingEmptyState(errorMessage = state.errorMessage)
                             } else {
                                 ShoppingItemsList(
                                     items = state.items,
@@ -234,6 +249,17 @@ private fun ShoppingScreenUI(
                 }
             }
         }
+    }
+
+    val loadedState = state as? ShoppingUiState.Loaded
+    if (loadedState?.isAddDialogVisible == true) {
+        AddShoppingItemDialog(
+            inputValue = loadedState.newItemName,
+            isSaving = loadedState.isSavingItem,
+            onInputChanged = { dispatch(ShoppingUiAction.UpdateNewItemName(it)) },
+            onDismiss = { dispatch(ShoppingUiAction.DismissAddDialog) },
+            onSave = { dispatch(ShoppingUiAction.SaveNewItem) },
+        )
     }
 }
 
@@ -277,7 +303,9 @@ private fun ShoppingLoadingState() {
 }
 
 @Composable
-private fun ShoppingEmptyState() {
+private fun ShoppingEmptyState(
+    errorMessage: String? = null,
+) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -294,6 +322,13 @@ private fun ShoppingEmptyState() {
                 text = "Your default shopping list is empty",
                 color = HataColors.onSurfaceVariant,
             )
+            if (!errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = errorMessage,
+                    color = HataColors.error,
+                )
+            }
         }
     }
 }
@@ -331,6 +366,7 @@ private fun ShoppingItemsList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 104.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (!errorMessage.isNullOrBlank()) {
@@ -349,8 +385,52 @@ private fun ShoppingItemsList(
                 onToggleChecked = { checked -> onSetChecked(item.id, checked) },
             )
         }
-        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
+}
+
+@Composable
+private fun AddShoppingItemDialog(
+    inputValue: String,
+    isSaving: Boolean,
+    onInputChanged: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit,
+) {
+    val isSaveEnabled = inputValue.trim().isNotEmpty() && !isSaving
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isSaving) {
+                onDismiss()
+            }
+        },
+        title = { Text(text = "Add item") },
+        text = {
+            OutlinedTextField(
+                value = inputValue,
+                onValueChange = onInputChanged,
+                singleLine = true,
+                enabled = !isSaving,
+                label = { Text(text = "Item name") },
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onSave,
+                enabled = isSaveEnabled,
+            ) {
+                Text(text = "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSaving,
+            ) {
+                Text(text = "Cancel")
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -78,6 +78,16 @@ class DeviceRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addDefaultShoppingItem(name: String): Result<ShoppingItem> = withContext(dispatcher) {
+        runCatching {
+            val session = requireSession()
+            val service = getServerService(session.serverUrl)
+            service.addDefaultShoppingItem(name = name)
+                .getOrThrow()
+                .toShoppingItem()
+        }
+    }
+
     override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> =
         withContext(dispatcher) {
             runCatching {

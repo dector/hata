@@ -40,4 +40,6 @@ interface ServerApi {
         itemId: String,
         checked: Boolean,
     ): Result<ApiShoppingItemInfo>
+
+    suspend fun addDefaultShoppingItem(name: String): Result<ApiShoppingItemInfo>
 }

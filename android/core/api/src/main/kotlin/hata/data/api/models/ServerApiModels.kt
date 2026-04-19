@@ -101,3 +101,8 @@ data class ApiShoppingItemResponse(
 data class ApiShoppingItemCheckRequest(
     val checked: Boolean,
 )
+
+@JsonClass(generateAdapter = true)
+data class ApiShoppingItemCreateRequest(
+    val name: String,
+)

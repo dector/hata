@@ -3,6 +3,7 @@ package hata.feature.home.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hata.feature.home.domain.AddShoppingItemUseCase
 import hata.feature.home.domain.LoadDefaultShoppingListUseCase
 import hata.feature.home.domain.SetShoppingItemPurchasedUseCase
 import hata.feature.home.domain.ShoppingItem
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class ShoppingViewModel @Inject constructor(
     private val loadDefaultShoppingListUseCase: LoadDefaultShoppingListUseCase,
     private val setShoppingItemPurchasedUseCase: SetShoppingItemPurchasedUseCase,
+    private val addShoppingItemUseCase: AddShoppingItemUseCase,
     private val navigator: Navigator,
 ) : ViewModel() {
 
@@ -39,6 +41,10 @@ class ShoppingViewModel @Inject constructor(
             ShoppingUiAction.Retry -> loadShoppingList(showLoadingState = true)
             ShoppingUiAction.Refresh -> refreshShoppingList()
             ShoppingUiAction.Back -> navigator.goBack()
+            ShoppingUiAction.OpenAddDialog -> openAddDialog()
+            ShoppingUiAction.DismissAddDialog -> dismissAddDialog()
+            is ShoppingUiAction.UpdateNewItemName -> updateNewItemName(action.name)
+            ShoppingUiAction.SaveNewItem -> saveNewItem()
             is ShoppingUiAction.SetChecked -> setItemChecked(
                 itemId = action.itemId,
                 checked = action.checked,
@@ -86,6 +92,66 @@ class ShoppingViewModel @Inject constructor(
                             message = error.message ?: "Failed to load shopping list",
                         )
                     }
+                }
+        }
+    }
+
+    private fun openAddDialog() {
+        val state = _uiState.value as? ShoppingUiState.Loaded ?: return
+        _uiState.value = state.copy(
+            isAddDialogVisible = true,
+            newItemName = "",
+            errorMessage = null,
+        )
+    }
+
+    private fun dismissAddDialog() {
+        val state = _uiState.value as? ShoppingUiState.Loaded ?: return
+        if (state.isSavingItem) return
+
+        _uiState.value = state.copy(
+            isAddDialogVisible = false,
+            newItemName = "",
+        )
+    }
+
+    private fun updateNewItemName(name: String) {
+        val state = _uiState.value as? ShoppingUiState.Loaded ?: return
+        if (!state.isAddDialogVisible || state.isSavingItem) return
+
+        _uiState.value = state.copy(newItemName = name)
+    }
+
+    private fun saveNewItem() {
+        val state = _uiState.value as? ShoppingUiState.Loaded ?: return
+        if (state.isSavingItem) return
+
+        val trimmedName = state.newItemName.trim()
+        if (trimmedName.isBlank()) return
+
+        _uiState.value = state.copy(
+            isSavingItem = true,
+            errorMessage = null,
+        )
+
+        viewModelScope.launch {
+            addShoppingItemUseCase.run(name = trimmedName)
+                .onSuccess { addedItem ->
+                    val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onSuccess
+                    _uiState.value = latestState.copy(
+                        items = (latestState.items + addedItem).sortedForDisplay(),
+                        errorMessage = null,
+                        isAddDialogVisible = false,
+                        newItemName = "",
+                        isSavingItem = false,
+                    )
+                }
+                .onFailure { error ->
+                    val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onFailure
+                    _uiState.value = latestState.copy(
+                        isSavingItem = false,
+                        errorMessage = error.message ?: "Failed to add item",
+                    )
                 }
         }
     }
@@ -140,6 +206,9 @@ sealed interface ShoppingUiState {
         val items: List<ShoppingItem>,
         val errorMessage: String? = null,
         val isRefreshing: Boolean = false,
+        val isAddDialogVisible: Boolean = false,
+        val newItemName: String = "",
+        val isSavingItem: Boolean = false,
     ) : ShoppingUiState
 
     data class Error(
@@ -152,6 +221,12 @@ sealed interface ShoppingUiAction {
     data object Retry : ShoppingUiAction
     data object Refresh : ShoppingUiAction
     data object Back : ShoppingUiAction
+    data object OpenAddDialog : ShoppingUiAction
+    data object DismissAddDialog : ShoppingUiAction
+    data class UpdateNewItemName(
+        val name: String,
+    ) : ShoppingUiAction
+    data object SaveNewItem : ShoppingUiAction
     data class SetChecked(
         val itemId: String,
         val checked: Boolean,

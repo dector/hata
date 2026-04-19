@@ -1,6 +1,7 @@
 package hata.feature.home.ui
 
 import hata.data.models.Device
+import hata.feature.home.domain.AddShoppingItemUseCase
 import hata.feature.home.domain.LoadDefaultShoppingListUseCase
 import hata.feature.home.domain.NewState
 import hata.feature.home.domain.SetShoppingItemPurchasedUseCase
@@ -32,15 +33,7 @@ class ShoppingViewModelTest {
         val repository = FakeDeviceRepository(
             shoppingListResult = Result.success(defaultItems),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(
-                deviceRepository = repository,
-            ),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(
-                deviceRepository = repository,
-            ),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -62,11 +55,7 @@ class ShoppingViewModelTest {
                 ),
             ),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -86,15 +75,7 @@ class ShoppingViewModelTest {
         val repository = FakeDeviceRepository(
             shoppingListResult = Result.failure(IllegalStateException("Boom")),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(
-                deviceRepository = repository,
-            ),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(
-                deviceRepository = repository,
-            ),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -110,11 +91,7 @@ class ShoppingViewModelTest {
                 ShoppingItem(id = "1", name = "Milk", isChecked = true),
             ),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -146,11 +123,7 @@ class ShoppingViewModelTest {
                 ShoppingItem(id = "1", name = "Milk", isChecked = false),
             ),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -178,11 +151,7 @@ class ShoppingViewModelTest {
                 ShoppingItem(id = "1", name = "Apple", isChecked = true),
             ),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -204,11 +173,7 @@ class ShoppingViewModelTest {
             shoppingListResult = Result.success(defaultItems),
             setCheckedResult = Result.failure(IllegalStateException("No internet")),
         )
-        val vm = ShoppingViewModel(
-            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
-            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
-            navigator = FakeNavigator(),
-        )
+        val vm = createVm(repository)
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
@@ -220,6 +185,97 @@ class ShoppingViewModelTest {
             errorMessage = "No internet",
         )
     }
+
+    @Test
+    fun `save new item success appends and resorts then closes dialog`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(
+                listOf(
+                    ShoppingItem(id = "1", name = "Milk", isChecked = false),
+                ),
+            ),
+            addItemResult = Result.success(
+                ShoppingItem(id = "2", name = "Apple", isChecked = false),
+            ),
+        )
+        val vm = createVm(repository)
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+        vm.onDispatch(ShoppingUiAction.OpenAddDialog)
+        vm.onDispatch(ShoppingUiAction.UpdateNewItemName("Apple"))
+        vm.onDispatch(ShoppingUiAction.SaveNewItem)
+        advanceUntilIdle()
+
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = listOf(
+                ShoppingItem(id = "2", name = "Apple", isChecked = false),
+                ShoppingItem(id = "1", name = "Milk", isChecked = false),
+            ),
+            errorMessage = null,
+            isAddDialogVisible = false,
+            newItemName = "",
+            isSavingItem = false,
+        )
+        repository.addItemCalls shouldBe 1
+        repository.lastAddedName shouldBe "Apple"
+    }
+
+    @Test
+    fun `save new item failure keeps list and shows error with dialog open`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(defaultItems),
+            addItemResult = Result.failure(IllegalStateException("Create failed")),
+        )
+        val vm = createVm(repository)
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+        vm.onDispatch(ShoppingUiAction.OpenAddDialog)
+        vm.onDispatch(ShoppingUiAction.UpdateNewItemName("Bread"))
+        vm.onDispatch(ShoppingUiAction.SaveNewItem)
+        advanceUntilIdle()
+
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = defaultItems,
+            errorMessage = "Create failed",
+            isAddDialogVisible = true,
+            newItemName = "Bread",
+            isSavingItem = false,
+        )
+        repository.addItemCalls shouldBe 1
+    }
+
+    @Test
+    fun `save new item with blank name does not call repository`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(defaultItems),
+        )
+        val vm = createVm(repository)
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+        vm.onDispatch(ShoppingUiAction.OpenAddDialog)
+        vm.onDispatch(ShoppingUiAction.UpdateNewItemName("   "))
+        vm.onDispatch(ShoppingUiAction.SaveNewItem)
+        advanceUntilIdle()
+
+        repository.addItemCalls shouldBe 0
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = defaultItems,
+            isAddDialogVisible = true,
+            newItemName = "   ",
+        )
+    }
+
+    private fun createVm(repository: FakeDeviceRepository): ShoppingViewModel {
+        return ShoppingViewModel(
+            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
+            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
+            addShoppingItemUseCase = AddShoppingItemUseCase(repository),
+            navigator = FakeNavigator(),
+        )
+    }
 }
 
 private class FakeDeviceRepository(
@@ -227,7 +283,17 @@ private class FakeDeviceRepository(
     private val setCheckedResult: Result<ShoppingItem> = Result.success(
         ShoppingItem(id = "1", name = "Milk", isChecked = true),
     ),
+    private val addItemResult: Result<ShoppingItem> = Result.success(
+        ShoppingItem(id = "2", name = "Bread", isChecked = false),
+    ),
 ) : DeviceRepository {
+
+    var addItemCalls: Int = 0
+        private set
+
+    var lastAddedName: String? = null
+        private set
+
     override suspend fun listByHouse(houseId: String): List<Device> = emptyList()
 
     override suspend fun listByUser(): List<Device> = emptyList()
@@ -237,6 +303,12 @@ private class FakeDeviceRepository(
     override suspend fun getDefaultShoppingList(): Result<List<ShoppingItem>> = shoppingListResult
 
     override suspend fun setShoppingItemChecked(itemId: String, checked: Boolean): Result<ShoppingItem> = setCheckedResult
+
+    override suspend fun addDefaultShoppingItem(name: String): Result<ShoppingItem> {
+        addItemCalls += 1
+        lastAddedName = name
+        return addItemResult
+    }
 
     override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> {
         throw UnsupportedOperationException("Not used in tests")

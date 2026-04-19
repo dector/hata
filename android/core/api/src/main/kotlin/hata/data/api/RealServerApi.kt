@@ -4,6 +4,7 @@ import hata.data.api.models.ApiDevice
 import hata.data.api.models.ApiDeviceSetStateRequest
 import hata.data.api.models.ApiHouseInfo
 import hata.data.api.models.ApiShoppingItemCheckRequest
+import hata.data.api.models.ApiShoppingItemCreateRequest
 import hata.data.api.models.ApiShoppingItemInfo
 import hata.data.api.models.ApiShoppingListInfo
 import hata.data.api.models.LoginRequest
@@ -262,6 +263,33 @@ class RealServerApi(
         } catch (e: Exception) {
             Result.failure(
                 Exception("Failed to update shopping item: ${e.message ?: "Unknown error"}"),
+            )
+        }
+    }
+
+    override suspend fun addDefaultShoppingItem(name: String): Result<ApiShoppingItemInfo> {
+        return try {
+            val (houseId, listId) = resolveDefaultShoppingListIds()
+                ?: return Result.failure(Exception("Default shopping list is not available"))
+
+            val item = api.createShoppingItem(
+                houseId = houseId,
+                listId = listId,
+                request = ApiShoppingItemCreateRequest(name = name),
+            ).item
+
+            Result.success(item)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to add shopping item"),
+            )
+        } catch (e: IOException) {
+            Result.failure(
+                Exception("Network error: ${e.message ?: "Unable to reach server"}"),
+            )
+        } catch (e: Exception) {
+            Result.failure(
+                Exception("Failed to add shopping item: ${e.message ?: "Unknown error"}"),
             )
         }
     }
