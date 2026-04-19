@@ -146,7 +146,11 @@ func startServer(database db.DB, ctx context.Context) {
 	}
 
 	host := "localhost"
-	port := "4501"
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "4501"
+	}
+	port = strings.TrimPrefix(port, ":")
 	listenAddr := fmt.Sprintf("%s:%s", host, port)
 
 	portAccess := port
