@@ -11,11 +11,12 @@ import hata.feature.notifications.repository.NotificationsRepository
 import hata.feature.session.repository.SessionRepository
 import hata.navigation.Navigator
 import hata.navigation.Route
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,6 +39,9 @@ class HomeViewModel @Inject constructor(
 
     private val _userName = MutableStateFlow<String?>(null)
     val userName: StateFlow<String?> = _userName.asStateFlow()
+
+    private val pendingToggleDeviceIds = mutableSetOf<String>()
+    private val toggleLoaderJobs = mutableMapOf<String, Job>()
 
     private fun observeNotifications() {
         viewModelScope.launch {
@@ -78,8 +82,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun toggleDevice(deviceId: String, newState: NewState) {
+        if (pendingToggleDeviceIds.contains(deviceId)) {
+            return
+        }
+
         val previousState = _uiState.value as? HomeUiState.WithData ?: return
         val desiredIsOn = newState == NewState.On
+
+        pendingToggleDeviceIds += deviceId
 
         _uiState.update { state ->
             val withData = state as? HomeUiState.WithData ?: return@update state
@@ -90,6 +100,7 @@ class HomeViewModel @Inject constructor(
                             device.copy(
                                 isOn = desiredIsOn,
                                 status = device.status.replacePowerState(desiredIsOn),
+                                isAwaitingConfirmation = false,
                             )
                         } else {
                             device
@@ -99,8 +110,26 @@ class HomeViewModel @Inject constructor(
             )
         }
 
+        val loaderJob = viewModelScope.launch {
+            delay(300)
+            updateDeviceAwaitingConfirmation(deviceId = deviceId, isAwaitingConfirmation = true)
+        }
+        toggleLoaderJobs[deviceId] = loaderJob
+
         viewModelScope.launch {
-            toggleDeviceUseCase.run(deviceId, newState)
+            val result = toggleDeviceUseCase.run(deviceId, newState)
+
+            loaderJob.cancel()
+            toggleLoaderJobs.remove(deviceId)
+            pendingToggleDeviceIds.remove(deviceId)
+
+            result
+                .onSuccess {
+                    updateDeviceAwaitingConfirmation(
+                        deviceId = deviceId,
+                        isAwaitingConfirmation = false,
+                    )
+                }
                 .onFailure {
                     _uiState.value = previousState
                 }
@@ -153,6 +182,23 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    private fun updateDeviceAwaitingConfirmation(deviceId: String, isAwaitingConfirmation: Boolean) {
+        _uiState.update { state ->
+            val withData = state as? HomeUiState.WithData ?: return@update state
+            withData.copy(
+                data = withData.data.copy(
+                    devices = withData.data.devices.map { device ->
+                        if (device.id == deviceId) {
+                            device.copy(isAwaitingConfirmation = isAwaitingConfirmation)
+                        } else {
+                            device
+                        }
+                    },
+                ),
+            )
         }
     }
 }

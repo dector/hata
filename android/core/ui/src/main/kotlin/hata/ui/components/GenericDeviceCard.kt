@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -45,6 +46,7 @@ sealed interface DeviceCard {
         val status: String,
         val isOn: Boolean,
         val canControl: Boolean = true,
+        val isAwaitingConfirmation: Boolean = false,
         val icon: Icon = Icon.Default,
     ) : DeviceCard
 
@@ -85,17 +87,25 @@ fun GenericDeviceCard(
                         .background(if (data.isOn) HataColors.primaryContainer else HataColors.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = iconFor(data),
-                        contentDescription = null,
-                        tint = if (data.isOn) Color.White else HataColors.onSurfaceVariant,
-                    )
+                    if (data.isAwaitingConfirmation) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            color = if (data.isOn) Color.White else HataColors.onSurfaceVariant,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = iconFor(data),
+                            contentDescription = null,
+                            tint = if (data.isOn) Color.White else HataColors.onSurfaceVariant,
+                        )
+                    }
                 }
 
                 Switch(
                     checked = data.isOn,
                     onCheckedChange = onToggle,
-                    enabled = data.canControl,
+                    enabled = data.canControl && !data.isAwaitingConfirmation,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = HataColors.primaryContainerVariant,
