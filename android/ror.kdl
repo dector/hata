@@ -9,3 +9,8 @@ task device:install-and-launch {
 
     cmd "bash -lc './gradlew installDebug && adb shell am start -n space.dector.hata/hata.app.AppActivity'"
 }
+
+task fix:ports {
+  cmd "adb reverse tcp:4500 tcp:4500"
+}
+
