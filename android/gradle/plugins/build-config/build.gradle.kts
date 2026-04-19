@@ -8,5 +8,5 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.android.tools.build:gradle:9.0.0")
+    compileOnly("com.android.tools.build:gradle:9.1.1")
 }

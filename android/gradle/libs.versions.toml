@@ -1,8 +1,8 @@
 [versions]
-agp = "9.0.0"
+agp = "9.1.1"
 javax-inject = "1"
-kotlin = "2.3.10"
-ksp = "2.3.4"
+kotlin = "2.3.20"
+ksp = "2.3.6"
 kotlinx-serialization = "1.11.0"
 kotlinx-coroutines = "1.10.2"
 retrofit = "3.0.0"
