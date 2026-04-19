@@ -10,6 +10,8 @@ import hata.navigation.Navigator
 import hata.navigation.Route
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -116,6 +118,8 @@ class ShoppingViewModelTest {
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
+
+        val event = async { vm.events.first() }
         vm.onDispatch(ShoppingUiAction.SetChecked(itemId = "1", checked = true))
         advanceUntilIdle()
 
@@ -124,6 +128,11 @@ class ShoppingViewModelTest {
                 ShoppingItem(id = "1", name = "Milk", isChecked = true),
             ),
             errorMessage = null,
+        )
+        event.await() shouldBe ShoppingUiEvent.ItemCheckedChanged(
+            itemId = "1",
+            itemName = "Milk",
+            checked = true,
         )
     }
 

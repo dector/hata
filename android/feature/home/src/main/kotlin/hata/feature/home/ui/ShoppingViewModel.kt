@@ -7,8 +7,11 @@ import hata.feature.home.domain.LoadDefaultShoppingListUseCase
 import hata.feature.home.domain.SetShoppingItemPurchasedUseCase
 import hata.feature.home.domain.ShoppingItem
 import hata.navigation.Navigator
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,6 +25,9 @@ class ShoppingViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<ShoppingUiState>(ShoppingUiState.Init)
     val uiState: StateFlow<ShoppingUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<ShoppingUiEvent>()
+    val events: SharedFlow<ShoppingUiEvent> = _events.asSharedFlow()
 
     fun onDispatch(action: ShoppingUiAction) {
         when (action) {
@@ -102,6 +108,13 @@ class ShoppingViewModel @Inject constructor(
                             .sortedForDisplay(),
                         errorMessage = null,
                     )
+                    _events.emit(
+                        ShoppingUiEvent.ItemCheckedChanged(
+                            itemId = updatedItem.id,
+                            itemName = updatedItem.name,
+                            checked = updatedItem.isChecked,
+                        ),
+                    )
                 }
                 .onFailure { error ->
                     val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onFailure
@@ -143,4 +156,12 @@ sealed interface ShoppingUiAction {
         val itemId: String,
         val checked: Boolean,
     ) : ShoppingUiAction
+}
+
+sealed interface ShoppingUiEvent {
+    data class ItemCheckedChanged(
+        val itemId: String,
+        val itemName: String,
+        val checked: Boolean,
+    ) : ShoppingUiEvent
 }
