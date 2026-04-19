@@ -21,7 +21,7 @@ androidx-hilt = "1.3.0"
 androidx-test = "1.3.0"
 androidx-espresso = "3.7.0"
 junit4 = "4.13.2"
-androidx-room = "2.8.0"
+androidx-room = "2.8.4"
 
 [libraries]
 javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
