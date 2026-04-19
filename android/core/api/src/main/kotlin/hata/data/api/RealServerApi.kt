@@ -148,9 +148,16 @@ class RealServerApi(
 
             Result.success(response.state)
         } catch (e: HttpException) {
-            Result.failure(
-                Exception(ApiClient.parseErrorMessage(e) ?: "Failed to set device state"),
-            )
+            val apiError = ApiClient.parseError(e)
+            val message = apiError?.message ?: "Failed to set device state"
+
+            val mappedError = when (apiError?.code) {
+                DeviceNoAckException.CODE -> DeviceNoAckException(message)
+                null -> Exception(message)
+                else -> ApiException(message = message, code = apiError.code)
+            }
+
+            Result.failure(mappedError)
         } catch (e: IOException) {
             Result.failure(
                 Exception("Network error: ${e.message ?: "Unable to reach server"}"),

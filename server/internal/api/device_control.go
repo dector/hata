@@ -14,6 +14,7 @@ import (
 var (
 	errUnsupportedIntegration = errors.New("unsupported integration")
 	errInvalidIntegrationData = errors.New("invalid integration data")
+	errDeviceNoAck            = errors.New("device did not acknowledge command")
 )
 
 // DeviceController executes physical control commands for devices.
@@ -55,10 +56,16 @@ func (c *RealDeviceController) setWizState(device *db.DeviceData, state string) 
 	switch state {
 	case "on":
 		if err := light.On(); err != nil {
+			if wiz.IsNoAck(err) {
+				return fmt.Errorf("%w: %w", errDeviceNoAck, err)
+			}
 			return fmt.Errorf("wiz turn on failed: %w", err)
 		}
 	case "off":
 		if err := light.Off(); err != nil {
+			if wiz.IsNoAck(err) {
+				return fmt.Errorf("%w: %w", errDeviceNoAck, err)
+			}
 			return fmt.Errorf("wiz turn off failed: %w", err)
 		}
 	default:

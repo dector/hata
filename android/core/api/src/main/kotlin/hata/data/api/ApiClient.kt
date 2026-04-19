@@ -2,6 +2,7 @@ package hata.data.api
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import hata.data.api.models.ErrorDetail
 import hata.data.api.models.ErrorResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -30,20 +31,19 @@ internal object ApiClient {
             .build()
     }
 
-    fun parseErrorMessage(exception: HttpException): String? {
+    fun parseError(exception: HttpException): ErrorDetail? {
         return try {
-            val errorBody = exception.response()?.errorBody()?.string()
-            if (errorBody != null) {
-                val adapter = moshi.adapter(ErrorResponse::class.java)
-                val errorResponse = adapter.fromJson(errorBody)
-                errorResponse?.error?.message
-            } else {
-                null
-            }
+            val errorBody = exception.response()?.errorBody()?.string() ?: return null
+            val adapter = moshi.adapter(ErrorResponse::class.java)
+            val errorResponse = adapter.fromJson(errorBody)
+            errorResponse?.error
         } catch (e: Exception) {
             null
         }
     }
+
+    fun parseErrorMessage(exception: HttpException): String? =
+        parseError(exception)?.message
 }
 
 private fun createOkHttpClient(

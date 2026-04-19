@@ -182,6 +182,10 @@ func (h *DeviceHandler) SetState(w http.ResponseWriter, r *http.Request) {
 			WriteError(w, http.StatusInternalServerError, "Device integration data is invalid", "invalid-integration-data")
 			return
 		}
+		if errors.Is(err, errDeviceNoAck) {
+			WriteError(w, http.StatusGatewayTimeout, "Device did not acknowledge command", "device-no-ack")
+			return
+		}
 		fmt.Printf("Error controlling device %q in house %q: %v\n", deviceID, houseID, err)
 		WriteError(w, http.StatusBadGateway, "Failed to control physical device", "device-control-failed")
 		return

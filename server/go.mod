@@ -4,7 +4,8 @@ go 1.26.2
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/dector/go-devices v0.0.0-20260413000523-d2f647587e44
+	github.com/a-h/templ v0.3.1001
+	github.com/dector/go-devices v0.0.0-20260419130626-8ae1de3f1d26
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/sqids/sqids-go v0.4.1
@@ -16,7 +17,6 @@ require (
 	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
-	github.com/a-h/templ v0.3.1001 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/air-verse/air v1.62.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
