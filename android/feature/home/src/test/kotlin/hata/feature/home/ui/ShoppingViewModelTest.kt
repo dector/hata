@@ -70,10 +70,10 @@ class ShoppingViewModelTest {
     }
 
     @Test
-    fun `mark purchased success updates item`() = runTest {
+    fun `set checked success updates item`() = runTest {
         val repository = FakeDeviceRepository(
             shoppingListResult = Result.success(defaultItems),
-            setPurchasedResult = Result.success(
+            setCheckedResult = Result.success(
                 ShoppingItem(id = "1", name = "Milk", isChecked = true),
             ),
         )
@@ -85,7 +85,7 @@ class ShoppingViewModelTest {
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
-        vm.onDispatch(ShoppingUiAction.MarkPurchased("1"))
+        vm.onDispatch(ShoppingUiAction.SetChecked(itemId = "1", checked = true))
         advanceUntilIdle()
 
         vm.uiState.value shouldBe ShoppingUiState.Loaded(
@@ -97,10 +97,14 @@ class ShoppingViewModelTest {
     }
 
     @Test
-    fun `mark purchased failure keeps item and shows error`() = runTest {
+    fun `set unchecked success updates item`() = runTest {
         val repository = FakeDeviceRepository(
-            shoppingListResult = Result.success(defaultItems),
-            setPurchasedResult = Result.failure(IllegalStateException("No internet")),
+            shoppingListResult = Result.success(
+                listOf(ShoppingItem(id = "1", name = "Milk", isChecked = true)),
+            ),
+            setCheckedResult = Result.success(
+                ShoppingItem(id = "1", name = "Milk", isChecked = false),
+            ),
         )
         val vm = ShoppingViewModel(
             loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
@@ -110,7 +114,32 @@ class ShoppingViewModelTest {
 
         vm.onDispatch(ShoppingUiAction.Init)
         advanceUntilIdle()
-        vm.onDispatch(ShoppingUiAction.MarkPurchased("1"))
+        vm.onDispatch(ShoppingUiAction.SetChecked(itemId = "1", checked = false))
+        advanceUntilIdle()
+
+        vm.uiState.value shouldBe ShoppingUiState.Loaded(
+            items = listOf(
+                ShoppingItem(id = "1", name = "Milk", isChecked = false),
+            ),
+            errorMessage = null,
+        )
+    }
+
+    @Test
+    fun `set checked failure keeps item and shows error`() = runTest {
+        val repository = FakeDeviceRepository(
+            shoppingListResult = Result.success(defaultItems),
+            setCheckedResult = Result.failure(IllegalStateException("No internet")),
+        )
+        val vm = ShoppingViewModel(
+            loadDefaultShoppingListUseCase = LoadDefaultShoppingListUseCase(repository),
+            setShoppingItemPurchasedUseCase = SetShoppingItemPurchasedUseCase(repository),
+            navigator = FakeNavigator(),
+        )
+
+        vm.onDispatch(ShoppingUiAction.Init)
+        advanceUntilIdle()
+        vm.onDispatch(ShoppingUiAction.SetChecked(itemId = "1", checked = true))
         advanceUntilIdle()
 
         vm.uiState.value shouldBe ShoppingUiState.Loaded(
@@ -122,7 +151,7 @@ class ShoppingViewModelTest {
 
 private class FakeDeviceRepository(
     private val shoppingListResult: Result<List<ShoppingItem>>,
-    private val setPurchasedResult: Result<ShoppingItem> = Result.success(
+    private val setCheckedResult: Result<ShoppingItem> = Result.success(
         ShoppingItem(id = "1", name = "Milk", isChecked = true),
     ),
 ) : DeviceRepository {
@@ -134,7 +163,7 @@ private class FakeDeviceRepository(
 
     override suspend fun getDefaultShoppingList(): Result<List<ShoppingItem>> = shoppingListResult
 
-    override suspend fun setShoppingItemPurchased(itemId: String): Result<ShoppingItem> = setPurchasedResult
+    override suspend fun setShoppingItemChecked(itemId: String, checked: Boolean): Result<ShoppingItem> = setCheckedResult
 
     override suspend fun toggleDevice(deviceId: String, newState: NewState): Result<Device> {
         throw UnsupportedOperationException("Not used in tests")

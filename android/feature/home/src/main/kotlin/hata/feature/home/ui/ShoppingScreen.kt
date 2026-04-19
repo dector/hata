@@ -42,6 +42,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -150,8 +151,13 @@ private fun ShoppingScreenUI(
                                 ShoppingItemsList(
                                     items = state.items,
                                     errorMessage = state.errorMessage,
-                                    onMarkPurchased = { itemId ->
-                                        dispatch(ShoppingUiAction.MarkPurchased(itemId))
+                                    onSetChecked = { itemId, checked ->
+                                        dispatch(
+                                            ShoppingUiAction.SetChecked(
+                                                itemId = itemId,
+                                                checked = checked,
+                                            ),
+                                        )
                                     },
                                 )
                             }
@@ -260,7 +266,7 @@ private fun ShoppingErrorState(
 private fun ShoppingItemsList(
     items: List<ShoppingItem>,
     errorMessage: String?,
-    onMarkPurchased: (String) -> Unit,
+    onSetChecked: (itemId: String, checked: Boolean) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -279,7 +285,7 @@ private fun ShoppingItemsList(
         items(items, key = { it.id }) { item ->
             ShoppingItemRow(
                 item = item,
-                onMarkPurchased = { onMarkPurchased(item.id) },
+                onToggleChecked = { checked -> onSetChecked(item.id, checked) },
             )
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -290,36 +296,9 @@ private fun ShoppingItemsList(
 @Composable
 private fun ShoppingItemRow(
     item: ShoppingItem,
-    onMarkPurchased: () -> Unit,
+    onToggleChecked: (Boolean) -> Unit,
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.StartToEnd && !item.isChecked) {
-                onMarkPurchased()
-            }
-            false
-        },
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = !item.isChecked,
-        enableDismissFromEndToStart = false,
-        backgroundContent = {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 32.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Done,
-                    contentDescription = null,
-                    tint = HataColors.primary,
-                )
-            }
-        },
-    ) {
+    val itemContent: @Composable () -> Unit = {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -352,6 +331,39 @@ private fun ShoppingItemRow(
                 )
             }
         }
+    }
+
+    val latestCheckedState by rememberUpdatedState(item.isChecked)
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.StartToEnd) {
+                onToggleChecked(!latestCheckedState)
+            }
+            false
+        },
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = false,
+        backgroundContent = {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Done,
+                    contentDescription = null,
+                    tint = HataColors.primary,
+                )
+            }
+        },
+    ) {
+        itemContent()
     }
 }
 

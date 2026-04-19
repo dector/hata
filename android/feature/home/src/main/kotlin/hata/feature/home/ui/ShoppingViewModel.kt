@@ -33,7 +33,10 @@ class ShoppingViewModel @Inject constructor(
             ShoppingUiAction.Retry -> loadShoppingList(showLoadingState = true)
             ShoppingUiAction.Refresh -> refreshShoppingList()
             ShoppingUiAction.Back -> navigator.goBack()
-            is ShoppingUiAction.MarkPurchased -> markItemPurchased(action.itemId)
+            is ShoppingUiAction.SetChecked -> setItemChecked(
+                itemId = action.itemId,
+                checked = action.checked,
+            )
         }
     }
 
@@ -81,13 +84,16 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
-    private fun markItemPurchased(itemId: String) {
+    private fun setItemChecked(itemId: String, checked: Boolean) {
         val state = _uiState.value as? ShoppingUiState.Loaded ?: return
         val currentItem = state.items.firstOrNull { it.id == itemId } ?: return
-        if (currentItem.isChecked) return
+        if (currentItem.isChecked == checked) return
 
         viewModelScope.launch {
-            setShoppingItemPurchasedUseCase.run(itemId = itemId)
+            setShoppingItemPurchasedUseCase.run(
+                itemId = itemId,
+                checked = checked,
+            )
                 .onSuccess { updatedItem ->
                     val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onSuccess
                     _uiState.value = latestState.copy(
@@ -100,7 +106,7 @@ class ShoppingViewModel @Inject constructor(
                 .onFailure { error ->
                     val latestState = _uiState.value as? ShoppingUiState.Loaded ?: return@onFailure
                     _uiState.value = latestState.copy(
-                        errorMessage = error.message ?: "Failed to mark item as purchased",
+                        errorMessage = error.message ?: "Failed to update item",
                     )
                 }
         }
@@ -127,5 +133,8 @@ sealed interface ShoppingUiAction {
     data object Retry : ShoppingUiAction
     data object Refresh : ShoppingUiAction
     data object Back : ShoppingUiAction
-    data class MarkPurchased(val itemId: String) : ShoppingUiAction
+    data class SetChecked(
+        val itemId: String,
+        val checked: Boolean,
+    ) : ShoppingUiAction
 }

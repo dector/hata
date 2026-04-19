@@ -7,7 +7,10 @@ class SetShoppingItemPurchasedUseCase @Inject constructor(
     private val deviceRepository: DeviceRepository,
 ) {
 
-    suspend fun run(itemId: String): Result<ShoppingItem> {
-        return deviceRepository.setShoppingItemPurchased(itemId = itemId)
+    suspend fun run(itemId: String, checked: Boolean): Result<ShoppingItem> {
+        return deviceRepository.setShoppingItemChecked(
+            itemId = itemId,
+            checked = checked,
+        )
     }
 }

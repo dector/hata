@@ -68,11 +68,11 @@ class DeviceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setShoppingItemPurchased(itemId: String): Result<ShoppingItem> = withContext(dispatcher) {
+    override suspend fun setShoppingItemChecked(itemId: String, checked: Boolean): Result<ShoppingItem> = withContext(dispatcher) {
         runCatching {
             val session = requireSession()
             val service = getServerService(session.serverUrl)
-            service.setDefaultShoppingItemChecked(itemId = itemId, checked = true)
+            service.setDefaultShoppingItemChecked(itemId = itemId, checked = checked)
                 .getOrThrow()
                 .toShoppingItem()
         }
