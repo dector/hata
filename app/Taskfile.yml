@@ -4,6 +4,10 @@ tasks:
   run:linux:
     desc: Run the Flutter app on Linux desktop
     cmds:
+      - |
+        if grep -q '^CMAKE_INSTALL_PREFIX:PATH=/usr/local$' build/linux/x64/debug/CMakeCache.txt 2>/dev/null; then
+          rm -rf build/linux
+        fi
       - flutter run -d linux
 
   run:android:
