@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  run:linux:
+    desc: Run the Flutter app on Linux desktop
+    cmds:
+      - flutter run -d linux
+
+  run:android:
+    desc: Run the Flutter app on Android
+    cmds:
+      - flutter run -d android
