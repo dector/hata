@@ -25,7 +25,7 @@ func (h *IndexHandler) Index(w http.ResponseWriter, r *http.Request) {
 		Heading:     "Hata API UI",
 		Description: template.HTML(`Available browser test pages under <code>/apiui</code>.`),
 		Path:        "/apiui",
-		BackHref:    "/",
+		BackHref:    "/dev",
 		Content: template.HTML(`
 <p style="margin-top:0">Available pages</p>
 <ul>

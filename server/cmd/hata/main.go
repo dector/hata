@@ -72,6 +72,10 @@ func startServer(database db.DB, ctx context.Context) {
 
 	// Add routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/app", http.StatusFound)
+	})
+
+	devIndexHandler := func(w http.ResponseWriter, r *http.Request) {
 		homeData := webui.HomePageData{}
 		auth, ok, err := webauth.TryAuthFromRequest(r, database.Repos())
 		if err != nil {
@@ -88,10 +92,12 @@ func startServer(database db.DB, ctx context.Context) {
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := webui.HomePage(homeData).Render(r.Context(), w); err != nil {
-			http.Error(w, "failed to render home page", http.StatusInternalServerError)
+			http.Error(w, "failed to render dev index page", http.StatusInternalServerError)
 			return
 		}
-	})
+	}
+	r.Get("/dev", devIndexHandler)
+	r.Get("/dev/", devIndexHandler)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
