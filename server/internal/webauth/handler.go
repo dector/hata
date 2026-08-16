@@ -104,6 +104,7 @@ func (h *Handler) MePage(w http.ResponseWriter, r *http.Request) {
 	if err := webui.MePage(webui.MePageData{
 		UserID:          auth.UserID,
 		Username:        auth.Username,
+		DisplayName:     displayNameFromAuth(auth),
 		HasSessionToken: auth.Token != "",
 	}).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render me page", http.StatusInternalServerError)
@@ -167,7 +168,7 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := webui.AppPage(webui.AppPageData{Houses: houses}).Render(r.Context(), w); err != nil {
+	if err := webui.AppPage(webui.AppPageData{DisplayName: displayNameFromAuth(auth), Houses: houses}).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render app page", http.StatusInternalServerError)
 		return
 	}
@@ -176,6 +177,14 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 type loginPageView struct {
 	Then  string
 	Error string
+}
+
+func displayNameFromAuth(auth AuthContext) string {
+	displayName := strings.TrimSpace(auth.DisplayName)
+	if displayName == "" {
+		displayName = auth.Username
+	}
+	return displayName
 }
 
 func renderLogin(w http.ResponseWriter, r *http.Request, view loginPageView, status int) {

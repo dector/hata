@@ -23,11 +23,13 @@ type LogoutPageData struct {
 type MePageData struct {
 	UserID          int
 	Username        string
+	DisplayName     string
 	HasSessionToken bool
 	HTMXScriptSrc   string
 }
 
 type AppPageData struct {
+	DisplayName   string
 	Houses        []AppHouseData
 	HTMXScriptSrc string
 }
