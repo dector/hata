@@ -161,6 +161,111 @@ templ WebPage(title string, htmxScriptSrc string) {
 					color: var(--muted);
 					font-style: italic;
 				}
+
+				main:has(.app-screen),
+				main:has(.dev-screen),
+				main:has(.me-screen) {
+					width: min(100%, 88rem);
+					min-height: calc(100dvh - 3rem);
+				}
+
+				.app-screen header,
+				.dev-screen header,
+				.me-screen header {
+					display: flex;
+					align-items: end;
+					justify-content: space-between;
+					gap: 1rem;
+					border-bottom: 1px solid var(--border);
+					padding-bottom: 1rem;
+					margin-bottom: 1rem;
+				}
+
+				.app-screen header h1,
+				.app-screen header p,
+				.dev-screen header h1,
+				.dev-screen header p,
+				.me-screen header h1,
+				.me-screen header p {
+					margin: 0;
+				}
+
+				.app-houses,
+				.dev-links,
+				.me-details {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+					gap: 1rem;
+				}
+
+				.dev-links,
+				.me-details {
+					margin: 0;
+					padding-left: 0;
+					list-style: none;
+				}
+
+				.dev-links li,
+				.me-details li {
+					padding: 1rem;
+					border: 1px solid var(--border);
+					border-radius: 0.5rem;
+				}
+
+				.me-screen form {
+					margin-top: 1rem;
+					width: fit-content;
+				}
+
+				.app-screen .house {
+					display: grid;
+					gap: 0.75rem;
+					align-content: start;
+					margin-top: 0;
+					padding: 1rem;
+				}
+
+				.app-screen .house h2,
+				.app-screen .house p {
+					margin: 0;
+				}
+
+				.app-screen .house ul {
+					display: grid;
+					gap: 0.5rem;
+					padding-left: 0;
+					list-style: none;
+				}
+
+				.device-card {
+					display: flex;
+					align-items: baseline;
+					justify-content: space-between;
+					gap: 0.75rem;
+					padding: 0.65rem 0.75rem;
+					border: 1px solid var(--border);
+					border-radius: 0.5rem;
+				}
+
+				.device-name {
+					min-width: 0;
+					overflow-wrap: anywhere;
+				}
+
+				.device-state {
+					flex: 0 0 auto;
+					color: var(--muted);
+				}
+
+				@media (max-width: 42rem) {
+					.app-screen header,
+					.dev-screen header,
+					.me-screen header,
+					.device-card {
+						display: grid;
+						align-items: start;
+					}
+				}
 			</style>
 			<script src={ scriptSrcOrDefault(htmxScriptSrc) } defer></script>
 		</head>
@@ -190,17 +295,21 @@ templ PageLayout(title string, htmxScriptSrc string, displayName string) {
 
 templ HomePage(data HomePageData) {
 	@PageLayout("Hata", data.HTMXScriptSrc, data.DisplayName) {
-		<h1>Hata</h1>
-		<p>Smart home backend.</p>
-		<ul>
-			if !data.IsLoggedIn {
-				<li><a href="/auth/login">Sign in</a></li>
-			}
-			<li><a href="/me">My session</a></li>
-			<li><a href="/app">App</a></li>
-			<li><a href="/health">Health check</a></li>
-			<li><a href="/apiui">API UI</a></li>
-		</ul>
+		<div class="dev-screen">
+			<header>
+				<h1>Hata</h1>
+				<p>Smart home backend.</p>
+			</header>
+			<ul class="dev-links">
+				if !data.IsLoggedIn {
+					<li><a href="/auth/login">Sign in</a></li>
+				}
+				<li><a href="/me">My session</a></li>
+				<li><a href="/app">App</a></li>
+				<li><a href="/health">Health check</a></li>
+				<li><a href="/apiui">API UI</a></li>
+			</ul>
+		</div>
 	}
 }
 
@@ -242,45 +351,55 @@ templ LogoutPage(data LogoutPageData) {
 
 templ MePage(data MePageData) {
 	@PageLayout("Me · Hata", data.HTMXScriptSrc, data.DisplayName) {
-		<h1>My session</h1>
-		<p>Authenticated page.</p>
-		<ul>
-			<li>User ID: { data.UserID }</li>
-			<li>Username: { data.Username }</li>
-			if data.HasSessionToken {
-				<li>Session token: present</li>
-			} else {
-				<li>Session token: missing</li>
-			}
-		</ul>
-		<form method="post" action="/auth/logout">
-			<button type="submit">Sign out</button>
-		</form>
+		<div class="me-screen">
+			<header>
+				<h1>My session</h1>
+				<p>Authenticated page.</p>
+			</header>
+			<ul class="me-details">
+				<li>User ID: { data.UserID }</li>
+				<li>Username: { data.Username }</li>
+				if data.HasSessionToken {
+					<li>Session token: present</li>
+				} else {
+					<li>Session token: missing</li>
+				}
+			</ul>
+			<form method="post" action="/auth/logout">
+				<button type="submit">Sign out</button>
+			</form>
+		</div>
 	}
 }
 
 templ AppPage(data AppPageData) {
 	@PageLayout("App · Hata", data.HTMXScriptSrc, data.DisplayName) {
-		<h1>My devices</h1>
-		<p>Devices grouped by houses.</p>
-		if len(data.Houses) == 0 {
-			<p>You don't have access to any houses yet.</p>
-		} else {
-			for _, house := range data.Houses {
-				<section class="house">
-					<h2>{ house.DisplayName }</h2>
-					<p class="house-role">House ID: { house.ID } · Role: { house.Role }</p>
-					if len(house.Devices) == 0 {
-						<p class="device-empty">No devices in this house.</p>
-					} else {
-						<ul>
-							for _, device := range house.Devices {
-								<li>{ device.Name } ({ device.ID }) · { device.State }</li>
+		<div class="app-screen">
+			<header>
+				<h1>My devices</h1>
+				<p>Devices grouped by houses.</p>
+			</header>
+			if len(data.Houses) == 0 {
+				<p>You don't have access to any houses yet.</p>
+			} else {
+				<div class="app-houses">
+					for _, house := range data.Houses {
+						<section class="house">
+							<h2>{ house.DisplayName }</h2>
+							<p class="house-role">House ID: { house.ID } · Role: { house.Role }</p>
+							if len(house.Devices) == 0 {
+								<p class="device-empty">No devices in this house.</p>
+							} else {
+								<ul>
+									for _, device := range house.Devices {
+										<li class="device-card"><span class="device-name">{ device.Name } ({ device.ID })</span><span class="device-state">· { device.State }</span></li>
+									}
+								</ul>
 							}
-						</ul>
+						</section>
 					}
-				</section>
+				</div>
 			}
-		}
+		</div>
 	}
 }
