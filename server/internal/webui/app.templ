@@ -221,7 +221,7 @@ templ controlsIcon() {
 }
 
 templ AppDeviceCard(device AppDeviceData) {
-	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State } data-toggle-error={ device.ToggleError }>
+	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-preserve-attr="class" data-availability={ device.Availability } data-state={ device.State } data-toggle-error={ device.ToggleError }>
 		<span class={ deviceNameStyle() }>
 			if device.IsLight {
 				@lampIcon(deviceStatusClass(device))
@@ -271,9 +271,10 @@ templ AppPage(data AppPageData) {
 				}
 				.device-card {
 					background: rgba(29, 32, 33, 0.35);
-					transition: border-color 0.12s ease, background 0.12s ease;
+					transition: opacity 0.22s ease;
 				}
-				.device-card:hover {
+				.device-card:hover,
+				.device-card.device-card-hovered {
 					border-color: var(--accent);
 					background: rgba(29, 32, 33, 0.55);
 				}
@@ -319,9 +320,6 @@ templ AppPage(data AppPageData) {
 				.device-card[data-state="on"] .toggle-icon-off,
 				.device-card:not([data-state="on"]) .toggle-icon-on {
 					display: none;
-				}
-				.device-card[data-device-pending="true"] {
-					opacity: 0.82;
 				}
 				.lamp-icon.device-status-on {
 					filter: drop-shadow(0 0 0.35rem rgba(250, 189, 47, 0.7));
@@ -405,9 +403,9 @@ templ AppPage(data AppPageData) {
 					const nextState = form.getAttribute('data-next-state');
 					const card = form.closest('.device-card');
 					if (!card || (nextState !== 'on' && nextState !== 'off')) return;
+					setHoveredDeviceCard(card);
 					const statusClass = nextState === 'on' ? 'device-status-on' : 'device-status-off';
 					card.dataset.state = nextState;
-					card.dataset.devicePending = 'true';
 					applyDeviceStatusClass(card.querySelector('.device-status-badge'), statusClass);
 					applyDeviceStatusClass(card.querySelector('.device-toggle-button'), statusClass);
 					applyDeviceStatusClass(card.querySelector('.lamp-icon'), statusClass);
@@ -416,12 +414,35 @@ templ AppPage(data AppPageData) {
 					const button = form.querySelector('button[type="submit"]');
 					if (button) button.disabled = true;
 				}
+				let hoveredDeviceCardID = '';
+				function setHoveredDeviceCard(card) {
+					if (!card?.id) return;
+					if (hoveredDeviceCardID && hoveredDeviceCardID !== card.id) {
+						document.getElementById(hoveredDeviceCardID)?.classList.remove('device-card-hovered');
+					}
+					hoveredDeviceCardID = card.id;
+					card.classList.add('device-card-hovered');
+				}
+				function restoreDeviceCardHover(card) {
+					if (card?.id && card.id === hoveredDeviceCardID) card.classList.add('device-card-hovered');
+				}
 				function reportDeviceToggleError(card) {
 					const message = card?.dataset?.toggleError;
 					if (!message) return;
 					delete card.dataset.toggleError;
 					window.alert(message);
 				}
+				document.addEventListener('pointerover', (event) => {
+					const card = event.target.closest('.device-card');
+					if (card) setHoveredDeviceCard(card);
+				});
+				document.addEventListener('pointerout', (event) => {
+					const card = event.target.closest('.device-card');
+					if (!card) return;
+					if (event.relatedTarget instanceof Node && card.contains(event.relatedTarget)) return;
+					if (card.id === hoveredDeviceCardID) hoveredDeviceCardID = '';
+					card.classList.remove('device-card-hovered');
+				});
 				document.addEventListener('submit', (event) => {
 					const form = event.target.closest('[data-device-toggle-form]');
 					if (!form) return;
@@ -431,8 +452,14 @@ templ AppPage(data AppPageData) {
 					for (const mutation of mutations) {
 						for (const node of mutation.addedNodes) {
 							if (!(node instanceof HTMLElement)) continue;
-							if (node.matches('.device-card')) reportDeviceToggleError(node);
-							node.querySelectorAll?.('.device-card').forEach(reportDeviceToggleError);
+							if (node.matches('.device-card')) {
+								reportDeviceToggleError(node);
+								restoreDeviceCardHover(node);
+							}
+							node.querySelectorAll?.('.device-card').forEach((card) => {
+								reportDeviceToggleError(card);
+								restoreDeviceCardHover(card);
+							});
 						}
 					}
 				}).observe(document.body, { childList: true, subtree: true });
