@@ -46,6 +46,9 @@ func TestLoginPage_Renders(t *testing.T) {
 	if !strings.Contains(body, "/js/htmx-2.0.4.min.js") {
 		t.Fatalf("expected local htmx script in page")
 	}
+	if !strings.Contains(body, "/assets/js/datastar-1.0.2.js") {
+		t.Fatalf("expected local datastar script in page")
+	}
 	if !strings.Contains(body, `name="then" value="/me"`) {
 		t.Fatalf("expected hidden then field")
 	}

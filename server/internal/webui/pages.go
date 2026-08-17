@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-const LocalHTMXScriptPath = "/assets/js/htmx-2.0.4.min.js"
+const (
+	LocalHTMXScriptPath     = "/assets/js/htmx-2.0.4.min.js"
+	LocalDatastarScriptPath = "/assets/js/datastar-1.0.2.js"
+)
 
 type HomePageData struct {
 	IsLoggedIn    bool

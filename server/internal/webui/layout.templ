@@ -165,6 +165,7 @@ templ WebPage(title string, htmxScriptSrc string) {
 				}
 			</style>
 			<script src={ scriptSrcOrDefault(htmxScriptSrc) } defer></script>
+			<script type="module" src={ LocalDatastarScriptPath }></script>
 		</head>
 		<body>
 			{ children... }
