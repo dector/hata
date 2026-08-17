@@ -1,5 +1,120 @@
 package webui
 
+css userBadgeStyle() {
+	position: fixed;
+	top: 1rem;
+	right: 1rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	max-width: calc(100vw - 2rem);
+	padding: 0.4rem 0.55rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--text);
+	font-size: 0.85rem;
+	text-decoration: none;
+}
+
+css userBadgeIconStyle() {
+	flex: 0 0 auto;
+}
+
+css userBadgeTextStyle() {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+css screenHeaderStyle() {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: 1rem;
+	border-bottom: 1px solid var(--border);
+	padding-bottom: 1rem;
+	margin-bottom: 1rem;
+}
+
+css flushBlockStyle() {
+	margin: 0;
+}
+
+css cardGridStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+	gap: 1rem;
+}
+
+css plainListGridStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+	gap: 1rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css panelListItemStyle() {
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css compactLogoutFormStyle() {
+	margin-top: 1rem;
+	width: fit-content;
+}
+
+css appHouseCardStyle() {
+	display: grid;
+	gap: 0.75rem;
+	align-content: start;
+	margin-top: 0;
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css houseRoleStyle() {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+css deviceEmptyStyle() {
+	color: var(--muted);
+	font-style: italic;
+}
+
+css deviceListStyle() {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css deviceCardStyle() {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css deviceNameStyle() {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+css deviceStateStyle() {
+	flex: 0 0 auto;
+	color: var(--muted);
+}
+
 templ WebPage(title string, htmxScriptSrc string) {
 	<!doctype html>
 	<html lang="en">
@@ -103,63 +218,9 @@ templ WebPage(title string, htmxScriptSrc string) {
 					color: #fabd2f;
 				}
 
-				.user-badge {
-					position: fixed;
-					top: 1rem;
-					right: 1rem;
-					display: inline-flex;
-					align-items: center;
-					gap: 0.35rem;
-					max-width: calc(100vw - 2rem);
-					padding: 0.4rem 0.55rem;
-					border: 1px solid var(--border);
-					border-radius: 999px;
-					background: var(--surface);
-					color: var(--text);
-					font-size: 0.85rem;
-					text-decoration: none;
-				}
-
-				.user-badge svg {
-					flex: 0 0 auto;
-				}
-
-				.user-badge span {
-					overflow: hidden;
-					text-overflow: ellipsis;
-					white-space: nowrap;
-				}
-
 				[role="alert"] {
 					color: var(--danger);
 					font-weight: 600;
-				}
-
-				.house {
-					border: 1px solid var(--border);
-					border-radius: 0.5rem;
-					padding: 0.75rem;
-					margin-top: 0.75rem;
-				}
-
-				.house h2 {
-					margin: 0 0 0.5rem 0;
-					font-size: 1rem;
-				}
-
-				.house ul {
-					margin: 0;
-					padding-left: 1.25rem;
-				}
-
-				.house-role {
-					color: var(--muted);
-					font-size: 0.9rem;
-				}
-
-				.device-empty {
-					color: var(--muted);
-					font-style: italic;
 				}
 
 				main:has(.app-screen),
@@ -169,98 +230,8 @@ templ WebPage(title string, htmxScriptSrc string) {
 					min-height: calc(100dvh - 3rem);
 				}
 
-				.app-screen header,
-				.dev-screen header,
-				.me-screen header {
-					display: flex;
-					align-items: end;
-					justify-content: space-between;
-					gap: 1rem;
-					border-bottom: 1px solid var(--border);
-					padding-bottom: 1rem;
-					margin-bottom: 1rem;
-				}
-
-				.app-screen header h1,
-				.app-screen header p,
-				.dev-screen header h1,
-				.dev-screen header p,
-				.me-screen header h1,
-				.me-screen header p {
-					margin: 0;
-				}
-
-				.app-houses,
-				.dev-links,
-				.me-details {
-					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-					gap: 1rem;
-				}
-
-				.dev-links,
-				.me-details {
-					margin: 0;
-					padding-left: 0;
-					list-style: none;
-				}
-
-				.dev-links li,
-				.me-details li {
-					padding: 1rem;
-					border: 1px solid var(--border);
-					border-radius: 0.5rem;
-				}
-
-				.me-screen form {
-					margin-top: 1rem;
-					width: fit-content;
-				}
-
-				.app-screen .house {
-					display: grid;
-					gap: 0.75rem;
-					align-content: start;
-					margin-top: 0;
-					padding: 1rem;
-				}
-
-				.app-screen .house h2,
-				.app-screen .house p {
-					margin: 0;
-				}
-
-				.app-screen .house ul {
-					display: grid;
-					gap: 0.5rem;
-					padding-left: 0;
-					list-style: none;
-				}
-
-				.device-card {
-					display: flex;
-					align-items: baseline;
-					justify-content: space-between;
-					gap: 0.75rem;
-					padding: 0.65rem 0.75rem;
-					border: 1px solid var(--border);
-					border-radius: 0.5rem;
-				}
-
-				.device-name {
-					min-width: 0;
-					overflow-wrap: anywhere;
-				}
-
-				.device-state {
-					flex: 0 0 auto;
-					color: var(--muted);
-				}
-
 				@media (max-width: 42rem) {
-					.app-screen header,
-					.dev-screen header,
-					.me-screen header,
+					.screen-header,
 					.device-card {
 						display: grid;
 						align-items: start;
@@ -277,9 +248,9 @@ templ WebPage(title string, htmxScriptSrc string) {
 
 templ UserBadge(displayName string) {
 	if displayName != "" {
-		<a class="user-badge" href="/me" aria-label={ displayName }>
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
-			<span>{ displayName }</span>
+		<a class={ userBadgeStyle() } href="/me" aria-label={ displayName }>
+			<svg class={ userBadgeIconStyle() } xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+			<span class={ userBadgeTextStyle() }>{ displayName }</span>
 		</a>
 	}
 }
@@ -296,18 +267,18 @@ templ PageLayout(title string, htmxScriptSrc string, displayName string) {
 templ HomePage(data HomePageData) {
 	@PageLayout("Hata", data.HTMXScriptSrc, data.DisplayName) {
 		<div class="dev-screen">
-			<header>
-				<h1>Hata</h1>
-				<p>Smart home backend.</p>
+			<header class={ "screen-header", screenHeaderStyle() }>
+				<h1 class={ flushBlockStyle() }>Hata</h1>
+				<p class={ flushBlockStyle() }>Smart home backend.</p>
 			</header>
-			<ul class="dev-links">
+			<ul class={ plainListGridStyle() }>
 				if !data.IsLoggedIn {
-					<li><a href="/auth/login">Sign in</a></li>
+					<li class={ panelListItemStyle() }><a href="/auth/login">Sign in</a></li>
 				}
-				<li><a href="/me">My session</a></li>
-				<li><a href="/app">App</a></li>
-				<li><a href="/health">Health check</a></li>
-				<li><a href="/apiui">API UI</a></li>
+				<li class={ panelListItemStyle() }><a href="/me">My session</a></li>
+				<li class={ panelListItemStyle() }><a href="/app">App</a></li>
+				<li class={ panelListItemStyle() }><a href="/health">Health check</a></li>
+				<li class={ panelListItemStyle() }><a href="/apiui">API UI</a></li>
 			</ul>
 		</div>
 	}
@@ -352,20 +323,20 @@ templ LogoutPage(data LogoutPageData) {
 templ MePage(data MePageData) {
 	@PageLayout("Me · Hata", data.HTMXScriptSrc, data.DisplayName) {
 		<div class="me-screen">
-			<header>
-				<h1>My session</h1>
-				<p>Authenticated page.</p>
+			<header class={ "screen-header", screenHeaderStyle() }>
+				<h1 class={ flushBlockStyle() }>My session</h1>
+				<p class={ flushBlockStyle() }>Authenticated page.</p>
 			</header>
-			<ul class="me-details">
-				<li>User ID: { data.UserID }</li>
-				<li>Username: { data.Username }</li>
+			<ul class={ plainListGridStyle() }>
+				<li class={ panelListItemStyle() }>User ID: { data.UserID }</li>
+				<li class={ panelListItemStyle() }>Username: { data.Username }</li>
 				if data.HasSessionToken {
-					<li>Session token: present</li>
+					<li class={ panelListItemStyle() }>Session token: present</li>
 				} else {
-					<li>Session token: missing</li>
+					<li class={ panelListItemStyle() }>Session token: missing</li>
 				}
 			</ul>
-			<form method="post" action="/auth/logout">
+			<form class={ compactLogoutFormStyle() } method="post" action="/auth/logout">
 				<button type="submit">Sign out</button>
 			</form>
 		</div>
@@ -375,24 +346,24 @@ templ MePage(data MePageData) {
 templ AppPage(data AppPageData) {
 	@PageLayout("App · Hata", data.HTMXScriptSrc, data.DisplayName) {
 		<div class="app-screen">
-			<header>
-				<h1>My devices</h1>
-				<p>Devices grouped by houses.</p>
+			<header class={ "screen-header", screenHeaderStyle() }>
+				<h1 class={ flushBlockStyle() }>My devices</h1>
+				<p class={ flushBlockStyle() }>Devices grouped by houses.</p>
 			</header>
 			if len(data.Houses) == 0 {
 				<p>You don't have access to any houses yet.</p>
 			} else {
-				<div class="app-houses">
+				<div class={ cardGridStyle() }>
 					for _, house := range data.Houses {
-						<section class="house">
-							<h2>{ house.DisplayName }</h2>
-							<p class="house-role">House ID: { house.ID } · Role: { house.Role }</p>
+						<section class={ appHouseCardStyle() }>
+							<h2 class={ flushBlockStyle() }>{ house.DisplayName }</h2>
+							<p class={ flushBlockStyle(), houseRoleStyle() }>House ID: { house.ID } · Role: { house.Role }</p>
 							if len(house.Devices) == 0 {
-								<p class="device-empty">No devices in this house.</p>
+								<p class={ flushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
 							} else {
-								<ul>
+								<ul class={ deviceListStyle() }>
 									for _, device := range house.Devices {
-										<li class="device-card"><span class="device-name">{ device.Name } ({ device.ID })</span><span class="device-state">· { device.State }</span></li>
+										<li class={ "device-card", deviceCardStyle() }><span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span><span class={ deviceStateStyle() }>· { device.State }</span></li>
 									}
 								</ul>
 							}
