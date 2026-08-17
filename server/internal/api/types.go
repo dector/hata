@@ -52,8 +52,9 @@ type DeviceIntegrationInfo struct {
 type DeviceInfo struct {
 	ID          string                `json:"id"`
 	Name        string                `json:"name"`
-	Integration DeviceIntegrationInfo `json:"integration"`
-	State       string                `json:"state"`
+	Integration  DeviceIntegrationInfo `json:"integration"`
+	State        string                `json:"state"`
+	Availability string                `json:"availability"`
 }
 
 // HouseRef contains house references for device responses.

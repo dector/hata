@@ -50,6 +50,7 @@ type AppDeviceData struct {
 	Name          string
 	IntegrationID string
 	State         string
+	Availability  string
 	ToggleURL     string
 }
 

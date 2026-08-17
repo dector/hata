@@ -170,6 +170,12 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Bedroom Lamp", "dummy", nil, "on"); err != nil {
 		t.Fatalf("create device: %v", err)
 	}
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-2", "Desk Lamp", "dummy", nil, "off"); err != nil {
+		t.Fatalf("create offline device: %v", err)
+	}
+	if err := repos.Device().UpdateAvailability(context.Background(), "H1", "lamp-2", "offline"); err != nil {
+		t.Fatalf("mark device offline: %v", err)
+	}
 
 	h := NewHandler(api.NewAuthHandler(repos), repos)
 	req := httptest.NewRequest(http.MethodGet, "/app", nil)
@@ -189,8 +195,11 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	if !strings.Contains(body, `href="/h/H1/manage"`) || !strings.Contains(body, `href="/h/H2/manage"`) {
 		t.Fatalf("expected house manage links on page")
 	}
-	if !strings.Contains(body, "Bedroom Lamp") {
+	if !strings.Contains(body, "Bedroom Lamp") || !strings.Contains(body, "Desk Lamp") {
 		t.Fatalf("expected house devices on page")
+	}
+	if !strings.Contains(body, "offline") {
+		t.Fatalf("expected offline device status on page")
 	}
 	if !strings.Contains(body, "No devices in this house") {
 		t.Fatalf("expected empty house message")

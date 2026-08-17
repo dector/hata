@@ -120,10 +120,14 @@ templ AppPage(data AppPageData) {
 										<li class={ "device-card", deviceCardStyle() }>
 											<span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span>
 											<span class={ deviceActionsStyle() }>
-												<span class={ deviceStateStyle() }>· { device.State }</span>
-												<form class={ deviceToggleFormStyle() } method="post" action={ templ.SafeURL(device.ToggleURL) }>
-													<button class={ deviceToggleButtonStyle() } type="submit">Toggle</button>
-												</form>
+												if device.Availability == "offline" {
+													<span class={ deviceStateStyle() }>· offline</span>
+												} else {
+													<span class={ deviceStateStyle() }>· { device.State }</span>
+													<form class={ deviceToggleFormStyle() } method="post" action={ templ.SafeURL(device.ToggleURL) }>
+														<button class={ deviceToggleButtonStyle() } type="submit">Toggle</button>
+													</form>
+												}
 											</span>
 										</li>
 									}

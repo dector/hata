@@ -563,6 +563,10 @@ func (f *fakeDeviceController) SetState(ctx context.Context, device *db.DeviceDa
 	return f.err
 }
 
+func (f *fakeDeviceController) GetStatus(ctx context.Context, device *db.DeviceData) (DeviceStatus, error) {
+	return DeviceStatus{State: f.lastState, Availability: "online"}, f.err
+}
+
 func createTestUser(t *testing.T, repos db.Repositories, username string) *db.UserData {
 	t.Helper()
 	ctx := context.Background()

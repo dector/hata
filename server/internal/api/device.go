@@ -174,6 +174,9 @@ func (h *DeviceHandler) SetState(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.controller.SetState(r.Context(), device, newState); err != nil {
+		if errors.Is(err, errDeviceNoAck) {
+			_ = h.repos.Device().UpdateAvailability(r.Context(), houseID, deviceID, "offline")
+		}
 		if errors.Is(err, errUnsupportedIntegration) {
 			WriteError(w, http.StatusUnprocessableEntity, "Device integration is not supported", "unsupported-integration")
 			return
@@ -191,7 +194,7 @@ func (h *DeviceHandler) SetState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repos.Device().UpdateState(r.Context(), houseID, deviceID, newState); err != nil {
+	if err := h.repos.Device().UpdateStatus(r.Context(), houseID, deviceID, newState, "online"); err != nil {
 		fmt.Printf("Error updating state for device %q in house %q: %v\n", deviceID, houseID, err)
 		WriteError(w, http.StatusInternalServerError, "Internal server error", "internal-error")
 		return
@@ -236,7 +239,8 @@ func deviceInfoFromData(device *db.DeviceData) DeviceInfo {
 			ID:   device.IntegrationID,
 			Data: decodeIntegrationData(device.IntegrationData),
 		},
-		State: device.State,
+		State:        device.State,
+		Availability: device.Availability,
 	}
 }
 

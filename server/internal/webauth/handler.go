@@ -171,6 +171,7 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 			Name:          d.Name,
 			IntegrationID: d.IntegrationID,
 			State:         d.State,
+			Availability:  d.Availability,
 			ToggleURL:     webui.HouseDeviceTogglePath(d.HouseID, d.ID),
 		})
 	}
@@ -248,11 +249,14 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.deviceController.SetState(r.Context(), device, newState); err != nil {
+		if api.IsDeviceNoAck(err) {
+			_ = h.repos.Device().UpdateAvailability(r.Context(), houseID, deviceID, "offline")
+		}
 		fmt.Printf("Error toggling device %q in house %q: %v\n", deviceID, houseID, err)
 		http.Error(w, "failed to toggle device", http.StatusBadGateway)
 		return
 	}
-	if err := h.repos.Device().UpdateState(r.Context(), houseID, deviceID, newState); err != nil {
+	if err := h.repos.Device().UpdateStatus(r.Context(), houseID, deviceID, newState, "online"); err != nil {
 		http.Error(w, "failed to update device", http.StatusInternalServerError)
 		return
 	}
@@ -307,6 +311,7 @@ func (h *Handler) HouseManagePage(w http.ResponseWriter, r *http.Request) {
 			Name:          d.Name,
 			IntegrationID: d.IntegrationID,
 			State:         d.State,
+			Availability:  d.Availability,
 		})
 	}
 

@@ -117,6 +117,15 @@ type DeviceRepository interface {
 	// UpdateState updates the device state.
 	UpdateState(ctx context.Context, houseID, id, state string) error
 
+	// UpdateAvailability updates the device availability.
+	UpdateAvailability(ctx context.Context, houseID, id, availability string) error
+
+	// UpdateStatus updates the device state and availability.
+	UpdateStatus(ctx context.Context, houseID, id, state, availability string) error
+
+	// ListAll lists all devices.
+	ListAll(ctx context.Context) ([]*DeviceData, error)
+
 	// UpdateName updates the device display name.
 	UpdateName(ctx context.Context, houseID, id, name string) error
 }
@@ -215,6 +224,7 @@ type DeviceData struct {
 	IntegrationID   string
 	IntegrationData *string
 	State           string
+	Availability    string
 	HouseID         string
 }
 

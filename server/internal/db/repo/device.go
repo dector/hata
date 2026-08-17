@@ -80,6 +80,24 @@ func (r *DeviceRepo) ListByUser(ctx context.Context, userID int) ([]*DeviceData,
 	return results, nil
 }
 
+// ListAll lists all devices.
+func (r *DeviceRepo) ListAll(ctx context.Context) ([]*DeviceData, error) {
+	devices, err := r.client.Device.Query().
+		Order(device.ByHouseID(), device.ByDeviceID()).
+		All(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed listing devices: %w", err)
+	}
+
+	results := make([]*DeviceData, len(devices))
+	for i, d := range devices {
+		results[i] = deviceDataFromEnt(d)
+	}
+
+	return results, nil
+}
+
 // GetByHouseAndID retrieves a device by house and device ID.
 func (r *DeviceRepo) GetByHouseAndID(ctx context.Context, houseID, id string) (*DeviceData, error) {
 	d, err := r.client.Device.Query().
@@ -109,6 +127,37 @@ func (r *DeviceRepo) UpdateState(ctx context.Context, houseID, id, state string)
 	return nil
 }
 
+// UpdateAvailability updates the device availability.
+func (r *DeviceRepo) UpdateAvailability(ctx context.Context, houseID, id, availability string) error {
+	count, err := r.client.Device.Update().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id)).
+		SetAvailability(availability).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating device availability: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
+// UpdateStatus updates the device state and availability.
+func (r *DeviceRepo) UpdateStatus(ctx context.Context, houseID, id, state, availability string) error {
+	count, err := r.client.Device.Update().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id)).
+		SetState(state).
+		SetAvailability(availability).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating device status: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
 // UpdateName updates the device display name.
 func (r *DeviceRepo) UpdateName(ctx context.Context, houseID, id, name string) error {
 	count, err := r.client.Device.Update().
@@ -131,6 +180,7 @@ func deviceDataFromEnt(d *orm.Device) *DeviceData {
 		IntegrationID:   d.IntegrationID,
 		IntegrationData: d.IntegrationData,
 		State:           d.State,
+		Availability:    d.Availability,
 		HouseID:         d.HouseID,
 	}
 }

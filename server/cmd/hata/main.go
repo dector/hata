@@ -15,6 +15,7 @@ import (
 	"hata/internal/api"
 	"hata/internal/apiui"
 	"hata/internal/db"
+	"hata/internal/devicestatus"
 	"hata/internal/util"
 	"hata/internal/webauth"
 	"hata/internal/webui"
@@ -63,8 +64,10 @@ func startServer(database db.DB, ctx context.Context) {
 	authHandler := api.NewAuthHandler(database.Repos())
 	serverHandler := api.NewServerHandler()
 	houseHandler := api.NewHouseHandler(database.Repos())
-	deviceHandler := api.NewDeviceHandler(database.Repos())
+	deviceController := api.NewRealDeviceController()
+	deviceHandler := api.NewDeviceHandlerWithController(database.Repos(), deviceController)
 	shoppingListHandler := api.NewShoppingListHandler(database.Repos())
+	devicestatus.StartPoller(ctx, database.Repos(), deviceController, 0)
 
 	// Static assets
 	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("public"))))
