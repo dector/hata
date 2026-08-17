@@ -35,6 +35,10 @@ func TestHouseManagePage_RendersForMember(t *testing.T) {
 	if _, err := repos.HouseDiscoveryNetwork().Create(context.Background(), "H1", "192.168.1.0/24", "Main WiFi"); err != nil {
 		t.Fatalf("create discovery network: %v", err)
 	}
+	integrationData := `{"ip":"192.168.1.41"}`
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Office Lamp", "wiz", &integrationData, "off"); err != nil {
+		t.Fatalf("create device: %v", err)
+	}
 
 	h := NewHandler(api.NewAuthHandler(repos), repos)
 	router := chi.NewRouter()
@@ -50,8 +54,11 @@ func TestHouseManagePage_RendersForMember(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	body := w.Body.String()
-	if !strings.Contains(body, "Main Home") || !strings.Contains(body, "House ID: H1") || !strings.Contains(body, "Your role: owner") {
-		t.Fatalf("expected house manage details on page")
+	if !strings.Contains(body, "House Settings") || !strings.Contains(body, "owner") || strings.Contains(body, "House ID:") || strings.Contains(body, "Your role:") {
+		t.Fatalf("expected refreshed house manage details on page")
+	}
+	if !strings.Contains(body, "Office Lamp") || !strings.Contains(body, "IP 192.168.1.41") || !strings.Contains(body, "Rename Office Lamp") {
+		t.Fatalf("expected refreshed device details on page")
 	}
 	if !strings.Contains(body, "Devices") || !strings.Contains(body, "+ Add") || !strings.Contains(body, "Scan") {
 		t.Fatalf("expected device discovery controls on page")

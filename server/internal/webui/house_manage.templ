@@ -1,18 +1,32 @@
 package webui
 
-css houseManageDetailsStyle() {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+css houseManageHeroStyle() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	gap: 1rem;
 	margin: 0 0 1rem;
-	padding-left: 0;
-	list-style: none;
-}
-
-css houseManageDetailsItemStyle() {
 	padding: 1rem;
 	border: 1px solid var(--border);
-	border-radius: 0.5rem;
+	border-radius: 0.75rem;
+	background: rgba(250, 189, 47, 0.06);
+}
+
+css houseManageRoleBadgeStyle() {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	padding: 0.25rem 0.65rem;
+	color: var(--muted);
+	font-size: 0.85rem;
+	font-weight: 700;
+}
+
+css houseManageHeroTextStyle() {
+	display: grid;
+	gap: 0.25rem;
 }
 
 css houseManageSectionStyle() {
@@ -72,22 +86,86 @@ css discoveryResultsStyle() {
 	list-style: none;
 }
 
+css houseManageDeviceCardStyle() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	min-height: 0;
+	padding: 0.9rem;
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	background: rgba(255, 255, 255, 0.02);
+}
+
+css houseManageDeviceInfoStyle() {
+	display: grid;
+	gap: 0.35rem;
+	min-width: 0;
+}
+
+css houseManageDeviceMetaStyle() {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+css houseManageDeviceBadgeStyle() {
+	display: inline-flex;
+	align-items: center;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	padding: 0.15rem 0.5rem;
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+css houseManageIconFormStyle() {
+	flex: 0 0 auto;
+	display: inline-flex;
+	gap: 0;
+	margin: 0;
+}
+
+css houseManageIconButtonStyle() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--muted);
+}
+
 css discoveryStatusStyle() {
 	color: var(--muted);
 }
 
 templ HouseManagePage(data HouseManagePageData) {
-	@PageLayout("Manage house · Hata", data.DisplayName) {
+	@WebPage("House Settings · Hata") {
+		@HouseSelector(data.HeaderHouses, data.ActiveHouseID, "/app")
+		@UserBadge(data.DisplayName)
+		<main>
 		<div class="app-screen">
-			@ScreenHeader(data.House.DisplayName, "House management.")
-			<ul class={ houseManageDetailsStyle() }>
-				<li class={ houseManageDetailsItemStyle() }>House ID: { data.House.ID }</li>
-				<li class={ houseManageDetailsItemStyle() }>Your role: { data.House.Role }</li>
-			</ul>
+			@ScreenHeader("House Settings", "Manage devices and discovery networks.")
+			<div class={ houseManageHeroStyle() }>
+				<div class={ houseManageHeroTextStyle() }>
+					<strong>House Settings</strong>
+					<span class={ discoveryStatusStyle() }>Manage devices and discovery networks.</span>
+				</div>
+				<span class={ houseManageRoleBadgeStyle() }>{ data.House.Role }</span>
+			</div>
 
 			<section class={ houseManageSectionStyle() } data-discover-url={ houseManageDiscoverPath(data.House.ID) }>
 				<div class={ houseManageSectionHeaderStyle() }>
-					<h2 class={ appFlushBlockStyle() }>Devices</h2>
+					<h2 class={ appFlushBlockStyle() }>{ houseDevicesTitle(data.House) }</h2>
 					<button id="device-add-button" type="button">+ Add</button>
 				</div>
 
@@ -96,12 +174,23 @@ templ HouseManagePage(data HouseManagePageData) {
 				} else {
 					<ul class={ deviceListStyle() }>
 						for _, device := range data.House.Devices {
-							<li class={ "device-card", deviceCardStyle() }>
-								<span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span><span class={ deviceStateStyle() }>· { device.State }</span>
+							<li class={ houseManageDeviceCardStyle() }>
+								<div class={ houseManageDeviceInfoStyle() }>
+									<span class={ deviceNameStyle() }>{ device.Name }</span>
+									<span class={ houseManageDeviceMetaStyle() }>
+										<span class={ houseManageDeviceBadgeStyle() }>{ device.IntegrationID }</span>
+										if device.IntegrationIP != "" {
+											<span>IP { device.IntegrationIP }</span>
+										}
+										if device.Availability != "" {
+											<span>{ device.Availability }</span>
+										}
+									</span>
+								</div>
 								if data.CanManageHouse {
-									<form class="device-rename-form" method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
+									<form class={ "device-rename-form", houseManageIconFormStyle() } method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
 										<input type="hidden" name="name"/>
-										<button type="submit">Rename</button>
+										<button class={ houseManageIconButtonStyle() } type="submit" aria-label={ "Rename " + device.Name } title="Rename">@editIcon()</button>
 									</form>
 								}
 							</li>
@@ -111,17 +200,7 @@ templ HouseManagePage(data HouseManagePageData) {
 
 				<div id="device-add-panel" class={ houseManageAddPanelStyle() } hidden>
 					<p class={ appFlushBlockStyle(), discoveryStatusStyle() }>Scan supported integrations for devices.</p>
-					<p class={ appFlushBlockStyle() }>This scan will check:</p>
-					<ul>
-						<li>Server local networks</li>
-						for _, network := range data.DiscoveryNetworks {
-							if network.Label != "" {
-								<li>{ network.Label }: { network.CIDR }</li>
-							} else {
-								<li>{ network.CIDR }</li>
-							}
-						}
-					</ul>
+					<p class={ appFlushBlockStyle() }>This scan will check the discovery networks listed below.</p>
 					<button id="device-scan-button" type="button">Scan</button>
 					<p id="device-discovery-status" class={ appFlushBlockStyle(), discoveryStatusStyle() }></p>
 					<ul id="device-discovery-results" class={ discoveryResultsStyle() }></ul>
@@ -133,10 +212,25 @@ templ HouseManagePage(data HouseManagePageData) {
 					<h2 class={ appFlushBlockStyle() }>Discovery networks</h2>
 				</div>
 				<p class={ appFlushBlockStyle(), discoveryStatusStyle() }>Extra network ranges to scan. Example: 192.168.1.0/24 scans 192.168.1.*.</p>
-				if len(data.DiscoveryNetworks) == 0 {
-					<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No extra discovery networks configured.</p>
-				} else {
-					<ul class={ houseManageNetworkListStyle() }>
+				<ul class={ houseManageNetworkListStyle() }>
+					if len(data.DefaultDiscoveryNetworks) == 0 {
+						<li class={ houseManageNetworkItemStyle() }>
+							<span><strong>Default</strong> · server local networks</span>
+							<span class={ discoveryStatusStyle() }>Built in</span>
+						</li>
+					} else {
+						for _, cidr := range data.DefaultDiscoveryNetworks {
+							<li class={ houseManageNetworkItemStyle() }>
+								<span><strong>Default</strong> · { cidr }</span>
+								<span class={ discoveryStatusStyle() }>Built in</span>
+							</li>
+						}
+					}
+					if len(data.DiscoveryNetworks) == 0 {
+						<li class={ houseManageNetworkItemStyle() }>
+							<span class={ deviceEmptyStyle() }>No extra discovery networks configured.</span>
+						</li>
+					} else {
 						for _, network := range data.DiscoveryNetworks {
 							<li class={ houseManageNetworkItemStyle() }>
 								<span>
@@ -153,8 +247,8 @@ templ HouseManagePage(data HouseManagePageData) {
 								}
 							</li>
 						}
-					</ul>
-				}
+					}
+				</ul>
 				if data.CanManageHouse {
 					<form class={ houseManageInlineFormStyle() } method="post" action={ houseDiscoveryNetworksPath(data.House.ID) }>
 						<label for="discovery-network-cidr">CIDR
@@ -224,9 +318,8 @@ templ HouseManagePage(data HouseManagePageData) {
 						source.addEventListener('device', (event) => {
 							const device = JSON.parse(event.data);
 							const item = document.createElement('li');
-							const state = device.state ? ` · ${device.state}` : ' · unknown';
 							const label = document.createElement('span');
-							label.textContent = `[${device.integration}] ${device.name || 'Unnamed device'} at ${device.ip}${state}`;
+							label.textContent = `[${device.integration}] ${device.name || 'Unnamed device'} at ${device.ip}`;
 							item.append(label);
 
 							if (device.inHouse) {
@@ -276,5 +369,6 @@ templ HouseManagePage(data HouseManagePageData) {
 				})();
 			</script>
 		</div>
+		</main>
 	}
 }

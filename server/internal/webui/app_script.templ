@@ -73,10 +73,6 @@ templ appPageScript() {
 			}
 		}).observe(document.body, { childList: true, subtree: true });
 		document.addEventListener('click', (event) => {
-			document.querySelectorAll('[data-house-selector][open]').forEach((selector) => {
-				if (!selector.contains(event.target)) selector.removeAttribute('open');
-			});
-
 			const openButton = event.target.closest('[data-light-open]');
 			if (openButton) {
 				event.preventDefault();
@@ -89,10 +85,6 @@ templ appPageScript() {
 				const isOutside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
 				if (isOutside) event.target.close();
 			}
-		});
-		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape') return;
-			document.querySelectorAll('[data-house-selector][open]').forEach((selector) => selector.removeAttribute('open'));
 		});
 		document.addEventListener('submit', async (event) => {
 			const form = event.target.closest('[data-light-state-form]');

@@ -230,6 +230,17 @@ templ WebPage(title string) {
 				}
 			</style>
 			<script type="module" src={ LocalDatastarScriptPath }></script>
+			<script>
+				document.addEventListener('click', (event) => {
+					document.querySelectorAll('[data-house-selector][open]').forEach((selector) => {
+						if (!selector.contains(event.target)) selector.removeAttribute('open');
+					});
+				});
+				document.addEventListener('keydown', (event) => {
+					if (event.key !== 'Escape') return;
+					document.querySelectorAll('[data-house-selector][open]').forEach((selector) => selector.removeAttribute('open'));
+				});
+			</script>
 		</head>
 		<body>
 			{ children... }

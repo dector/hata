@@ -46,6 +46,7 @@ type AppDeviceData struct {
 	ID               string
 	Name             string
 	IntegrationID    string
+	IntegrationIP    string
 	State            string
 	Availability     string
 	ToggleURL        string
@@ -67,7 +68,10 @@ type LightPresetData struct {
 type HouseManagePageData struct {
 	DisplayName       string
 	House             AppHouseData
-	DiscoveryNetworks []HouseDiscoveryNetworkData
+	HeaderHouses             []AppHouseData
+	ActiveHouseID            string
+	DefaultDiscoveryNetworks []string
+	DiscoveryNetworks        []HouseDiscoveryNetworkData
 	CanManageHouse    bool
 }
 
@@ -75,6 +79,10 @@ type HouseDiscoveryNetworkData struct {
 	ID    int
 	CIDR  string
 	Label string
+}
+
+func houseDevicesTitle(house AppHouseData) string {
+	return "Devices (" + strconv.Itoa(len(house.Devices)) + ")"
 }
 
 func activeHouseName(houses []AppHouseData, activeHouseID string) string {
