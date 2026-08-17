@@ -24,9 +24,10 @@ const defaultThenPath = "/me"
 
 // Handler serves browser auth pages.
 type Handler struct {
-	auth            *api.AuthHandler
-	repos           db.Repositories
-	discoverDevices func(context.Context, []string) <-chan integrations.DiscoveredDevice
+	auth             *api.AuthHandler
+	repos            db.Repositories
+	deviceController api.DeviceController
+	discoverDevices  func(context.Context, []string) <-chan integrations.DiscoveredDevice
 }
 
 type discoveredDeviceView struct {
@@ -40,9 +41,10 @@ type discoveredDeviceView struct {
 
 func NewHandler(auth *api.AuthHandler, repos db.Repositories) *Handler {
 	return &Handler{
-		auth:            auth,
-		repos:           repos,
-		discoverDevices: integrations.DiscoverDevices,
+		auth:             auth,
+		repos:            repos,
+		deviceController: &api.RealDeviceController{},
+		discoverDevices:  integrations.DiscoverDevices,
 	}
 }
 
@@ -169,6 +171,7 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 			Name:          d.Name,
 			IntegrationID: d.IntegrationID,
 			State:         d.State,
+			ToggleURL:     webui.HouseDeviceTogglePath(d.HouseID, d.ID),
 		})
 	}
 
@@ -194,6 +197,67 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to render app page", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if h.repos == nil || h.deviceController == nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	auth, ok := AuthFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	houseID := strings.TrimSpace(chi.URLParam(r, "houseId"))
+	deviceID := strings.TrimSpace(chi.URLParam(r, "deviceId"))
+	if houseID == "" || deviceID == "" {
+		http.Error(w, "house id and device id are required", http.StatusBadRequest)
+		return
+	}
+
+	memberships, err := h.repos.HouseRole().ListByUser(r.Context(), auth.UserID)
+	if err != nil {
+		http.Error(w, "failed to load houses", http.StatusInternalServerError)
+		return
+	}
+	if findMembership(memberships, houseID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	device, err := h.repos.Device().GetByHouseAndID(r.Context(), houseID, deviceID)
+	if err != nil {
+		http.Error(w, "failed to load device", http.StatusInternalServerError)
+		return
+	}
+	if device == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	newState := "on"
+	if strings.EqualFold(strings.TrimSpace(device.State), "on") {
+		newState = "off"
+	}
+
+	if err := h.deviceController.SetState(r.Context(), device, newState); err != nil {
+		fmt.Printf("Error toggling device %q in house %q: %v\n", deviceID, houseID, err)
+		http.Error(w, "failed to toggle device", http.StatusBadGateway)
+		return
+	}
+	if err := h.repos.Device().UpdateState(r.Context(), houseID, deviceID, newState); err != nil {
+		http.Error(w, "failed to update device", http.StatusInternalServerError)
+		return
+	}
+
+	redirectAfterPost(w, r, "/app")
 }
 
 func (h *Handler) HouseManagePage(w http.ResponseWriter, r *http.Request) {

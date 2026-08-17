@@ -50,6 +50,7 @@ type AppDeviceData struct {
 	Name          string
 	IntegrationID string
 	State         string
+	ToggleURL     string
 }
 
 type HouseManagePageData struct {
@@ -79,6 +80,10 @@ func houseManagePath(id string) string {
 
 func houseManageDiscoverPath(id string) string {
 	return houseManagePath(id) + "/devices/discover"
+}
+
+func HouseDeviceTogglePath(houseID string, deviceID string) string {
+	return "/h/" + url.PathEscape(houseID) + "/device/" + url.PathEscape(deviceID) + "/toggle"
 }
 
 func houseDiscoveryNetworksPath(id string) string {
