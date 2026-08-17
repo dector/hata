@@ -847,20 +847,12 @@ func renderDeviceCardData(w http.ResponseWriter, r *http.Request, data webui.App
 
 func renderDeviceCardWithTrigger(w http.ResponseWriter, r *http.Request, device *db.DeviceData, message string) {
 	data := appDeviceDataFromDB(device)
-	if isDatastarRequest(r) {
-		data.ToggleError = message
-	} else {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"device-toggle-failed":{"message":%q}}`, message))
-	}
+	data.ToggleError = message
 	renderDeviceCardData(w, r, data)
 }
 
 func isPartialRequest(r *http.Request) bool {
-	return isHTMXRequest(r) || isDatastarRequest(r)
-}
-
-func isHTMXRequest(r *http.Request) bool {
-	return strings.EqualFold(r.Header.Get("HX-Request"), "true")
+	return isDatastarRequest(r)
 }
 
 func isDatastarRequest(r *http.Request) bool {
@@ -928,11 +920,6 @@ func redirectAfterPost(w http.ResponseWriter, r *http.Request, target string) {
 	if isDatastarRequest(r) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 		_, _ = fmt.Fprintf(w, "window.location.assign(%s);", strconv.Quote(target))
-		return
-	}
-	if isHTMXRequest(r) {
-		w.Header().Set("HX-Redirect", target)
-		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther)

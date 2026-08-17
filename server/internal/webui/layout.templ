@@ -41,7 +41,7 @@ css flushBlockStyle() {
 	margin: 0;
 }
 
-templ WebPage(title string, htmxScriptSrc string) {
+templ WebPage(title string) {
 	<!doctype html>
 	<html lang="en">
 		<head>
@@ -164,7 +164,6 @@ templ WebPage(title string, htmxScriptSrc string) {
 					}
 				}
 			</style>
-			<script src={ scriptSrcOrDefault(htmxScriptSrc) } defer></script>
 			<script type="module" src={ LocalDatastarScriptPath }></script>
 		</head>
 		<body>
@@ -189,8 +188,8 @@ templ ScreenHeader(title string, subtitle string) {
 	</header>
 }
 
-templ PageLayout(title string, htmxScriptSrc string, displayName string) {
-	@WebPage(title, htmxScriptSrc) {
+templ PageLayout(title string, displayName string) {
+	@WebPage(title) {
 		@UserBadge(displayName)
 		<main>
 			{ children... }

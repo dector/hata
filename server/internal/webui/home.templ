@@ -16,7 +16,7 @@ css homeLinkItemStyle() {
 }
 
 templ HomePage(data HomePageData) {
-	@PageLayout("Hata", data.HTMXScriptSrc, data.DisplayName) {
+	@PageLayout("Hata", data.DisplayName) {
 		<div class="dev-screen">
 			@ScreenHeader("Hata", "Smart home backend.")
 			<ul class={ homeLinksStyle() }>

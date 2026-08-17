@@ -6,39 +6,30 @@ import (
 	"strings"
 )
 
-const (
-	LocalHTMXScriptPath     = "/assets/js/htmx-2.0.4.min.js"
-	LocalDatastarScriptPath = "/assets/js/datastar-1.0.2.js"
-)
+const LocalDatastarScriptPath = "/assets/js/datastar-1.0.2.js"
 
 type HomePageData struct {
-	IsLoggedIn    bool
-	DisplayName   string
-	HTMXScriptSrc string
+	IsLoggedIn  bool
+	DisplayName string
 }
 
 type LoginPageData struct {
-	Then          string
-	Error         string
-	HTMXScriptSrc string
+	Then  string
+	Error string
 }
 
-type LogoutPageData struct {
-	HTMXScriptSrc string
-}
+type LogoutPageData struct{}
 
 type MePageData struct {
 	UserID          int
 	Username        string
 	DisplayName     string
 	HasSessionToken bool
-	HTMXScriptSrc   string
 }
 
 type AppPageData struct {
-	DisplayName   string
-	Houses        []AppHouseData
-	HTMXScriptSrc string
+	DisplayName string
+	Houses      []AppHouseData
 }
 
 type AppHouseData struct {
@@ -76,7 +67,6 @@ type HouseManagePageData struct {
 	House             AppHouseData
 	DiscoveryNetworks []HouseDiscoveryNetworkData
 	CanManageHouse    bool
-	HTMXScriptSrc     string
 }
 
 type HouseDiscoveryNetworkData struct {
@@ -149,13 +139,6 @@ func deviceStatusLabel(device AppDeviceData) string {
 	default:
 		return device.State
 	}
-}
-
-func scriptSrcOrDefault(src string) string {
-	if strings.TrimSpace(src) == "" {
-		return LocalHTMXScriptPath
-	}
-	return src
 }
 
 func houseManagePath(id string) string {

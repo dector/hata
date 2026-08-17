@@ -44,8 +44,8 @@ func TestLoginPage_Renders(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	body := w.Body.String()
-	if !strings.Contains(body, "/js/htmx-2.0.4.min.js") {
-		t.Fatalf("expected local htmx script in page")
+	if strings.Contains(body, "htmx") || strings.Contains(body, "htmx-2.0.4.min.js") {
+		t.Fatalf("did not expect htmx script in page")
 	}
 	if !strings.Contains(body, "/assets/js/datastar-1.0.2.js") {
 		t.Fatalf("expected local datastar script in page")
@@ -311,8 +311,8 @@ func TestPartialRequestDetection(t *testing.T) {
 
 	req.Header.Del("Datastar-Request")
 	req.Header.Set("HX-Request", "true")
-	if !isPartialRequest(req) {
-		t.Fatalf("htmx request should be partial")
+	if isPartialRequest(req) {
+		t.Fatalf("htmx request should not be partial")
 	}
 }
 
@@ -410,7 +410,7 @@ func TestToggleHouseDevice_DatastarFailureReturnsCardWithError(t *testing.T) {
 		t.Fatalf("expected card with datastar error marker, got %s", body)
 	}
 	if got := w.Header().Get("HX-Trigger"); got != "" {
-		t.Fatalf("did not expect HX trigger for datastar request, got %q", got)
+		t.Fatalf("did not expect HX trigger, got %q", got)
 	}
 }
 

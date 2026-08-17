@@ -1,7 +1,7 @@
 package webui
 
 templ LoginPage(data LoginPageData) {
-	@WebPage("Sign in · Hata", data.HTMXScriptSrc) {
+	@WebPage("Sign in · Hata") {
 		<main>
 			<h1>Sign in</h1>
 			<p>Use your credentials to start a browser session.</p>
@@ -25,7 +25,7 @@ templ LoginPage(data LoginPageData) {
 }
 
 templ LogoutPage(data LogoutPageData) {
-	@WebPage("Sign out · Hata", data.HTMXScriptSrc) {
+	@WebPage("Sign out · Hata") {
 		<main id="logout-shell">
 			<h1>Sign out</h1>
 			<p>This clears your auth cookie for this browser.</p>

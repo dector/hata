@@ -21,7 +21,7 @@ css meLogoutFormStyle() {
 }
 
 templ MePage(data MePageData) {
-	@PageLayout("Me · Hata", data.HTMXScriptSrc, data.DisplayName) {
+	@PageLayout("Me · Hata", data.DisplayName) {
 		<div class="me-screen">
 			@ScreenHeader("My session", "Authenticated page.")
 			<ul class={ meDetailsStyle() }>
