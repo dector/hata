@@ -53,10 +53,13 @@ func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseReco
 	}
 
 	var authCookie *http.Cookie
+	var activeHouseCookie *http.Cookie
 	for _, c := range w.Result().Cookies() {
-		if c.Name == api.AuthTokenCookieName {
+		switch c.Name {
+		case api.AuthTokenCookieName:
 			authCookie = c
-			break
+		case activeHouseCookieName:
+			activeHouseCookie = c
 		}
 	}
 	if authCookie == nil {
@@ -67,5 +70,14 @@ func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseReco
 	}
 	if !authCookie.Expires.Equal(time.Unix(0, 0)) {
 		t.Fatalf("expected expires unix 0, got %v", authCookie.Expires)
+	}
+	if activeHouseCookie == nil {
+		t.Fatalf("expected active house cookie to be cleared")
+	}
+	if activeHouseCookie.Value != "-" {
+		t.Fatalf("expected cleared active house cookie value '-', got %q", activeHouseCookie.Value)
+	}
+	if !activeHouseCookie.Expires.Equal(time.Unix(0, 0)) {
+		t.Fatalf("expected active house expires unix 0, got %v", activeHouseCookie.Expires)
 	}
 }

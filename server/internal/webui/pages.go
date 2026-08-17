@@ -28,8 +28,10 @@ type MePageData struct {
 }
 
 type AppPageData struct {
-	DisplayName string
-	Houses      []AppHouseData
+	DisplayName   string
+	Houses        []AppHouseData
+	HeaderHouses  []AppHouseData
+	ActiveHouseID string
 }
 
 type AppHouseData struct {
@@ -73,6 +75,18 @@ type HouseDiscoveryNetworkData struct {
 	ID    int
 	CIDR  string
 	Label string
+}
+
+func activeHouseName(houses []AppHouseData, activeHouseID string) string {
+	for _, house := range houses {
+		if house.ID == activeHouseID {
+			return house.DisplayName
+		}
+	}
+	if len(houses) > 0 {
+		return houses[0].DisplayName
+	}
+	return "House"
 }
 
 func lightDialogID(device AppDeviceData) string {
@@ -139,6 +153,10 @@ func deviceStatusLabel(device AppDeviceData) string {
 	default:
 		return device.State
 	}
+}
+
+func activeHousePath() string {
+	return "/app/active-house"
 }
 
 func houseManagePath(id string) string {

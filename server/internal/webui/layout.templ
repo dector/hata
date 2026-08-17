@@ -1,5 +1,66 @@
 package webui
 
+css houseSelectorStyle() {
+	position: fixed;
+	top: 1rem;
+	left: 1rem;
+	z-index: 10;
+	max-width: calc(100vw - 2rem);
+}
+
+css houseSelectorSummaryStyle() {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	max-width: min(22rem, calc(100vw - 2rem));
+	padding: 0.4rem 0.55rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--text);
+	font-size: 0.85rem;
+	cursor: pointer;
+	list-style: none;
+}
+
+css houseSelectorMenuStyle() {
+	display: grid;
+	gap: 0.25rem;
+	min-width: min(22rem, calc(100vw - 2rem));
+	margin-top: 0.45rem;
+	padding: 0.45rem;
+	border: 1px solid var(--border);
+	border-radius: 0.65rem;
+	background: var(--surface);
+	box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.28);
+}
+
+css houseSelectorItemStyle() {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.45rem 0.55rem;
+	border: 0;
+	border-radius: 0.45rem;
+	background: transparent;
+	color: var(--text);
+	text-align: left;
+	text-decoration: none;
+	font-size: 0.85rem;
+}
+
+css houseSelectorActiveStyle() {
+	color: var(--accent-hover);
+}
+
+css houseSelectorDividerStyle() {
+	height: 1px;
+	margin: 0.25rem 0;
+	background: var(--border);
+}
+
 css userBadgeStyle() {
 	position: fixed;
 	top: 1rem;
@@ -170,6 +231,35 @@ templ WebPage(title string) {
 			{ children... }
 		</body>
 	</html>
+}
+
+templ HouseSelector(houses []AppHouseData, activeHouseID string, then string) {
+	if len(houses) > 0 {
+		<details class={ houseSelectorStyle() } data-house-selector>
+			<summary class={ houseSelectorSummaryStyle() }>
+				<span class={ userBadgeTextStyle() }>{ activeHouseName(houses, activeHouseID) }</span>
+				<span aria-hidden="true">▾</span>
+			</summary>
+			<div class={ houseSelectorMenuStyle() }>
+				for _, house := range houses {
+					if house.ID == activeHouseID {
+						<div class={ houseSelectorItemStyle(), houseSelectorActiveStyle() } aria-current="true">
+							<span>{ house.DisplayName }</span>
+							<span aria-hidden="true">✓</span>
+						</div>
+					} else {
+						<form method="post" action={ templ.SafeURL(activeHousePath()) }>
+							<input type="hidden" name="house_id" value={ house.ID }/>
+							<input type="hidden" name="then" value={ then }/>
+							<button class={ houseSelectorItemStyle() } type="submit">{ house.DisplayName }</button>
+						</form>
+					}
+				}
+				<div class={ houseSelectorDividerStyle() }></div>
+				<a class={ houseSelectorItemStyle() } href={ templ.SafeURL(houseManagePath(activeHouseID)) }>Manage house</a>
+			</div>
+		</details>
+	}
 }
 
 templ UserBadge(displayName string) {

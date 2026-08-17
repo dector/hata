@@ -3,7 +3,6 @@ package webauth
 import (
 	"hata/internal/webui"
 	"net/http"
-	"sort"
 )
 
 func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
@@ -28,36 +27,44 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	devices, err := h.repos.Device().ListByUser(r.Context(), auth.UserID)
-	if err != nil {
-		http.Error(w, "failed to load devices", http.StatusInternalServerError)
-		return
-	}
+	sortMemberships(memberships)
+	activeMembership := activeHouseFromRequest(r, memberships)
 
-	devicesByHouse := make(map[string][]webui.AppDeviceData, len(memberships))
-	for _, d := range devices {
-		devicesByHouse[d.HouseID] = append(devicesByHouse[d.HouseID], appDeviceDataFromDB(d))
-	}
-
-	houses := make([]webui.AppHouseData, 0, len(memberships))
+	headerHouses := make([]webui.AppHouseData, 0, len(memberships))
 	for _, m := range memberships {
-		houses = append(houses, webui.AppHouseData{
+		headerHouses = append(headerHouses, webui.AppHouseData{
 			ID:          m.HouseID,
 			DisplayName: m.DisplayName,
 			Role:        m.Role,
-			Devices:     devicesByHouse[m.HouseID],
 		})
 	}
 
-	sort.Slice(houses, func(i, j int) bool {
-		if houses[i].DisplayName == houses[j].DisplayName {
-			return houses[i].ID < houses[j].ID
+	houses := make([]webui.AppHouseData, 0, 1)
+	activeHouseID := ""
+	if activeMembership != nil {
+		activeHouseID = activeMembership.HouseID
+		setActiveHouseCookie(w, activeHouseID)
+
+		devices, err := h.repos.Device().ListByHouse(r.Context(), activeHouseID)
+		if err != nil {
+			http.Error(w, "failed to load devices", http.StatusInternalServerError)
+			return
 		}
-		return houses[i].DisplayName < houses[j].DisplayName
-	})
+
+		activeHouse := webui.AppHouseData{
+			ID:          activeMembership.HouseID,
+			DisplayName: activeMembership.DisplayName,
+			Role:        activeMembership.Role,
+			Devices:     make([]webui.AppDeviceData, 0, len(devices)),
+		}
+		for _, d := range devices {
+			activeHouse.Devices = append(activeHouse.Devices, appDeviceDataFromDB(d))
+		}
+		houses = append(houses, activeHouse)
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := webui.AppPage(webui.AppPageData{DisplayName: displayNameFromAuth(auth), Houses: houses}).Render(r.Context(), w); err != nil {
+	if err := webui.AppPage(webui.AppPageData{DisplayName: displayNameFromAuth(auth), Houses: houses, HeaderHouses: headerHouses, ActiveHouseID: activeHouseID}).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render app page", http.StatusInternalServerError)
 		return
 	}

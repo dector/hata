@@ -12,5 +12,6 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.ClearAuthTokenCookie(w)
+	clearActiveHouseCookie(w)
 	redirectAfterPost(w, r, "/auth/login")
 }

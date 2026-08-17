@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
+func TestAppPage_ShowsOnlyActiveHouse(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()
 
@@ -53,6 +53,7 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 
 	h := NewHandler(api.NewAuthHandler(repos), repos)
 	req := httptest.NewRequest(http.MethodGet, "/app", nil)
+	req.AddCookie(&http.Cookie{Name: activeHouseCookieName, Value: "H1"})
 	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
 	w := httptest.NewRecorder()
 
@@ -64,19 +65,22 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 
 	body := w.Body.String()
 	if !strings.Contains(body, "Main Home") || !strings.Contains(body, "Garage") {
-		t.Fatalf("expected both houses on page")
+		t.Fatalf("expected active house and switcher house on page")
 	}
-	if !strings.Contains(body, `href="/h/H1/manage"`) || !strings.Contains(body, `href="/h/H2/manage"`) {
-		t.Fatalf("expected house manage links on page")
+	if !strings.Contains(body, `href="/h/H1/manage"`) || !strings.Contains(body, "Manage house") {
+		t.Fatalf("expected active house manage action in selector")
+	}
+	if strings.Contains(body, `href="/h/H2/manage"`) {
+		t.Fatalf("did not expect inactive house manage link")
 	}
 	if !strings.Contains(body, "Bedroom Lamp") || !strings.Contains(body, "Desk Lamp") {
-		t.Fatalf("expected house devices on page")
+		t.Fatalf("expected active house devices on page")
 	}
 	if !strings.Contains(body, "offline") {
 		t.Fatalf("expected offline device status on page")
 	}
-	if !strings.Contains(body, "No devices in this house") {
-		t.Fatalf("expected empty house message")
+	if strings.Contains(body, "No devices in this house") {
+		t.Fatalf("did not expect inactive house empty message")
 	}
 	if !strings.Contains(body, `id="device-card-H1-lamp-1"`) {
 		t.Fatalf("expected stable device card id")
@@ -86,6 +90,85 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	}
 	if strings.Contains(body, "hx-post") || strings.Contains(body, "htmx:beforeRequest") || strings.Contains(body, "htmx-request") {
 		t.Fatalf("did not expect htmx device toggle usage")
+	}
+}
+
+func TestSetActiveHouse_SetsCookieAndRedirects(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house H1: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role H1: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	req := httptest.NewRequest(http.MethodPost, "/app/active-house", strings.NewReader("house_id=H1&then=/app?x=1"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	h.SetActiveHouse(w, req)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+	if got := w.Header().Get("Location"); got != "/app?x=1" {
+		t.Fatalf("expected redirect to then path, got %q", got)
+	}
+	var activeCookie *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == activeHouseCookieName {
+			activeCookie = c
+			break
+		}
+	}
+	if activeCookie == nil || activeCookie.Value != "H1" || !activeCookie.HttpOnly || activeCookie.SameSite != http.SameSiteLaxMode {
+		t.Fatalf("expected secure active house cookie, got %#v", activeCookie)
+	}
+}
+
+func TestSetActiveHouse_RejectsUnauthorizedHouse(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house H1: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	req := httptest.NewRequest(http.MethodPost, "/app/active-house", strings.NewReader("house_id=H1"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	h.SetActiveHouse(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+	for _, c := range w.Result().Cookies() {
+		if c.Name == activeHouseCookieName {
+			t.Fatalf("did not expect active house cookie")
+		}
 	}
 }
 

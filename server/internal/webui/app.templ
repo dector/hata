@@ -1,12 +1,16 @@
 package webui
 
 templ AppPage(data AppPageData) {
-	@PageLayout("App · Hata", data.DisplayName) {
-		<div class="app-screen">
-			@appPageStyles()
-			@ScreenHeader("My devices", "Devices grouped by houses.")
-			@AppHouseGrid(data.Houses)
-			@appPageScript()
-		</div>
+	@WebPage("App · Hata") {
+		@HouseSelector(data.HeaderHouses, data.ActiveHouseID, "/app")
+		@UserBadge(data.DisplayName)
+		<main>
+			<div class="app-screen">
+				@appPageStyles()
+				@ScreenHeader("My devices", "Devices in the selected house.")
+				@AppHouseGrid(data.Houses)
+				@appPageScript()
+			</div>
+		</main>
 	}
 }

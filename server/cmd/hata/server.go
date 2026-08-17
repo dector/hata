@@ -105,6 +105,7 @@ func startServer(database db.DB, ctx context.Context) {
 
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/me", webAuthHandler.MePage)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/app", webAuthHandler.AppPage)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/app/active-house", webAuthHandler.SetActiveHouse)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage", webAuthHandler.HouseManagePage)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/toggle", webAuthHandler.ToggleHouseDevice)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/state", webAuthHandler.SetHouseDeviceState)
