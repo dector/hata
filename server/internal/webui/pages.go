@@ -62,6 +62,7 @@ type AppDeviceData struct {
 	LightBrightness  *int
 	LightColorPreset *string
 	LightPresets     []LightPresetData
+	ToggleError      string
 }
 
 type LightPresetData struct {
@@ -90,6 +91,10 @@ func lightDialogID(device AppDeviceData) string {
 
 func deviceCardID(device AppDeviceData) string {
 	return "device-card-" + stableDeviceElementID(device)
+}
+
+func datastarPostFormAction(url string, selector string) string {
+	return "@post(" + strconv.Quote(url) + ", {contentType: 'form', selector: " + strconv.Quote(selector) + "})"
 }
 
 func stableDeviceElementID(device AppDeviceData) string {

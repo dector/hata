@@ -221,7 +221,7 @@ templ controlsIcon() {
 }
 
 templ AppDeviceCard(device AppDeviceData) {
-	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State }>
+	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State } data-toggle-error={ device.ToggleError }>
 		<span class={ deviceNameStyle() }>
 			if device.IsLight {
 				@lampIcon(deviceStatusClass(device))
@@ -242,9 +242,7 @@ templ AppDeviceCard(device AppDeviceData) {
 					class={ deviceToggleFormStyle() }
 					method="post"
 					action={ templ.SafeURL(device.ToggleURL) }
-					hx-post={ device.ToggleURL }
-					hx-target="closest .device-card"
-					hx-swap="outerHTML"
+					data-on-submit__prevent={ datastarPostFormAction(device.ToggleURL, "#" + deviceCardID(device)) }
 					data-device-toggle-form
 					data-next-state={ toggleNextState(device) }
 				>
@@ -323,7 +321,7 @@ templ AppPage(data AppPageData) {
 				.device-card:not([data-state="on"]) .toggle-icon-on {
 					display: none;
 				}
-				.device-card.htmx-request {
+				.device-card[data-device-pending="true"] {
 					opacity: 0.82;
 				}
 				.lamp-icon.device-status-on {
@@ -404,14 +402,13 @@ templ AppPage(data AppPageData) {
 					element.classList.remove(...deviceStatusClasses);
 					element.classList.add(statusClass);
 				}
-				document.addEventListener('htmx:beforeRequest', (event) => {
-					const form = event.detail.elt?.closest?.('[data-device-toggle-form]');
-					if (!form) return;
+				function applyOptimisticToggle(form) {
 					const nextState = form.getAttribute('data-next-state');
 					const card = form.closest('.device-card');
 					if (!card || (nextState !== 'on' && nextState !== 'off')) return;
 					const statusClass = nextState === 'on' ? 'device-status-on' : 'device-status-off';
 					card.dataset.state = nextState;
+					card.dataset.devicePending = 'true';
 					applyDeviceStatusClass(card.querySelector('.device-status-badge'), statusClass);
 					applyDeviceStatusClass(card.querySelector('.device-toggle-button'), statusClass);
 					applyDeviceStatusClass(card.querySelector('.lamp-icon'), statusClass);
@@ -419,10 +416,27 @@ templ AppPage(data AppPageData) {
 					if (badge) badge.textContent = nextState;
 					const button = form.querySelector('button[type="submit"]');
 					if (button) button.disabled = true;
+				}
+				function reportDeviceToggleError(card) {
+					const message = card?.dataset?.toggleError;
+					if (!message) return;
+					delete card.dataset.toggleError;
+					window.alert(message);
+				}
+				document.addEventListener('submit', (event) => {
+					const form = event.target.closest('[data-device-toggle-form]');
+					if (!form) return;
+					applyOptimisticToggle(form);
 				});
-				document.addEventListener('device-toggle-failed', (event) => {
-					window.alert(event.detail?.message || 'Failed to toggle device.');
-				});
+				new MutationObserver((mutations) => {
+					for (const mutation of mutations) {
+						for (const node of mutation.addedNodes) {
+							if (!(node instanceof HTMLElement)) continue;
+							if (node.matches('.device-card')) reportDeviceToggleError(node);
+							node.querySelectorAll?.('.device-card').forEach(reportDeviceToggleError);
+						}
+					}
+				}).observe(document.body, { childList: true, subtree: true });
 				document.addEventListener('click', (event) => {
 					const openButton = event.target.closest('[data-light-open]');
 					if (openButton) {

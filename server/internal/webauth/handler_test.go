@@ -2,6 +2,7 @@ package webauth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -289,6 +290,12 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	if !strings.Contains(body, `id="device-card-H1-lamp-1"`) {
 		t.Fatalf("expected stable device card id")
 	}
+	if !strings.Contains(body, `data-on-submit__prevent="@post(&#34;/h/H1/device/lamp-1/toggle&#34;, {contentType: &#39;form&#39;, selector: &#34;#device-card-H1-lamp-1&#34;})"`) {
+		t.Fatalf("expected datastar device toggle handler")
+	}
+	if strings.Contains(body, "hx-post") || strings.Contains(body, "htmx:beforeRequest") || strings.Contains(body, "htmx-request") {
+		t.Fatalf("did not expect htmx device toggle usage")
+	}
 }
 
 func TestPartialRequestDetection(t *testing.T) {
@@ -309,7 +316,7 @@ func TestPartialRequestDetection(t *testing.T) {
 	}
 }
 
-func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
+func TestToggleHouseDevice_DatastarUpdatesOnlyDeviceCard(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()
 
@@ -337,7 +344,7 @@ func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
 	router.Post("/h/{houseId}/device/{deviceId}/toggle", h.ToggleHouseDevice)
 
 	req := httptest.NewRequest(http.MethodPost, "/h/H1/device/lamp-1/toggle", nil)
-	req.Header.Set("HX-Request", "true")
+	req.Header.Set("Datastar-Request", "true")
 	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
 	w := httptest.NewRecorder()
 
@@ -358,6 +365,52 @@ func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
 	}
 	if strings.Contains(w.Header().Get("HX-Redirect"), "/app") {
 		t.Fatalf("did not expect HX redirect")
+	}
+}
+
+func TestToggleHouseDevice_DatastarFailureReturnsCardWithError(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Bedroom Lamp", "dummy", nil, "off"); err != nil {
+		t.Fatalf("create device: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	h.deviceController = &fakeWebDeviceController{err: errors.New("toggle failed")}
+	router := chi.NewRouter()
+	router.Post("/h/{houseId}/device/{deviceId}/toggle", h.ToggleHouseDevice)
+
+	req := httptest.NewRequest(http.MethodPost, "/h/H1/device/lamp-1/toggle", nil)
+	req.Header.Set("Datastar-Request", "true")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `id="device-card-H1-lamp-1"`) || !strings.Contains(body, `data-toggle-error="Failed to toggle device."`) {
+		t.Fatalf("expected card with datastar error marker, got %s", body)
+	}
+	if got := w.Header().Get("HX-Trigger"); got != "" {
+		t.Fatalf("did not expect HX trigger for datastar request, got %q", got)
 	}
 }
 
@@ -553,10 +606,12 @@ func TestRenameHouseDevice_RenamesDeviceForManager(t *testing.T) {
 	}
 }
 
-type fakeWebDeviceController struct{}
+type fakeWebDeviceController struct {
+	err error
+}
 
 func (f *fakeWebDeviceController) SetState(ctx context.Context, device *db.DeviceData, state string) error {
-	return nil
+	return f.err
 }
 
 func (f *fakeWebDeviceController) SetLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error {

@@ -835,15 +835,24 @@ func appDeviceDataFromDB(device *db.DeviceData) webui.AppDeviceData {
 }
 
 func renderDeviceCard(w http.ResponseWriter, r *http.Request, device *db.DeviceData) {
+	renderDeviceCardData(w, r, appDeviceDataFromDB(device))
+}
+
+func renderDeviceCardData(w http.ResponseWriter, r *http.Request, data webui.AppDeviceData) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := webui.AppDeviceCard(appDeviceDataFromDB(device)).Render(r.Context(), w); err != nil {
+	if err := webui.AppDeviceCard(data).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render device card", http.StatusInternalServerError)
 	}
 }
 
 func renderDeviceCardWithTrigger(w http.ResponseWriter, r *http.Request, device *db.DeviceData, message string) {
-	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"device-toggle-failed":{"message":%q}}`, message))
-	renderDeviceCard(w, r, device)
+	data := appDeviceDataFromDB(device)
+	if isDatastarRequest(r) {
+		data.ToggleError = message
+	} else {
+		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"device-toggle-failed":{"message":%q}}`, message))
+	}
+	renderDeviceCardData(w, r, data)
 }
 
 func isPartialRequest(r *http.Request) bool {
