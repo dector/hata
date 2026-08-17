@@ -6,7 +6,7 @@ templ LoginPage(data LoginPageData) {
 			<h1>Sign in</h1>
 			<p>Use your credentials to start a browser session.</p>
 			<div id="login-shell">
-				<form id="login-form" method="post" action="/auth/login" hx-post="/auth/login" hx-target="#login-shell" hx-swap="outerHTML">
+				<form id="login-form" method="post" action="/auth/login" data-on-submit__prevent="@post('/auth/login', {contentType: 'form', selector: '#login-shell'})">
 					<label for="username">Username</label>
 					<input id="username" name="username" type="text" autocomplete="username" required/>
 
@@ -29,7 +29,7 @@ templ LogoutPage(data LogoutPageData) {
 		<main id="logout-shell">
 			<h1>Sign out</h1>
 			<p>This clears your auth cookie for this browser.</p>
-			<form method="post" action="/auth/logout" hx-post="/auth/logout" hx-target="#logout-shell" hx-swap="outerHTML">
+			<form method="post" action="/auth/logout" data-on-submit__prevent="@post('/auth/logout', {contentType: 'form'})">
 				<button type="submit">Sign out</button>
 			</form>
 		</main>

@@ -49,6 +49,12 @@ func TestLoginPage_Renders(t *testing.T) {
 	if !strings.Contains(body, "/assets/js/datastar-1.0.2.js") {
 		t.Fatalf("expected local datastar script in page")
 	}
+	if !strings.Contains(body, `data-on-submit__prevent="@post('/auth/login', {contentType: 'form', selector: '#login-shell'})"`) {
+		t.Fatalf("expected datastar login submit handler")
+	}
+	if strings.Contains(body, "hx-post") {
+		t.Fatalf("did not expect htmx form attributes")
+	}
 	if !strings.Contains(body, `name="then" value="/me"`) {
 		t.Fatalf("expected hidden then field")
 	}
@@ -97,6 +103,39 @@ func TestLogin_SetsCookieAndRedirects(t *testing.T) {
 	}
 }
 
+func TestLogin_DatastarRedirectsWithJavaScript(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	if _, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User"); err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+
+	form := strings.NewReader("username=user@example.com&password=secret&then=%2Fme%3Fx%3D1")
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", form)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Datastar-Request", "true")
+	w := httptest.NewRecorder()
+
+	h.Login(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	if contentType := w.Header().Get("Content-Type"); !strings.Contains(contentType, "text/javascript") {
+		t.Fatalf("expected javascript content type, got %q", contentType)
+	}
+	if got := w.Body.String(); got != `window.location.assign("/me?x=1");` {
+		t.Fatalf("unexpected redirect script: %q", got)
+	}
+}
+
 func TestLogin_InvalidCredentials_NoCookie(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()
@@ -121,6 +160,29 @@ func TestLogin_InvalidCredentials_NoCookie(t *testing.T) {
 	}
 }
 
+func TestLogin_InvalidCredentials_DatastarReturnsPatchableHTML(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+
+	form := strings.NewReader("username=nope&password=bad")
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", form)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Datastar-Request", "true")
+	w := httptest.NewRecorder()
+
+	h.Login(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `id="login-shell"`) || !strings.Contains(body, "Invalid username or password") {
+		t.Fatalf("expected patchable login shell with error, got %q", body)
+	}
+}
+
 func TestLogout_ClearsCookieAndRedirects(t *testing.T) {
 	h := NewHandler(api.NewAuthHandler(nil), nil)
 
@@ -130,6 +192,23 @@ func TestLogout_ClearsCookieAndRedirects(t *testing.T) {
 	h.Logout(w, req)
 
 	assertLogoutRedirectAndCookieCleared(t, w)
+}
+
+func TestLogout_DatastarRedirectsWithJavaScript(t *testing.T) {
+	h := NewHandler(api.NewAuthHandler(nil), nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
+	req.Header.Set("Datastar-Request", "true")
+	w := httptest.NewRecorder()
+
+	h.Logout(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	if got := w.Body.String(); got != `window.location.assign("/auth/login");` {
+		t.Fatalf("unexpected redirect script: %q", got)
+	}
 }
 
 func TestLogoutPage_AutoSubmitsOnGet(t *testing.T) {

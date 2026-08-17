@@ -79,10 +79,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	result, err := h.auth.Authenticate(r.Context(), username, password)
 	if err != nil {
 		if errors.Is(err, api.ErrInvalidCredentials) {
+			status := http.StatusUnauthorized
+			if isDatastarRequest(r) {
+				status = http.StatusOK
+			}
 			renderLogin(w, r, loginPageView{
 				Then:  then,
 				Error: "Invalid username or password",
-			}, http.StatusUnauthorized)
+			}, status)
 			return
 		}
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -912,7 +916,12 @@ func renderLogin(w http.ResponseWriter, r *http.Request, view loginPageView, sta
 
 func redirectAfterPost(w http.ResponseWriter, r *http.Request, target string) {
 	target = sanitizeThen(target)
-	if strings.EqualFold(r.Header.Get("HX-Request"), "true") {
+	if isDatastarRequest(r) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+		_, _ = fmt.Fprintf(w, "window.location.assign(%s);", strconv.Quote(target))
+		return
+	}
+	if isHTMXRequest(r) {
 		w.Header().Set("HX-Redirect", target)
 		w.WriteHeader(http.StatusNoContent)
 		return
