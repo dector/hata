@@ -137,6 +137,7 @@ func startServer(database db.DB, ctx context.Context) {
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage", webAuthHandler.HouseManagePage)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/toggle", webAuthHandler.ToggleHouseDevice)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices", webAuthHandler.AddHouseDevice)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices/{deviceId}/rename", webAuthHandler.RenameHouseDevice)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks", webAuthHandler.AddHouseDiscoveryNetwork)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks/{networkId}/delete", webAuthHandler.DeleteHouseDiscoveryNetwork)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage/devices/discover", webAuthHandler.HouseDeviceDiscovery)

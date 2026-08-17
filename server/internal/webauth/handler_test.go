@@ -344,6 +344,51 @@ func TestAddHouseDevice_AddsDiscoveredDevice(t *testing.T) {
 	}
 }
 
+func TestRenameHouseDevice_RenamesDeviceForManager(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "admin"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Old Lamp", "wiz", nil, "off"); err != nil {
+		t.Fatalf("create device: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	router := chi.NewRouter()
+	router.Post("/h/{houseId}/manage/devices/{deviceId}/rename", h.RenameHouseDevice)
+
+	req := httptest.NewRequest(http.MethodPost, "/h/H1/manage/devices/lamp-1/rename", strings.NewReader("name=New+Lamp"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d: %s", w.Code, w.Body.String())
+	}
+	device, err := repos.Device().GetByHouseAndID(context.Background(), "H1", "lamp-1")
+	if err != nil {
+		t.Fatalf("get device: %v", err)
+	}
+	if device == nil || device.Name != "New Lamp" {
+		t.Fatalf("expected renamed device, got %#v", device)
+	}
+}
+
 func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseRecorder) {
 	t.Helper()
 

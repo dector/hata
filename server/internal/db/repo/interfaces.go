@@ -116,6 +116,9 @@ type DeviceRepository interface {
 
 	// UpdateState updates the device state.
 	UpdateState(ctx context.Context, houseID, id, state string) error
+
+	// UpdateName updates the device display name.
+	UpdateName(ctx context.Context, houseID, id, name string) error
 }
 
 // HouseDiscoveryNetworkRepository provides access to house discovery network data.

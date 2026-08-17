@@ -109,6 +109,21 @@ func (r *DeviceRepo) UpdateState(ctx context.Context, houseID, id, state string)
 	return nil
 }
 
+// UpdateName updates the device display name.
+func (r *DeviceRepo) UpdateName(ctx context.Context, houseID, id, name string) error {
+	count, err := r.client.Device.Update().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id)).
+		SetName(name).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating device name: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
 func deviceDataFromEnt(d *orm.Device) *DeviceData {
 	return &DeviceData{
 		ID:              d.DeviceID,

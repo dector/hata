@@ -82,6 +82,10 @@ func houseManageDiscoverPath(id string) string {
 	return houseManagePath(id) + "/devices/discover"
 }
 
+func houseDeviceRenamePath(houseID string, deviceID string) string {
+	return houseManagePath(houseID) + "/devices/" + url.PathEscape(deviceID) + "/rename"
+}
+
 func HouseDeviceTogglePath(houseID string, deviceID string) string {
 	return "/h/" + url.PathEscape(houseID) + "/device/" + url.PathEscape(deviceID) + "/toggle"
 }

@@ -96,7 +96,15 @@ templ HouseManagePage(data HouseManagePageData) {
 				} else {
 					<ul class={ deviceListStyle() }>
 						for _, device := range data.House.Devices {
-							<li class={ "device-card", deviceCardStyle() }><span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span><span class={ deviceStateStyle() }>· { device.State }</span></li>
+							<li class={ "device-card", deviceCardStyle() }>
+								<span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span><span class={ deviceStateStyle() }>· { device.State }</span>
+								if data.CanManageHouse {
+									<form class="device-rename-form" method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
+										<input type="hidden" name="name"/>
+										<button type="submit">Rename</button>
+									</form>
+								}
+							</li>
 						}
 					</ul>
 				}
@@ -176,6 +184,23 @@ templ HouseManagePage(data HouseManagePageData) {
 
 					addButton?.addEventListener('click', () => {
 						panel.hidden = !panel.hidden;
+					});
+
+					document.querySelectorAll('.device-rename-form').forEach((form) => {
+						form.addEventListener('submit', (event) => {
+							const currentName = form.dataset.currentName || '';
+							const name = prompt('New device name:', currentName);
+							if (name === null) {
+								event.preventDefault();
+								return;
+							}
+							const trimmed = name.trim();
+							if (!trimmed) {
+								event.preventDefault();
+								return;
+							}
+							form.querySelector('input[name="name"]').value = trimmed;
+						});
 					});
 
 					scanButton?.addEventListener('click', () => {
