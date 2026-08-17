@@ -7,7 +7,6 @@ templ AppPage(data AppPageData) {
 		<main>
 			<div class="app-screen">
 				@appPageStyles()
-				@ScreenHeader("My devices", "Devices in the selected house.")
 				@AppHouseGrid(data.Houses)
 				@appPageScript()
 			</div>

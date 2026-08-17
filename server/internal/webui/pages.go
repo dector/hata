@@ -89,6 +89,18 @@ func activeHouseName(houses []AppHouseData, activeHouseID string) string {
 	return "House"
 }
 
+func activeHouseRole(houses []AppHouseData, activeHouseID string) string {
+	for _, house := range houses {
+		if house.ID == activeHouseID {
+			return house.Role
+		}
+	}
+	if len(houses) > 0 {
+		return houses[0].Role
+	}
+	return ""
+}
+
 func lightDialogID(device AppDeviceData) string {
 	return "light-" + stableDeviceElementID(device)
 }

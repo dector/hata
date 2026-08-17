@@ -55,6 +55,10 @@ css houseSelectorActiveStyle() {
 	color: var(--accent-hover);
 }
 
+css houseSelectorRoleStyle() {
+	color: var(--muted);
+}
+
 css houseSelectorDividerStyle() {
 	height: 1px;
 	margin: 0.25rem 0;
@@ -238,6 +242,9 @@ templ HouseSelector(houses []AppHouseData, activeHouseID string, then string) {
 		<details class={ houseSelectorStyle() } data-house-selector>
 			<summary class={ houseSelectorSummaryStyle() }>
 				<span class={ userBadgeTextStyle() }>{ activeHouseName(houses, activeHouseID) }</span>
+				if activeHouseRole(houses, activeHouseID) != "" {
+					<span class={ houseSelectorRoleStyle() }>{ activeHouseRole(houses, activeHouseID) }</span>
+				}
 				<span aria-hidden="true">▾</span>
 			</summary>
 			<div class={ houseSelectorMenuStyle() }>

@@ -6,24 +6,10 @@ templ AppHouseGrid(houses []AppHouseData) {
 	} else {
 		<div class={ appHousesStyle() }>
 			for _, house := range houses {
-				@AppHouseSection(house)
+				@AppDeviceList(house.Devices)
 			}
 		</div>
 	}
-}
-
-templ AppHouseSection(house AppHouseData) {
-	<section class={ appHouseCardStyle() }>
-		@AppHouseHeader(house)
-		<p class={ appFlushBlockStyle(), houseRoleStyle() }>House ID: { house.ID } · Role: { house.Role }</p>
-		@AppDeviceList(house.Devices)
-	</section>
-}
-
-templ AppHouseHeader(house AppHouseData) {
-	<div class={ houseHeaderStyle() }>
-		<h2 class={ appFlushBlockStyle() }>{ house.DisplayName }</h2>
-	</div>
 }
 
 templ AppDeviceList(devices []AppDeviceData) {
