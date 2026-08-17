@@ -1,0 +1,49 @@
+package webui
+
+templ AppLightDialog(device AppDeviceData) {
+	if device.IsLight && device.Availability == "online" {
+		<dialog id={ lightDialogID(device) } class={ lightDialogStyle() }>
+			<h3>{ device.Name }</h3>
+			<p>State: <span data-light-state-label>{ device.State }</span> · Availability: { device.Availability }</p>
+			@AppLightStateControls(device)
+			@AppLightSettingsForm(device)
+		</dialog>
+	}
+}
+
+templ AppLightStateControls(device AppDeviceData) {
+	<div class={ lightStateButtonsStyle() }>
+		@AppLightStateForm(device, "on", "On")
+		@AppLightStateForm(device, "off", "Off")
+	</div>
+}
+
+templ AppLightStateForm(device AppDeviceData, state string, label string) {
+	<form data-light-state-form class={ lightStateFormStyle() } method="post" action={ templ.SafeURL(device.StateURL) }>
+		<input type="hidden" name="state" value={ state }/>
+		<button class={ lightStateButtonStyle() } type="submit">{ label }</button>
+	</form>
+}
+
+templ AppLightSettingsForm(device AppDeviceData) {
+	<form method="post" action={ templ.SafeURL(device.LightURL) }>
+		@AppLightPresetGrid(device)
+		<label>Brightness <strong data-brightness-label>{ lightBrightnessValue(device) }%</strong></label>
+		<input data-brightness-slider type="range" name="brightness" min="0" max="100" step="5" value={ lightBrightnessValue(device) }/>
+	</form>
+}
+
+templ AppLightPresetGrid(device AppDeviceData) {
+	<div class={ lightPresetGridStyle() }>
+		for _, preset := range device.LightPresets {
+			@AppLightPresetOption(device, preset)
+		}
+	</div>
+}
+
+templ AppLightPresetOption(device AppDeviceData, preset LightPresetData) {
+	<label class={ "light-preset", lightPresetOptionStyle() } title={ preset.Label } aria-label={ preset.Label }>
+		<input data-color-preset-input class={ lightPresetInputStyle() } type="radio" name="colorPreset" value={ preset.ID } checked?={ lightPresetChecked(device, preset.ID) }/>
+		<span class={ "light-swatch", lightSwatchStyle() } style={ "background-color: " + preset.Hex }></span>
+	</label>
+}

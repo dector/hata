@@ -1,0 +1,137 @@
+package webui
+
+templ appPageScript() {
+	<script>
+		const deviceStatusClasses = ['device-status-on', 'device-status-off', 'device-status-offline', 'device-status-unknown'];
+		function applyDeviceStatusClass(element, statusClass) {
+			if (!element) return;
+			element.classList.remove(...deviceStatusClasses);
+			element.classList.add(statusClass);
+		}
+		function applyOptimisticToggle(form) {
+			const nextState = form.getAttribute('data-next-state');
+			const card = form.closest('.device-card');
+			if (!card || (nextState !== 'on' && nextState !== 'off')) return;
+			setHoveredDeviceCard(card);
+			const statusClass = nextState === 'on' ? 'device-status-on' : 'device-status-off';
+			card.dataset.state = nextState;
+			applyDeviceStatusClass(card.querySelector('.device-status-badge'), statusClass);
+			applyDeviceStatusClass(card.querySelector('.device-toggle-button'), statusClass);
+			applyDeviceStatusClass(card.querySelector('.lamp-icon'), statusClass);
+			const badge = card.querySelector('.device-status-badge');
+			if (badge) badge.textContent = nextState;
+			const button = form.querySelector('button[type="submit"]');
+			if (button) button.disabled = true;
+		}
+		let hoveredDeviceCardID = '';
+		function setHoveredDeviceCard(card) {
+			if (!card?.id) return;
+			if (hoveredDeviceCardID && hoveredDeviceCardID !== card.id) {
+				document.getElementById(hoveredDeviceCardID)?.classList.remove('device-card-hovered');
+			}
+			hoveredDeviceCardID = card.id;
+			card.classList.add('device-card-hovered');
+		}
+		function restoreDeviceCardHover(card) {
+			if (card?.id && card.id === hoveredDeviceCardID) card.classList.add('device-card-hovered');
+		}
+		function reportDeviceToggleError(card) {
+			const message = card?.dataset?.toggleError;
+			if (!message) return;
+			delete card.dataset.toggleError;
+			window.alert(message);
+		}
+		document.addEventListener('pointerover', (event) => {
+			const card = event.target.closest('.device-card');
+			if (card) setHoveredDeviceCard(card);
+		});
+		document.addEventListener('pointerout', (event) => {
+			const card = event.target.closest('.device-card');
+			if (!card) return;
+			if (event.relatedTarget instanceof Node && card.contains(event.relatedTarget)) return;
+			if (card.id === hoveredDeviceCardID) hoveredDeviceCardID = '';
+			card.classList.remove('device-card-hovered');
+		});
+		document.addEventListener('submit', (event) => {
+			const form = event.target.closest('[data-device-toggle-form]');
+			if (!form) return;
+			applyOptimisticToggle(form);
+		});
+		new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				for (const node of mutation.addedNodes) {
+					if (!(node instanceof HTMLElement)) continue;
+					if (node.matches('.device-card')) {
+						reportDeviceToggleError(node);
+						restoreDeviceCardHover(node);
+					}
+					node.querySelectorAll?.('.device-card').forEach((card) => {
+						reportDeviceToggleError(card);
+						restoreDeviceCardHover(card);
+					});
+				}
+			}
+		}).observe(document.body, { childList: true, subtree: true });
+		document.addEventListener('click', (event) => {
+			const openButton = event.target.closest('[data-light-open]');
+			if (openButton) {
+				event.preventDefault();
+				const dialog = document.getElementById(openButton.getAttribute('data-light-open'));
+				if (dialog) dialog.showModal();
+				return;
+			}
+			if (event.target instanceof HTMLDialogElement && event.target.open) {
+				const rect = event.target.getBoundingClientRect();
+				const isOutside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+				if (isOutside) event.target.close();
+			}
+		});
+		document.addEventListener('submit', async (event) => {
+			const form = event.target.closest('[data-light-state-form]');
+			if (!form) return;
+			event.preventDefault();
+			const button = event.submitter;
+			if (button) button.disabled = true;
+			try {
+				const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+				if (!response.ok) throw new Error('state request failed');
+				const state = new FormData(form).get('state');
+				const dialog = form.closest('dialog');
+				const label = dialog?.querySelector('[data-light-state-label]');
+				if (label) label.textContent = state;
+			} catch (error) {
+				window.alert('Failed to update light state.');
+			} finally {
+				if (button) button.disabled = false;
+			}
+		});
+		document.addEventListener('input', (event) => {
+			if (!event.target.matches('[data-brightness-slider]')) return;
+			const label = event.target.form?.querySelector('[data-brightness-label]');
+			if (label) label.textContent = event.target.value + '%';
+		});
+		document.addEventListener('change', async (event) => {
+			let fieldName = '';
+			let fieldValue = '';
+			if (event.target.matches('[data-brightness-slider]')) {
+				fieldName = 'brightness';
+				fieldValue = event.target.value;
+			} else if (event.target.matches('[data-color-preset-input]')) {
+				fieldName = 'colorPreset';
+				fieldValue = event.target.value;
+			} else {
+				return;
+			}
+			const form = event.target.form;
+			if (!form) return;
+			const data = new FormData();
+			data.set(fieldName, fieldValue);
+			try {
+				const response = await fetch(form.action, { method: 'POST', body: data, credentials: 'same-origin' });
+				if (!response.ok) throw new Error('light request failed');
+			} catch (error) {
+				window.alert('Failed to update light setting.');
+			}
+		});
+	</script>
+}

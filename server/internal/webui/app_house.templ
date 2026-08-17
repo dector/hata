@@ -1,0 +1,43 @@
+package webui
+
+templ AppHouseGrid(houses []AppHouseData) {
+	if len(houses) == 0 {
+		<p>You don't have access to any houses yet.</p>
+	} else {
+		<div class={ appHousesStyle() }>
+			for _, house := range houses {
+				@AppHouseSection(house)
+			}
+		</div>
+	}
+}
+
+templ AppHouseSection(house AppHouseData) {
+	<section class={ appHouseCardStyle() }>
+		@AppHouseHeader(house)
+		<p class={ appFlushBlockStyle(), houseRoleStyle() }>House ID: { house.ID } · Role: { house.Role }</p>
+		@AppDeviceList(house.Devices)
+	</section>
+}
+
+templ AppHouseHeader(house AppHouseData) {
+	<div class={ houseHeaderStyle() }>
+		<h2 class={ appFlushBlockStyle() }>{ house.DisplayName }</h2>
+		<a class={ houseManageLinkStyle() } href={ templ.SafeURL(houseManagePath(house.ID)) } aria-label={ "Manage " + house.DisplayName } title="Manage house">
+			@manageHouseIcon()
+		</a>
+	</div>
+}
+
+templ AppDeviceList(devices []AppDeviceData) {
+	if len(devices) == 0 {
+		<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
+	} else {
+		<ul class={ "device-list", deviceListStyle() }>
+			for _, device := range devices {
+				@AppDeviceCard(device)
+				@AppLightDialog(device)
+			}
+		</ul>
+	}
+}

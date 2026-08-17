@@ -1,0 +1,48 @@
+package webui
+
+templ AppDeviceCard(device AppDeviceData) {
+	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-preserve-attr="class" data-availability={ device.Availability } data-state={ device.State } data-toggle-error={ device.ToggleError }>
+		@AppDeviceTitle(device)
+		if device.Availability != "offline" {
+			@AppDeviceActions(device)
+		}
+	</li>
+}
+
+templ AppDeviceTitle(device AppDeviceData) {
+	<span class={ deviceNameStyle() }>
+		if device.IsLight {
+			@lampIcon(deviceStatusClass(device))
+		}
+		<span class={ deviceTitleStyle() }>
+			<span>{ device.Name }</span>
+			<span class={ "device-status-badge", deviceStateStyle(), deviceStatusClass(device) }>{ deviceStatusLabel(device) }</span>
+		</span>
+	</span>
+}
+
+templ AppDeviceActions(device AppDeviceData) {
+	<span class={ deviceActionsStyle() }>
+		if device.IsLight {
+			<button class={ "device-controls-button", deviceToggleButtonStyle() } type="button" data-light-open={ lightDialogID(device) } aria-label={ "Open controls for " + device.Name } title="Controls">
+				@controlsIcon()
+			</button>
+		}
+		@AppDeviceToggleForm(device)
+	</span>
+}
+
+templ AppDeviceToggleForm(device AppDeviceData) {
+	<form
+		class={ deviceToggleFormStyle() }
+		method="post"
+		action={ templ.SafeURL(device.ToggleURL) }
+		data-on-submit__prevent={ datastarPostFormAction(device.ToggleURL, "#" + deviceCardID(device)) }
+		data-device-toggle-form
+		data-next-state={ toggleNextState(device) }
+	>
+		<button class={ "device-toggle-button", deviceIconToggleButtonStyle(), deviceStatusClass(device) } type="submit" aria-label={ "Toggle " + device.Name } title="Toggle">
+			@toggleIcon()
+		</button>
+	</form>
+}
