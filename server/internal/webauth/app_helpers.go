@@ -20,13 +20,20 @@ func normalizeDeviceState(raw string) (string, bool) {
 }
 
 func appDeviceDataFromDB(device *db.DeviceData) webui.AppDeviceData {
+	integrationData := ""
+	if device.IntegrationData != nil {
+		integrationData = *device.IntegrationData
+	}
 	return webui.AppDeviceData{
 		HouseID:          device.HouseID,
 		ID:               device.ID,
 		Name:             device.Name,
 		IntegrationID:    device.IntegrationID,
+		IntegrationIP:    deviceIntegrationIP(device.IntegrationData),
+		IntegrationData:  integrationData,
 		State:            device.State,
 		Availability:     device.Availability,
+		DetailsURL:       webui.DeviceDetailsPath(device.ID),
 		ToggleURL:        webui.HouseDeviceTogglePath(device.HouseID, device.ID),
 		StateURL:         webui.HouseDeviceStatePath(device.HouseID, device.ID),
 		LightURL:         webui.HouseDeviceLightPath(device.HouseID, device.ID),

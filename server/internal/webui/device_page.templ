@@ -1,0 +1,112 @@
+package webui
+
+css devicePageScreenStyle() {
+	display: grid;
+	gap: 1rem;
+}
+
+css devicePageGridStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	gap: 1rem;
+}
+
+css devicePanelStyle() {
+	display: grid;
+	gap: 0.75rem;
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	background: #282828;
+}
+
+css deviceFactListStyle() {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.5rem 0.75rem;
+	margin: 0;
+}
+
+css deviceFactNameStyle() {
+	color: var(--muted);
+}
+
+css deviceFactValueStyle() {
+	margin: 0;
+	word-break: break-word;
+}
+
+css deviceMetadataStyle() {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	padding: 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+	background: #1d2021;
+	color: var(--text);
+}
+
+css deviceActionsRowStyle() {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+templ DevicePage(data DevicePageData) {
+	@WebPage(data.Device.Name + " · Hata") {
+		@HouseSelector(data.HeaderHouses, data.ActiveHouseID, data.Device.DetailsURL)
+		@UserBadge(data.DisplayName)
+		<main>
+			<div class={ "dev-screen", devicePageScreenStyle() }>
+				@ScreenHeader(data.Device.Name, "Device details")
+				if data.ReloadMessage != "" {
+					<p role="status">{ data.ReloadMessage }</p>
+				}
+				if data.ReloadError != "" {
+					<p role="alert">{ data.ReloadError }</p>
+				}
+				<div class={ deviceActionsRowStyle() }>
+					<form method="post" action={ templ.SafeURL(data.ReloadURL) }>
+						<button type="submit">Reload info</button>
+					</form>
+					<a href="/app">Back to app</a>
+					<a href={ templ.SafeURL(houseManagePath(data.House.ID)) }>Manage house</a>
+				</div>
+				<div class={ devicePageGridStyle() }>
+					<section class={ devicePanelStyle() }>
+						<h2 class={ flushBlockStyle() }>Identity</h2>
+						<dl class={ deviceFactListStyle() }>
+							<dt class={ deviceFactNameStyle() }>Name</dt><dd class={ deviceFactValueStyle() }>{ data.Device.Name }</dd>
+							<dt class={ deviceFactNameStyle() }>Device ID</dt><dd class={ deviceFactValueStyle() }>{ data.Device.ID }</dd>
+							<dt class={ deviceFactNameStyle() }>House</dt><dd class={ deviceFactValueStyle() }>{ data.House.DisplayName }</dd>
+							<dt class={ deviceFactNameStyle() }>Role</dt><dd class={ deviceFactValueStyle() }>{ data.House.Role }</dd>
+						</dl>
+					</section>
+					<section class={ devicePanelStyle() }>
+						<h2 class={ flushBlockStyle() }>Current state</h2>
+						<dl class={ deviceFactListStyle() }>
+							<dt class={ deviceFactNameStyle() }>State</dt><dd class={ deviceFactValueStyle() }><span class={ "device-status-badge", deviceStateStyle(), deviceStatusClass(data.Device) }>{ deviceStatusLabel(data.Device) }</span></dd>
+							<dt class={ deviceFactNameStyle() }>Availability</dt><dd class={ deviceFactValueStyle() }>{ data.Device.Availability }</dd>
+							<dt class={ deviceFactNameStyle() }>Light</dt><dd class={ deviceFactValueStyle() }>{ lightSupportLabel(data.Device) }</dd>
+							if data.Device.IsLight {
+								<dt class={ deviceFactNameStyle() }>Brightness</dt><dd class={ deviceFactValueStyle() }>{ nullableIntValue(data.Device.LightBrightness) }%</dd>
+								<dt class={ deviceFactNameStyle() }>Color preset</dt><dd class={ deviceFactValueStyle() }>{ nullableStringValue(data.Device.LightColorPreset) }</dd>
+							}
+						</dl>
+					</section>
+					<section class={ devicePanelStyle() }>
+						<h2 class={ flushBlockStyle() }>Integration</h2>
+						<dl class={ deviceFactListStyle() }>
+							<dt class={ deviceFactNameStyle() }>Integration</dt><dd class={ deviceFactValueStyle() }>{ data.Device.IntegrationID }</dd>
+							<dt class={ deviceFactNameStyle() }>IP</dt><dd class={ deviceFactValueStyle() }>{ nullableStringValue(&data.Device.IntegrationIP) }</dd>
+						</dl>
+						<h3 class={ flushBlockStyle() }>Metadata</h3>
+						<pre class={ deviceMetadataStyle() }>{ formattedIntegrationData(data.Device.IntegrationData) }</pre>
+					</section>
+				</div>
+			</div>
+		</main>
+	}
+}

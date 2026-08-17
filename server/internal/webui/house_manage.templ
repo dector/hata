@@ -124,8 +124,14 @@ css houseManageDeviceBadgeStyle() {
 	text-transform: uppercase;
 }
 
-css houseManageIconFormStyle() {
+css houseManageDeviceActionsStyle() {
 	flex: 0 0 auto;
+	display: inline-flex;
+	gap: 0.4rem;
+	align-items: center;
+}
+
+css houseManageIconFormStyle() {
 	display: inline-flex;
 	gap: 0;
 	margin: 0;
@@ -176,7 +182,7 @@ templ HouseManagePage(data HouseManagePageData) {
 						for _, device := range data.House.Devices {
 							<li class={ houseManageDeviceCardStyle() }>
 								<div class={ houseManageDeviceInfoStyle() }>
-									<span class={ deviceNameStyle() }>{ device.Name }</span>
+									<a class={ deviceNameStyle() } href={ templ.SafeURL(device.DetailsURL) }>{ device.Name }</a>
 									<span class={ houseManageDeviceMetaStyle() }>
 										<span class={ houseManageDeviceBadgeStyle() }>{ device.IntegrationID }</span>
 										if device.IntegrationIP != "" {
@@ -187,12 +193,15 @@ templ HouseManagePage(data HouseManagePageData) {
 										}
 									</span>
 								</div>
-								if data.CanManageHouse {
-									<form class={ "device-rename-form", houseManageIconFormStyle() } method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
-										<input type="hidden" name="name"/>
-										<button class={ houseManageIconButtonStyle() } type="submit" aria-label={ "Rename " + device.Name } title="Rename">@editIcon()</button>
-									</form>
-								}
+								<div class={ houseManageDeviceActionsStyle() }>
+									<a class={ houseManageIconButtonStyle() } href={ templ.SafeURL(device.DetailsURL) } aria-label={ "Open info for " + device.Name } title="Info">@infoIcon()</a>
+									if data.CanManageHouse {
+										<form class={ "device-rename-form", houseManageIconFormStyle() } method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
+											<input type="hidden" name="name"/>
+											<button class={ houseManageIconButtonStyle() } type="submit" aria-label={ "Rename " + device.Name } title="Rename">@editIcon()</button>
+										</form>
+									}
+								</div>
 							</li>
 						}
 					</ul>

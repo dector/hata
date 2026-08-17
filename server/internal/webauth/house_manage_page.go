@@ -62,18 +62,7 @@ func (h *Handler) HouseManagePage(w http.ResponseWriter, r *http.Request) {
 
 	viewDevices := make([]webui.AppDeviceData, 0, len(devices))
 	for _, d := range devices {
-		viewDevices = append(viewDevices, webui.AppDeviceData{
-			HouseID:          d.HouseID,
-			ID:               d.ID,
-			Name:             d.Name,
-			IntegrationID:    d.IntegrationID,
-			IntegrationIP:    deviceIntegrationIP(d.IntegrationData),
-			State:            d.State,
-			Availability:     d.Availability,
-			IsLight:          deviceSupportsLight(d),
-			LightBrightness:  d.LightBrightness,
-			LightColorPreset: d.LightColorPreset,
-		})
+		viewDevices = append(viewDevices, appDeviceDataFromDB(d))
 	}
 
 	discoveryNetworks, err := h.repos.HouseDiscoveryNetwork().ListByHouse(r.Context(), houseID)

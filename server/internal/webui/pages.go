@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -47,8 +48,10 @@ type AppDeviceData struct {
 	Name             string
 	IntegrationID    string
 	IntegrationIP    string
+	IntegrationData  string
 	State            string
 	Availability     string
+	DetailsURL       string
 	ToggleURL        string
 	StateURL         string
 	LightURL         string
@@ -66,13 +69,24 @@ type LightPresetData struct {
 }
 
 type HouseManagePageData struct {
-	DisplayName       string
-	House             AppHouseData
+	DisplayName              string
+	House                    AppHouseData
 	HeaderHouses             []AppHouseData
 	ActiveHouseID            string
 	DefaultDiscoveryNetworks []string
 	DiscoveryNetworks        []HouseDiscoveryNetworkData
-	CanManageHouse    bool
+	CanManageHouse           bool
+}
+
+type DevicePageData struct {
+	DisplayName   string
+	HeaderHouses  []AppHouseData
+	ActiveHouseID string
+	House         AppHouseData
+	Device        AppDeviceData
+	ReloadURL     string
+	ReloadMessage string
+	ReloadError   string
 }
 
 type HouseDiscoveryNetworkData struct {
@@ -171,8 +185,48 @@ func deviceStatusLabel(device AppDeviceData) string {
 	case "off":
 		return "off"
 	default:
+		if strings.TrimSpace(device.State) == "" {
+			return "unknown"
+		}
 		return device.State
 	}
+}
+
+func formattedIntegrationData(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "No integration metadata stored."
+	}
+	var v any
+	if err := json.Unmarshal([]byte(raw), &v); err != nil {
+		return raw
+	}
+	buf, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return raw
+	}
+	return string(buf)
+}
+
+func nullableStringValue(value *string) string {
+	if value == nil || strings.TrimSpace(*value) == "" {
+		return "unknown"
+	}
+	return *value
+}
+
+func nullableIntValue(value *int) string {
+	if value == nil {
+		return "unknown"
+	}
+	return strconv.Itoa(*value)
+}
+
+func lightSupportLabel(device AppDeviceData) string {
+	if device.IsLight {
+		return "yes"
+	}
+	return "no"
 }
 
 func activeHousePath() string {
@@ -189,6 +243,14 @@ func houseManageDiscoverPath(id string) string {
 
 func houseDeviceRenamePath(houseID string, deviceID string) string {
 	return houseManagePath(houseID) + "/devices/" + url.PathEscape(deviceID) + "/rename"
+}
+
+func DeviceDetailsPath(deviceID string) string {
+	return "/d/" + url.PathEscape(deviceID)
+}
+
+func DeviceReloadPath(deviceID string) string {
+	return DeviceDetailsPath(deviceID) + "/reload"
 }
 
 func HouseDeviceTogglePath(houseID string, deviceID string) string {

@@ -15,7 +15,7 @@ templ AppDeviceTitle(device AppDeviceData) {
 			@lampIcon(deviceStatusClass(device))
 		}
 		<span class={ deviceTitleStyle() }>
-			<span>{ device.Name }</span>
+			<a href={ templ.SafeURL(device.DetailsURL) }>{ device.Name }</a>
 			<span class={ "device-status-badge", deviceStateStyle(), deviceStatusClass(device) }>{ deviceStatusLabel(device) }</span>
 		</span>
 	</span>
