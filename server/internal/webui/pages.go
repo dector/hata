@@ -114,22 +114,17 @@ func deviceStatusClass(device AppDeviceData) string {
 }
 
 func deviceStatusLabel(device AppDeviceData) string {
-	prefix := "Device"
-	if device.IsLight {
-		prefix = "Lamp"
-	}
-
 	if strings.EqualFold(device.Availability, "offline") {
-		return prefix + " offline"
+		return "offline"
 	}
 
 	switch strings.ToLower(strings.TrimSpace(device.State)) {
 	case "on":
-		return prefix + " on"
+		return "on"
 	case "off":
-		return prefix + " off"
+		return "off"
 	default:
-		return prefix + " " + device.State
+		return device.State
 	}
 }
 
