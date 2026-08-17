@@ -98,6 +98,41 @@ func lightPresetChecked(device AppDeviceData, presetID string) bool {
 	return device.LightColorPreset != nil && *device.LightColorPreset == presetID
 }
 
+func deviceStatusClass(device AppDeviceData) string {
+	if strings.EqualFold(device.Availability, "offline") {
+		return "device-status-offline"
+	}
+
+	switch strings.ToLower(strings.TrimSpace(device.State)) {
+	case "on":
+		return "device-status-on"
+	case "off":
+		return "device-status-off"
+	default:
+		return "device-status-unknown"
+	}
+}
+
+func deviceStatusLabel(device AppDeviceData) string {
+	prefix := "Device"
+	if device.IsLight {
+		prefix = "Lamp"
+	}
+
+	if strings.EqualFold(device.Availability, "offline") {
+		return prefix + " offline"
+	}
+
+	switch strings.ToLower(strings.TrimSpace(device.State)) {
+	case "on":
+		return prefix + " on"
+	case "off":
+		return prefix + " off"
+	default:
+		return prefix + " " + device.State
+	}
+}
+
 func scriptSrcOrDefault(src string) string {
 	if strings.TrimSpace(src) == "" {
 		return LocalHTMXScriptPath
