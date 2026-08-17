@@ -6,27 +6,29 @@ import (
 
 // Repos provides access to all repositories.
 type Repos struct {
-	kv           *KVRepo
-	user         *UserRepo
-	session      *SessionRepo
-	house        *HouseRepo
-	houseRole    *HouseRoleRepo
-	device       *DeviceRepo
-	shoppingList *ShoppingListRepo
-	shoppingItem *ShoppingItemRepo
+	kv                    *KVRepo
+	user                  *UserRepo
+	session               *SessionRepo
+	house                 *HouseRepo
+	houseRole             *HouseRoleRepo
+	device                *DeviceRepo
+	houseDiscoveryNetwork *HouseDiscoveryNetworkRepo
+	shoppingList          *ShoppingListRepo
+	shoppingItem          *ShoppingItemRepo
 }
 
 // NewRepos creates a new Repos instance.
 func NewRepos(client *orm.Client) *Repos {
 	return &Repos{
-		kv:           &KVRepo{client: client},
-		user:         &UserRepo{client: client},
-		session:      &SessionRepo{client: client},
-		house:        &HouseRepo{client: client},
-		houseRole:    &HouseRoleRepo{client: client},
-		device:       &DeviceRepo{client: client},
-		shoppingList: &ShoppingListRepo{client: client},
-		shoppingItem: &ShoppingItemRepo{client: client},
+		kv:                    &KVRepo{client: client},
+		user:                  &UserRepo{client: client},
+		session:               &SessionRepo{client: client},
+		house:                 &HouseRepo{client: client},
+		houseRole:             &HouseRoleRepo{client: client},
+		device:                &DeviceRepo{client: client},
+		houseDiscoveryNetwork: &HouseDiscoveryNetworkRepo{client: client},
+		shoppingList:          &ShoppingListRepo{client: client},
+		shoppingItem:          &ShoppingItemRepo{client: client},
 	}
 }
 
@@ -58,6 +60,11 @@ func (r *Repos) HouseRole() HouseRoleRepository {
 // Device returns the device repository.
 func (r *Repos) Device() DeviceRepository {
 	return r.device
+}
+
+// HouseDiscoveryNetwork returns the house discovery network repository.
+func (r *Repos) HouseDiscoveryNetwork() HouseDiscoveryNetworkRepository {
+	return r.houseDiscoveryNetwork
 }
 
 // ShoppingList returns the shopping list repository.

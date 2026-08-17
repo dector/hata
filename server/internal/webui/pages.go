@@ -1,6 +1,10 @@
 package webui
 
-import "strings"
+import (
+	"net/url"
+	"strconv"
+	"strings"
+)
 
 const LocalHTMXScriptPath = "/assets/js/htmx-2.0.4.min.js"
 
@@ -48,9 +52,39 @@ type AppDeviceData struct {
 	State         string
 }
 
+type HouseManagePageData struct {
+	DisplayName       string
+	House             AppHouseData
+	DiscoveryNetworks []HouseDiscoveryNetworkData
+	CanManageHouse    bool
+	HTMXScriptSrc     string
+}
+
+type HouseDiscoveryNetworkData struct {
+	ID    int
+	CIDR  string
+	Label string
+}
+
 func scriptSrcOrDefault(src string) string {
 	if strings.TrimSpace(src) == "" {
 		return LocalHTMXScriptPath
 	}
 	return src
+}
+
+func houseManagePath(id string) string {
+	return "/h/" + url.PathEscape(id) + "/manage"
+}
+
+func houseManageDiscoverPath(id string) string {
+	return houseManagePath(id) + "/devices/discover"
+}
+
+func houseDiscoveryNetworksPath(id string) string {
+	return houseManagePath(id) + "/discovery-networks"
+}
+
+func houseDiscoveryNetworkDeletePath(houseID string, networkID int) string {
+	return houseDiscoveryNetworksPath(houseID) + "/" + strconv.Itoa(networkID) + "/delete"
 }

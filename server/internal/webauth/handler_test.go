@@ -10,7 +10,10 @@ import (
 
 	"hata/internal/api"
 	"hata/internal/db"
+	"hata/internal/integrations"
 	"hata/internal/util"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func setupAuthWebTest(t *testing.T) (db.Repositories, func()) {
@@ -183,11 +186,161 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	if !strings.Contains(body, "Main Home") || !strings.Contains(body, "Garage") {
 		t.Fatalf("expected both houses on page")
 	}
+	if !strings.Contains(body, `href="/h/H1/manage"`) || !strings.Contains(body, `href="/h/H2/manage"`) {
+		t.Fatalf("expected house manage links on page")
+	}
 	if !strings.Contains(body, "Bedroom Lamp") {
 		t.Fatalf("expected house devices on page")
 	}
 	if !strings.Contains(body, "No devices in this house") {
 		t.Fatalf("expected empty house message")
+	}
+}
+
+func TestHouseManagePage_RendersForMember(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+	if _, err := repos.HouseDiscoveryNetwork().Create(context.Background(), "H1", "192.168.1.0/24", "Main WiFi"); err != nil {
+		t.Fatalf("create discovery network: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	router := chi.NewRouter()
+	router.Get("/h/{houseId}/manage", h.HouseManagePage)
+
+	req := httptest.NewRequest(http.MethodGet, "/h/H1/manage", nil)
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, "Main Home") || !strings.Contains(body, "House ID: H1") || !strings.Contains(body, "Your role: owner") {
+		t.Fatalf("expected house manage details on page")
+	}
+	if !strings.Contains(body, "Devices") || !strings.Contains(body, "+ Add") || !strings.Contains(body, "Scan") {
+		t.Fatalf("expected device discovery controls on page")
+	}
+	if !strings.Contains(body, "Discovery networks") || !strings.Contains(body, "Main WiFi") || !strings.Contains(body, "192.168.1.0/24") {
+		t.Fatalf("expected discovery networks on page")
+	}
+}
+
+func TestHouseDeviceDiscovery_StreamsFoundDevices(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+	if _, err := repos.HouseDiscoveryNetwork().Create(context.Background(), "H1", "192.168.1.0/24", "Main WiFi"); err != nil {
+		t.Fatalf("create discovery network: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	var gotCIDRs []string
+	h.discoverDevices = func(ctx context.Context, cidrs []string) <-chan integrations.DiscoveredDevice {
+		gotCIDRs = append([]string(nil), cidrs...)
+		ch := make(chan integrations.DiscoveredDevice, 1)
+		ch <- integrations.DiscoveredDevice{Integration: "WiZ", Name: "Kitchen", IP: "192.168.1.41", State: "on"}
+		close(ch)
+		return ch
+	}
+	router := chi.NewRouter()
+	router.Get("/h/{houseId}/manage/devices/discover", h.HouseDeviceDiscovery)
+
+	req := httptest.NewRequest(http.MethodGet, "/h/H1/manage/devices/discover", nil)
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	if contentType := w.Header().Get("Content-Type"); !strings.Contains(contentType, "text/event-stream") {
+		t.Fatalf("expected event stream content type, got %q", contentType)
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, "event: progress") || !strings.Contains(body, "Main WiFi: 192.168.1.0/24") || !strings.Contains(body, "event: device") || !strings.Contains(body, `"integration":"WiZ"`) || !strings.Contains(body, `"name":"Kitchen"`) || !strings.Contains(body, `"ip":"192.168.1.41"`) || !strings.Contains(body, `"state":"on"`) || !strings.Contains(body, `"inHouse":false`) {
+		t.Fatalf("expected streamed discovery events, got %q", body)
+	}
+	if len(gotCIDRs) != 1 || gotCIDRs[0] != "192.168.1.0/24" {
+		t.Fatalf("expected configured CIDR to be passed to discovery, got %v", gotCIDRs)
+	}
+}
+
+func TestAddHouseDevice_AddsDiscoveredDevice(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	router := chi.NewRouter()
+	router.Post("/h/{houseId}/manage/devices", h.AddHouseDevice)
+
+	req := httptest.NewRequest(http.MethodPost, "/h/H1/manage/devices", strings.NewReader("integration=WiZ&name=Kitchen&ip=192.168.1.41&state=off"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d: %s", w.Code, w.Body.String())
+	}
+	devices, err := repos.Device().ListByHouse(context.Background(), "H1")
+	if err != nil {
+		t.Fatalf("list devices: %v", err)
+	}
+	if len(devices) != 1 {
+		t.Fatalf("expected 1 device, got %d", len(devices))
+	}
+	if devices[0].ID != "wiz-192-168-1-41" || devices[0].IntegrationID != "wiz" || devices[0].State != "off" || devices[0].IntegrationData == nil || !strings.Contains(*devices[0].IntegrationData, "192.168.1.41") {
+		t.Fatalf("unexpected device: %#v", devices[0])
 	}
 }
 

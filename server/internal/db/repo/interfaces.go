@@ -25,6 +25,9 @@ type Repositories interface {
 	// Device returns the device repository.
 	Device() DeviceRepository
 
+	// HouseDiscoveryNetwork returns the house discovery network repository.
+	HouseDiscoveryNetwork() HouseDiscoveryNetworkRepository
+
 	// ShoppingList returns the shopping list repository.
 	ShoppingList() ShoppingListRepository
 
@@ -115,6 +118,18 @@ type DeviceRepository interface {
 	UpdateState(ctx context.Context, houseID, id, state string) error
 }
 
+// HouseDiscoveryNetworkRepository provides access to house discovery network data.
+type HouseDiscoveryNetworkRepository interface {
+	// Create creates a discovery network for a house.
+	Create(ctx context.Context, houseID, cidr, label string) (*HouseDiscoveryNetworkData, error)
+
+	// ListByHouse lists discovery networks for a house.
+	ListByHouse(ctx context.Context, houseID string) ([]*HouseDiscoveryNetworkData, error)
+
+	// DeleteByID deletes a discovery network if it belongs to the house.
+	DeleteByID(ctx context.Context, houseID string, id int) error
+}
+
 // ShoppingListRepository provides access to shopping list data.
 type ShoppingListRepository interface {
 	// Create creates a shopping list in a house.
@@ -198,6 +213,14 @@ type DeviceData struct {
 	IntegrationData *string
 	State           string
 	HouseID         string
+}
+
+// HouseDiscoveryNetworkData represents a CIDR configured for house device discovery.
+type HouseDiscoveryNetworkData struct {
+	ID      int
+	HouseID string
+	CIDR    string
+	Label   string
 }
 
 // ShoppingListData represents shopping list information.

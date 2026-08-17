@@ -134,6 +134,11 @@ func startServer(database db.DB, ctx context.Context) {
 
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/me", webAuthHandler.MePage)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/app", webAuthHandler.AppPage)
+	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage", webAuthHandler.HouseManagePage)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices", webAuthHandler.AddHouseDevice)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks", webAuthHandler.AddHouseDiscoveryNetwork)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks/{networkId}/delete", webAuthHandler.DeleteHouseDiscoveryNetwork)
+	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage/devices/discover", webAuthHandler.HouseDeviceDiscovery)
 
 	// API UI routes (dev-only)
 	if os.Getenv("HATA_DEV") == "1" || os.Getenv("AIR") == "1" {

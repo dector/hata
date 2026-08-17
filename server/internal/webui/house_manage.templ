@@ -1,0 +1,255 @@
+package webui
+
+css houseManageDetailsStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+	gap: 1rem;
+	margin: 0 0 1rem;
+	padding-left: 0;
+	list-style: none;
+}
+
+css houseManageDetailsItemStyle() {
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css houseManageSectionStyle() {
+	display: grid;
+	gap: 0.75rem;
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--border);
+}
+
+css houseManageSectionHeaderStyle() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+css houseManageAddPanelStyle() {
+	display: grid;
+	gap: 0.75rem;
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css houseManageInlineFormStyle() {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 0.75rem;
+}
+
+css houseManageNetworkListStyle() {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css houseManageNetworkItemStyle() {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css discoveryResultsStyle() {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css discoveryStatusStyle() {
+	color: var(--muted);
+}
+
+templ HouseManagePage(data HouseManagePageData) {
+	@PageLayout("Manage house · Hata", data.HTMXScriptSrc, data.DisplayName) {
+		<div class="app-screen">
+			@ScreenHeader(data.House.DisplayName, "House management.")
+			<ul class={ houseManageDetailsStyle() }>
+				<li class={ houseManageDetailsItemStyle() }>House ID: { data.House.ID }</li>
+				<li class={ houseManageDetailsItemStyle() }>Your role: { data.House.Role }</li>
+			</ul>
+
+			<section class={ houseManageSectionStyle() } data-discover-url={ houseManageDiscoverPath(data.House.ID) }>
+				<div class={ houseManageSectionHeaderStyle() }>
+					<h2 class={ appFlushBlockStyle() }>Devices</h2>
+					<button id="device-add-button" type="button">+ Add</button>
+				</div>
+
+				if len(data.House.Devices) == 0 {
+					<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
+				} else {
+					<ul class={ deviceListStyle() }>
+						for _, device := range data.House.Devices {
+							<li class={ "device-card", deviceCardStyle() }><span class={ deviceNameStyle() }>{ device.Name } ({ device.ID })</span><span class={ deviceStateStyle() }>· { device.State }</span></li>
+						}
+					</ul>
+				}
+
+				<div id="device-add-panel" class={ houseManageAddPanelStyle() } hidden>
+					<p class={ appFlushBlockStyle(), discoveryStatusStyle() }>Scan supported integrations for devices.</p>
+					<p class={ appFlushBlockStyle() }>This scan will check:</p>
+					<ul>
+						<li>Server local networks</li>
+						for _, network := range data.DiscoveryNetworks {
+							if network.Label != "" {
+								<li>{ network.Label }: { network.CIDR }</li>
+							} else {
+								<li>{ network.CIDR }</li>
+							}
+						}
+					</ul>
+					<button id="device-scan-button" type="button">Scan</button>
+					<p id="device-discovery-status" class={ appFlushBlockStyle(), discoveryStatusStyle() }></p>
+					<ul id="device-discovery-results" class={ discoveryResultsStyle() }></ul>
+				</div>
+			</section>
+
+			<section class={ houseManageSectionStyle() }>
+				<div class={ houseManageSectionHeaderStyle() }>
+					<h2 class={ appFlushBlockStyle() }>Discovery networks</h2>
+				</div>
+				<p class={ appFlushBlockStyle(), discoveryStatusStyle() }>Extra network ranges to scan. Example: 192.168.1.0/24 scans 192.168.1.*.</p>
+				if len(data.DiscoveryNetworks) == 0 {
+					<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No extra discovery networks configured.</p>
+				} else {
+					<ul class={ houseManageNetworkListStyle() }>
+						for _, network := range data.DiscoveryNetworks {
+							<li class={ houseManageNetworkItemStyle() }>
+								<span>
+									if network.Label != "" {
+										<strong>{ network.Label }</strong> · { network.CIDR }
+									} else {
+										{ network.CIDR }
+									}
+								</span>
+								if data.CanManageHouse {
+									<form method="post" action={ houseDiscoveryNetworkDeletePath(data.House.ID, network.ID) }>
+										<button type="submit">Remove</button>
+									</form>
+								}
+							</li>
+						}
+					</ul>
+				}
+				if data.CanManageHouse {
+					<form class={ houseManageInlineFormStyle() } method="post" action={ houseDiscoveryNetworksPath(data.House.ID) }>
+						<label for="discovery-network-cidr">CIDR
+							<input id="discovery-network-cidr" name="cidr" type="text" placeholder="192.168.1.0/24" required/>
+						</label>
+						<label for="discovery-network-label">Label
+							<input id="discovery-network-label" name="label" type="text" placeholder="Main WiFi"/>
+						</label>
+						<button type="submit">Add</button>
+					</form>
+				} else {
+					<p class={ appFlushBlockStyle(), discoveryStatusStyle() }>Only house admins can change discovery networks.</p>
+				}
+			</section>
+
+			<p><a href="/app">← Back to app</a></p>
+			<script>
+				(() => {
+					const addButton = document.getElementById('device-add-button');
+					const panel = document.getElementById('device-add-panel');
+					const scanButton = document.getElementById('device-scan-button');
+					const status = document.getElementById('device-discovery-status');
+					const results = document.getElementById('device-discovery-results');
+					const section = document.querySelector('[data-discover-url]');
+					let source;
+					let completed = false;
+
+					addButton?.addEventListener('click', () => {
+						panel.hidden = !panel.hidden;
+					});
+
+					scanButton?.addEventListener('click', () => {
+						if (source) {
+							source.close();
+						}
+						results.replaceChildren();
+						status.textContent = 'Starting discovery…';
+						scanButton.disabled = true;
+						completed = false;
+						source = new EventSource(section.dataset.discoverUrl);
+
+						source.addEventListener('open', () => {
+							status.textContent = 'Discovery connection open.';
+						});
+
+						source.addEventListener('progress', (event) => {
+							status.textContent = event.data;
+						});
+
+						source.addEventListener('device', (event) => {
+							const device = JSON.parse(event.data);
+							const item = document.createElement('li');
+							const state = device.state ? ` · ${device.state}` : ' · unknown';
+							const label = document.createElement('span');
+							label.textContent = `[${device.integration}] ${device.name || 'Unnamed device'} at ${device.ip}${state}`;
+							item.append(label);
+
+							if (device.inHouse) {
+								const existing = document.createElement('span');
+								existing.textContent = ' · already in this house';
+								item.append(existing);
+							} else if (device.addUrl) {
+								const form = document.createElement('form');
+								form.method = 'post';
+								form.action = device.addUrl;
+								form.style.display = 'inline';
+								form.style.marginLeft = '0.5rem';
+
+								for (const [name, value] of Object.entries({integration: device.integration, name: device.name || '', ip: device.ip, state: device.state || ''})) {
+									const input = document.createElement('input');
+									input.type = 'hidden';
+									input.name = name;
+									input.value = value;
+									form.append(input);
+								}
+
+								const button = document.createElement('button');
+								button.type = 'submit';
+								button.textContent = 'Add';
+								form.append(button);
+								item.append(form);
+							}
+
+							results.append(item);
+						});
+
+						source.addEventListener('done', (event) => {
+							completed = true;
+							status.textContent = event.data || 'Discovery complete.';
+							scanButton.disabled = false;
+							source.close();
+						});
+
+						source.onerror = () => {
+							if (!completed) {
+								status.textContent = 'Discovery connection failed.';
+							}
+							scanButton.disabled = false;
+							source?.close();
+						};
+					});
+				})();
+			</script>
+		</div>
+	}
+}

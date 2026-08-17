@@ -24,21 +24,23 @@ type DB interface {
 
 // Re-export repository interfaces for convenience.
 type (
-	Repositories        = repo.Repositories
-	KVRepository        = repo.KVRepository
-	UserRepository      = repo.UserRepository
-	SessionRepository   = repo.SessionRepository
-	HouseRepository     = repo.HouseRepository
-	HouseRoleRepository = repo.HouseRoleRepository
-	DeviceRepository    = repo.DeviceRepository
-	ShoppingListRepository = repo.ShoppingListRepository
-	ShoppingItemRepository = repo.ShoppingItemRepository
-	UserData            = repo.UserData
-	SessionData         = repo.SessionData
-	HouseData           = repo.HouseData
-	HouseRoleData       = repo.HouseRoleData
-	HouseMembershipData = repo.HouseMembershipData
-	DeviceData          = repo.DeviceData
-	ShoppingListData    = repo.ShoppingListData
-	ShoppingItemData    = repo.ShoppingItemData
+	Repositories                    = repo.Repositories
+	KVRepository                    = repo.KVRepository
+	UserRepository                  = repo.UserRepository
+	SessionRepository               = repo.SessionRepository
+	HouseRepository                 = repo.HouseRepository
+	HouseRoleRepository             = repo.HouseRoleRepository
+	DeviceRepository                = repo.DeviceRepository
+	HouseDiscoveryNetworkRepository = repo.HouseDiscoveryNetworkRepository
+	ShoppingListRepository          = repo.ShoppingListRepository
+	ShoppingItemRepository          = repo.ShoppingItemRepository
+	UserData                        = repo.UserData
+	SessionData                     = repo.SessionData
+	HouseData                       = repo.HouseData
+	HouseRoleData                   = repo.HouseRoleData
+	HouseMembershipData             = repo.HouseMembershipData
+	DeviceData                      = repo.DeviceData
+	HouseDiscoveryNetworkData       = repo.HouseDiscoveryNetworkData
+	ShoppingListData                = repo.ShoppingListData
+	ShoppingItemData                = repo.ShoppingItemData
 )
