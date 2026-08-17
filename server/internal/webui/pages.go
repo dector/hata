@@ -98,6 +98,13 @@ func lightPresetChecked(device AppDeviceData, presetID string) bool {
 	return device.LightColorPreset != nil && *device.LightColorPreset == presetID
 }
 
+func toggleNextState(device AppDeviceData) string {
+	if strings.EqualFold(strings.TrimSpace(device.State), "on") {
+		return "off"
+	}
+	return "on"
+}
+
 func deviceStatusClass(device AppDeviceData) string {
 	if strings.EqualFold(device.Availability, "offline") {
 		return "device-status-offline"

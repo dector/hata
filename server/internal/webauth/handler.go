@@ -167,21 +167,7 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 
 	devicesByHouse := make(map[string][]webui.AppDeviceData, len(memberships))
 	for _, d := range devices {
-		devicesByHouse[d.HouseID] = append(devicesByHouse[d.HouseID], webui.AppDeviceData{
-			HouseID:          d.HouseID,
-			ID:               d.ID,
-			Name:             d.Name,
-			IntegrationID:    d.IntegrationID,
-			State:            d.State,
-			Availability:     d.Availability,
-			ToggleURL:        webui.HouseDeviceTogglePath(d.HouseID, d.ID),
-			StateURL:         webui.HouseDeviceStatePath(d.HouseID, d.ID),
-			LightURL:         webui.HouseDeviceLightPath(d.HouseID, d.ID),
-			IsLight:          deviceSupportsLight(d),
-			LightBrightness:  d.LightBrightness,
-			LightColorPreset: d.LightColorPreset,
-			LightPresets:     webLightPresets(),
-		})
+		devicesByHouse[d.HouseID] = append(devicesByHouse[d.HouseID], appDeviceDataFromDB(d))
 	}
 
 	houses := make([]webui.AppHouseData, 0, len(memberships))
@@ -259,8 +245,13 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 	if err := h.deviceController.SetState(r.Context(), device, newState); err != nil {
 		if api.IsDeviceNoAck(err) {
 			_ = h.repos.Device().UpdateAvailability(r.Context(), houseID, deviceID, "offline")
+			device.Availability = "offline"
 		}
 		fmt.Printf("Error toggling device %q in house %q: %v\n", deviceID, houseID, err)
+		if isHTMXRequest(r) {
+			renderDeviceCardWithTrigger(w, r, device, "Failed to toggle device.")
+			return
+		}
 		http.Error(w, "failed to toggle device", http.StatusBadGateway)
 		return
 	}
@@ -269,6 +260,12 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if isHTMXRequest(r) {
+		device.State = newState
+		device.Availability = "online"
+		renderDeviceCard(w, r, device)
+		return
+	}
 	redirectAfterPost(w, r, "/app")
 }
 
@@ -813,6 +810,40 @@ func normalizeDeviceState(raw string) (string, bool) {
 	default:
 		return "", false
 	}
+}
+
+func appDeviceDataFromDB(device *db.DeviceData) webui.AppDeviceData {
+	return webui.AppDeviceData{
+		HouseID:          device.HouseID,
+		ID:               device.ID,
+		Name:             device.Name,
+		IntegrationID:    device.IntegrationID,
+		State:            device.State,
+		Availability:     device.Availability,
+		ToggleURL:        webui.HouseDeviceTogglePath(device.HouseID, device.ID),
+		StateURL:         webui.HouseDeviceStatePath(device.HouseID, device.ID),
+		LightURL:         webui.HouseDeviceLightPath(device.HouseID, device.ID),
+		IsLight:          deviceSupportsLight(device),
+		LightBrightness:  device.LightBrightness,
+		LightColorPreset: device.LightColorPreset,
+		LightPresets:     webLightPresets(),
+	}
+}
+
+func renderDeviceCard(w http.ResponseWriter, r *http.Request, device *db.DeviceData) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := webui.AppDeviceCard(appDeviceDataFromDB(device)).Render(r.Context(), w); err != nil {
+		http.Error(w, "failed to render device card", http.StatusInternalServerError)
+	}
+}
+
+func renderDeviceCardWithTrigger(w http.ResponseWriter, r *http.Request, device *db.DeviceData, message string) {
+	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"device-toggle-failed":{"message":%q}}`, message))
+	renderDeviceCard(w, r, device)
+}
+
+func isHTMXRequest(r *http.Request) bool {
+	return strings.EqualFold(r.Header.Get("HX-Request"), "true")
 }
 
 func deviceSupportsLight(device *db.DeviceData) bool {

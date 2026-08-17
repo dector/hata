@@ -206,6 +206,55 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	}
 }
 
+func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
+	repos, cleanup := setupAuthWebTest(t)
+	defer cleanup()
+
+	passwordHash, err := util.HashPassword("secret")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+	user, err := repos.User().Create(context.Background(), "user@example.com", passwordHash, "User")
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if _, err := repos.House().Create(context.Background(), "H1", "Main Home"); err != nil {
+		t.Fatalf("create house: %v", err)
+	}
+	if _, err := repos.HouseRole().Assign(context.Background(), "H1", user.ID, "owner"); err != nil {
+		t.Fatalf("assign house role: %v", err)
+	}
+	if _, err := repos.Device().Create(context.Background(), "H1", "lamp-1", "Bedroom Lamp", "dummy", nil, "off"); err != nil {
+		t.Fatalf("create device: %v", err)
+	}
+
+	h := NewHandler(api.NewAuthHandler(repos), repos)
+	h.deviceController = &fakeWebDeviceController{}
+	router := chi.NewRouter()
+	router.Post("/h/{houseId}/device/{deviceId}/toggle", h.ToggleHouseDevice)
+
+	req := httptest.NewRequest(http.MethodPost, "/h/H1/device/lamp-1/toggle", nil)
+	req.Header.Set("HX-Request", "true")
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey{}, AuthContext{UserID: user.ID, Username: user.Username}))
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `class="device-card`) || !strings.Contains(body, `data-state="on"`) {
+		t.Fatalf("expected updated device card, got %s", body)
+	}
+	if strings.Contains(body, "My devices") || strings.Contains(body, "Main Home") {
+		t.Fatalf("expected only card partial, got full page: %s", body)
+	}
+	if strings.Contains(w.Header().Get("HX-Redirect"), "/app") {
+		t.Fatalf("did not expect HX redirect")
+	}
+}
+
 func TestHouseManagePage_RendersForMember(t *testing.T) {
 	repos, cleanup := setupAuthWebTest(t)
 	defer cleanup()
@@ -396,6 +445,20 @@ func TestRenameHouseDevice_RenamesDeviceForManager(t *testing.T) {
 	if device == nil || device.Name != "New Lamp" {
 		t.Fatalf("expected renamed device, got %#v", device)
 	}
+}
+
+type fakeWebDeviceController struct{}
+
+func (f *fakeWebDeviceController) SetState(ctx context.Context, device *db.DeviceData, state string) error {
+	return nil
+}
+
+func (f *fakeWebDeviceController) SetLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error {
+	return nil
+}
+
+func (f *fakeWebDeviceController) GetStatus(ctx context.Context, device *db.DeviceData) (api.DeviceStatus, error) {
+	return api.DeviceStatus{State: device.State, Availability: device.Availability}, nil
 }
 
 func assertLogoutRedirectAndCookieCleared(t *testing.T, w *httptest.ResponseRecorder) {

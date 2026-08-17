@@ -125,9 +125,14 @@ css deviceToggleButtonStyle() {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.35rem 0.6rem;
-	font-size: 0.85rem;
-	white-space: nowrap;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: var(--muted);
+	transition: color 0.12s ease, background 0.12s ease, transform 0.12s ease;
 }
 
 css deviceIconToggleButtonStyle() {
@@ -206,12 +211,50 @@ templ lampIcon(statusClass string) {
 	<svg class={ "lamp-icon", lampIconStyle(), statusClass } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"></path></svg>
 }
 
-templ toggleIcon(isOn bool) {
-	if isOn {
-		<svg class={ toggleIconStyle() } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56H80a72,72,0,0,0,0,144h96a72,72,0,0,0,0-144Zm0,128H80A56,56,0,0,1,80,72h96a56,56,0,0,1,0,112Zm0-96a40,40,0,1,0,40,40A40,40,0,0,0,176,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,176,152Z"></path></svg>
-	} else {
-		<svg class={ toggleIconStyle() } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56H80a72,72,0,0,0,0,144h96a72,72,0,0,0,0-144Zm0,128H80A56,56,0,0,1,80,72h96a56,56,0,0,1,0,112ZM80,88a40,40,0,1,0,40,40A40,40,0,0,0,80,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,80,152Z"></path></svg>
-	}
+templ toggleIcon() {
+	<svg class={ "toggle-icon-on", toggleIconStyle() } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56H80a72,72,0,0,0,0,144h96a72,72,0,0,0,0-144Zm0,128H80A56,56,0,0,1,80,72h96a56,56,0,0,1,0,112Zm0-96a40,40,0,1,0,40,40A40,40,0,0,0,176,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,176,152Z"></path></svg>
+	<svg class={ "toggle-icon-off", toggleIconStyle() } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56H80a72,72,0,0,0,0,144h96a72,72,0,0,0,0-144Zm0,128H80A56,56,0,0,1,80,72h96a56,56,0,0,1,0,112ZM80,88a40,40,0,1,0,40,40A40,40,0,0,0,80,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,80,152Z"></path></svg>
+}
+
+templ controlsIcon() {
+	<svg class={ toggleIconStyle() } xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M136,120v96a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm64,72a8,8,0,0,0-8,8v16a8,8,0,0,0,16,0V200A8,8,0,0,0,200,192Zm24-32H208V40a8,8,0,0,0-16,0V160H176a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16ZM56,160a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V168A8,8,0,0,0,56,160Zm24-32H64V40a8,8,0,0,0-16,0v88H32a8,8,0,0,0,0,16H80a8,8,0,0,0,0-16Zm72-48H136V40a8,8,0,0,0-16,0V80H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16Z"></path></svg>
+}
+
+templ AppDeviceCard(device AppDeviceData) {
+	<li class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State }>
+		<span class={ deviceNameStyle() }>
+			if device.IsLight {
+				@lampIcon(deviceStatusClass(device))
+			}
+			<span class={ deviceTitleStyle() }>
+				<span>{ device.Name }</span>
+				<span class={ "device-status-badge", deviceStateStyle(), deviceStatusClass(device) }>{ deviceStatusLabel(device) }</span>
+			</span>
+		</span>
+		if device.Availability != "offline" {
+			<span class={ deviceActionsStyle() }>
+				if device.IsLight {
+					<button class={ "device-controls-button", deviceToggleButtonStyle() } type="button" data-light-open={ lightDialogID(device) } aria-label={ "Open controls for " + device.Name } title="Controls">
+						@controlsIcon()
+					</button>
+				}
+				<form
+					class={ deviceToggleFormStyle() }
+					method="post"
+					action={ templ.SafeURL(device.ToggleURL) }
+					hx-post={ device.ToggleURL }
+					hx-target="closest .device-card"
+					hx-swap="outerHTML"
+					data-device-toggle-form
+					data-next-state={ toggleNextState(device) }
+				>
+					<button class={ "device-toggle-button", deviceIconToggleButtonStyle(), deviceStatusClass(device) } type="submit" aria-label={ "Toggle " + device.Name } title="Toggle">
+						@toggleIcon()
+					</button>
+				</form>
+			</span>
+		}
+	</li>
 }
 
 templ AppPage(data AppPageData) {
@@ -264,7 +307,8 @@ templ AppPage(data AppPageData) {
 				.device-status-badge {
 					letter-spacing: 0.01em;
 				}
-				button.device-toggle-button:hover {
+				button.device-toggle-button:hover,
+				button.device-controls-button:hover {
 					background: rgba(142, 192, 124, 0.16);
 					color: var(--accent-hover);
 					transform: scale(1.08);
@@ -274,6 +318,13 @@ templ AppPage(data AppPageData) {
 				}
 				.device-toggle-button.device-status-off {
 					color: var(--muted);
+				}
+				.device-card[data-state="on"] .toggle-icon-off,
+				.device-card:not([data-state="on"]) .toggle-icon-on {
+					display: none;
+				}
+				.device-card.htmx-request {
+					opacity: 0.82;
 				}
 				.lamp-icon.device-status-on {
 					filter: drop-shadow(0 0 0.35rem rgba(250, 189, 47, 0.7));
@@ -286,6 +337,9 @@ templ AppPage(data AppPageData) {
 				.light-preset:focus-within .light-swatch {
 					outline: 2px solid var(--accent);
 					outline-offset: 3px;
+				}
+				dialog::backdrop {
+					background: rgba(0, 0, 0, 0.78);
 				}
 			</style>
 			@ScreenHeader("My devices", "Devices grouped by houses.")
@@ -307,29 +361,7 @@ templ AppPage(data AppPageData) {
 							} else {
 								<ul class={ "device-list", deviceListStyle() }>
 									for _, device := range house.Devices {
-										<li class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State }>
-											<span class={ deviceNameStyle() }>
-												if device.IsLight {
-													@lampIcon(deviceStatusClass(device))
-												}
-												<span class={ deviceTitleStyle() }>
-													<span>{ device.Name }</span>
-													<span class={ "device-status-badge", deviceStateStyle(), deviceStatusClass(device) }>{ deviceStatusLabel(device) }</span>
-												</span>
-											</span>
-											if device.Availability != "offline" {
-												<span class={ deviceActionsStyle() }>
-													if device.IsLight {
-														<button class={ deviceToggleButtonStyle() } type="button" data-light-open={ lightDialogID(device) }>Controls</button>
-													}
-													<form class={ deviceToggleFormStyle() } method="post" action={ templ.SafeURL(device.ToggleURL) }>
-														<button class={ "device-toggle-button", deviceIconToggleButtonStyle(), deviceStatusClass(device) } type="submit" aria-label={ "Toggle " + device.Name } title="Toggle">
-															@toggleIcon(device.State == "on")
-														</button>
-													</form>
-												</span>
-											}
-										</li>
+										@AppDeviceCard(device)
 										if device.IsLight && device.Availability == "online" {
 											<dialog id={ lightDialogID(device) } class={ lightDialogStyle() }>
 												<h3>{ device.Name }</h3>
@@ -355,10 +387,6 @@ templ AppPage(data AppPageData) {
 													</div>
 													<label>Brightness <strong data-brightness-label>{ lightBrightnessValue(device) }%</strong></label>
 													<input data-brightness-slider type="range" name="brightness" min="0" max="100" step="5" value={ lightBrightnessValue(device) }/>
-													<p class={ deviceActionsStyle() }>
-														<button type="button" data-light-close>Cancel</button>
-														<button type="submit">Apply</button>
-													</p>
 												</form>
 											</dialog>
 										}
@@ -370,17 +398,43 @@ templ AppPage(data AppPageData) {
 				</div>
 			}
 			<script>
+				const deviceStatusClasses = ['device-status-on', 'device-status-off', 'device-status-offline', 'device-status-unknown'];
+				function applyDeviceStatusClass(element, statusClass) {
+					if (!element) return;
+					element.classList.remove(...deviceStatusClasses);
+					element.classList.add(statusClass);
+				}
+				document.addEventListener('htmx:beforeRequest', (event) => {
+					const form = event.detail.elt?.closest?.('[data-device-toggle-form]');
+					if (!form) return;
+					const nextState = form.getAttribute('data-next-state');
+					const card = form.closest('.device-card');
+					if (!card || (nextState !== 'on' && nextState !== 'off')) return;
+					const statusClass = nextState === 'on' ? 'device-status-on' : 'device-status-off';
+					card.dataset.state = nextState;
+					applyDeviceStatusClass(card.querySelector('.device-status-badge'), statusClass);
+					applyDeviceStatusClass(card.querySelector('.device-toggle-button'), statusClass);
+					applyDeviceStatusClass(card.querySelector('.lamp-icon'), statusClass);
+					const badge = card.querySelector('.device-status-badge');
+					if (badge) badge.textContent = nextState;
+					const button = form.querySelector('button[type="submit"]');
+					if (button) button.disabled = true;
+				});
+				document.addEventListener('device-toggle-failed', (event) => {
+					window.alert(event.detail?.message || 'Failed to toggle device.');
+				});
 				document.addEventListener('click', (event) => {
 					const openButton = event.target.closest('[data-light-open]');
 					if (openButton) {
 						event.preventDefault();
 						const dialog = document.getElementById(openButton.getAttribute('data-light-open'));
 						if (dialog) dialog.showModal();
+						return;
 					}
-					const closeButton = event.target.closest('[data-light-close]');
-					if (closeButton) {
-						event.preventDefault();
-						closeButton.closest('dialog')?.close();
+					if (event.target instanceof HTMLDialogElement && event.target.open) {
+						const rect = event.target.getBoundingClientRect();
+						const isOutside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+						if (isOutside) event.target.close();
 					}
 				});
 				document.addEventListener('submit', async (event) => {
