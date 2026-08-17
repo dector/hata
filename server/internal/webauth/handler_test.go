@@ -207,6 +207,27 @@ func TestAppPage_GroupsDevicesByHouse(t *testing.T) {
 	if !strings.Contains(body, "No devices in this house") {
 		t.Fatalf("expected empty house message")
 	}
+	if !strings.Contains(body, `id="device-card-H1-lamp-1"`) {
+		t.Fatalf("expected stable device card id")
+	}
+}
+
+func TestPartialRequestDetection(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	if isPartialRequest(req) {
+		t.Fatalf("plain request should not be partial")
+	}
+
+	req.Header.Set("Datastar-Request", "true")
+	if !isPartialRequest(req) {
+		t.Fatalf("datastar request should be partial")
+	}
+
+	req.Header.Del("Datastar-Request")
+	req.Header.Set("HX-Request", "true")
+	if !isPartialRequest(req) {
+		t.Fatalf("htmx request should be partial")
+	}
 }
 
 func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
@@ -249,6 +270,9 @@ func TestToggleHouseDevice_HTMXUpdatesOnlyDeviceCard(t *testing.T) {
 	body := w.Body.String()
 	if !strings.Contains(body, `class="device-card`) || !strings.Contains(body, `data-state="on"`) {
 		t.Fatalf("expected updated device card, got %s", body)
+	}
+	if !strings.Contains(body, `id="device-card-H1-lamp-1"`) {
+		t.Fatalf("expected stable device card id, got %s", body)
 	}
 	if strings.Contains(body, "My devices") || strings.Contains(body, "Main Home") {
 		t.Fatalf("expected only card partial, got full page: %s", body)

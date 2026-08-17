@@ -248,7 +248,7 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 			device.Availability = "offline"
 		}
 		fmt.Printf("Error toggling device %q in house %q: %v\n", deviceID, houseID, err)
-		if isHTMXRequest(r) {
+		if isPartialRequest(r) {
 			renderDeviceCardWithTrigger(w, r, device, "Failed to toggle device.")
 			return
 		}
@@ -260,7 +260,7 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMXRequest(r) {
+	if isPartialRequest(r) {
 		device.State = newState
 		device.Availability = "online"
 		renderDeviceCard(w, r, device)
@@ -842,8 +842,16 @@ func renderDeviceCardWithTrigger(w http.ResponseWriter, r *http.Request, device 
 	renderDeviceCard(w, r, device)
 }
 
+func isPartialRequest(r *http.Request) bool {
+	return isHTMXRequest(r) || isDatastarRequest(r)
+}
+
 func isHTMXRequest(r *http.Request) bool {
 	return strings.EqualFold(r.Header.Get("HX-Request"), "true")
+}
+
+func isDatastarRequest(r *http.Request) bool {
+	return strings.EqualFold(r.Header.Get("Datastar-Request"), "true")
 }
 
 func deviceSupportsLight(device *db.DeviceData) bool {

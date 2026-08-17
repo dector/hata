@@ -221,7 +221,7 @@ templ controlsIcon() {
 }
 
 templ AppDeviceCard(device AppDeviceData) {
-	<li class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State }>
+	<li id={ deviceCardID(device) } class={ "device-card", deviceCardStyle() } data-availability={ device.Availability } data-state={ device.State }>
 		<span class={ deviceNameStyle() }>
 			if device.IsLight {
 				@lampIcon(deviceStatusClass(device))

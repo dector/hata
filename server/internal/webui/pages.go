@@ -85,9 +85,17 @@ type HouseDiscoveryNetworkData struct {
 }
 
 func lightDialogID(device AppDeviceData) string {
+	return "light-" + stableDeviceElementID(device)
+}
+
+func deviceCardID(device AppDeviceData) string {
+	return "device-card-" + stableDeviceElementID(device)
+}
+
+func stableDeviceElementID(device AppDeviceData) string {
 	id := device.HouseID + "-" + device.ID
 	id = strings.NewReplacer("/", "-", " ", "-", ".", "-", ":", "-").Replace(id)
-	return "light-" + id
+	return id
 }
 
 func lightBrightnessValue(device AppDeviceData) string {
