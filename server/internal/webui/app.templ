@@ -95,9 +95,73 @@ css deviceToggleButtonStyle() {
 	font-size: 0.85rem;
 }
 
+css lightStateButtonsStyle() {
+	display: flex;
+	gap: 0.5rem;
+	margin: 0.75rem 0 1rem;
+}
+
+css lightStateFormStyle() {
+	flex: 1;
+}
+
+css lightStateButtonStyle() {
+	width: 100%;
+	padding: 0.55rem 0.75rem;
+}
+
+css lightDialogStyle() {
+	max-width: min(92vw, 28rem);
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	padding: 1rem;
+}
+
+css lightPresetGridStyle() {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+	margin: 0.75rem 0 1rem;
+}
+
+css lightPresetOptionStyle() {
+	display: inline-flex;
+	cursor: pointer;
+}
+
+css lightPresetInputStyle() {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+}
+
+css lightSwatchStyle() {
+	display: inline-block;
+	width: 2.6rem;
+	height: 2.6rem;
+	border: 2px solid var(--border);
+	border-radius: 999px;
+	box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
+	transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
 templ AppPage(data AppPageData) {
 	@PageLayout("App · Hata", data.HTMXScriptSrc, data.DisplayName) {
 		<div class="app-screen">
+			<style>
+				.light-preset input:checked + .light-swatch {
+					border-color: var(--text);
+					box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 3px var(--accent);
+					transform: scale(1.08);
+				}
+				.light-preset:focus-within .light-swatch {
+					outline: 2px solid var(--accent);
+					outline-offset: 3px;
+				}
+			</style>
 			@ScreenHeader("My devices", "Devices grouped by houses.")
 			if len(data.Houses) == 0 {
 				<p>You don't have access to any houses yet.</p>
@@ -127,9 +191,44 @@ templ AppPage(data AppPageData) {
 													<form class={ deviceToggleFormStyle() } method="post" action={ templ.SafeURL(device.ToggleURL) }>
 														<button class={ deviceToggleButtonStyle() } type="submit">Toggle</button>
 													</form>
+													if device.IsLight {
+														<button class={ deviceToggleButtonStyle() } type="button" data-light-open={ lightDialogID(device) }>Controls</button>
+													}
 												}
 											</span>
 										</li>
+										if device.IsLight && device.Availability == "online" {
+											<dialog id={ lightDialogID(device) } class={ lightDialogStyle() }>
+												<h3>{ device.Name }</h3>
+												<p>State: <span data-light-state-label>{ device.State }</span> · Availability: { device.Availability }</p>
+												<div class={ lightStateButtonsStyle() }>
+													<form data-light-state-form class={ lightStateFormStyle() } method="post" action={ templ.SafeURL(device.StateURL) }>
+														<input type="hidden" name="state" value="on"/>
+														<button class={ lightStateButtonStyle() } type="submit">On</button>
+													</form>
+													<form data-light-state-form class={ lightStateFormStyle() } method="post" action={ templ.SafeURL(device.StateURL) }>
+														<input type="hidden" name="state" value="off"/>
+														<button class={ lightStateButtonStyle() } type="submit">Off</button>
+													</form>
+												</div>
+												<form method="post" action={ templ.SafeURL(device.LightURL) }>
+													<div class={ lightPresetGridStyle() }>
+														for _, preset := range device.LightPresets {
+															<label class={ "light-preset", lightPresetOptionStyle() } title={ preset.Label } aria-label={ preset.Label }>
+																<input data-color-preset-input class={ lightPresetInputStyle() } type="radio" name="colorPreset" value={ preset.ID } checked?={ lightPresetChecked(device, preset.ID) }/>
+																<span class={ "light-swatch", lightSwatchStyle() } style={ "background-color: " + preset.Hex }></span>
+															</label>
+														}
+													</div>
+													<label>Brightness <strong data-brightness-label>{ lightBrightnessValue(device) }%</strong></label>
+													<input data-brightness-slider type="range" name="brightness" min="0" max="100" step="5" value={ lightBrightnessValue(device) }/>
+													<p class={ deviceActionsStyle() }>
+														<button type="button" data-light-close>Cancel</button>
+														<button type="submit">Apply</button>
+													</p>
+												</form>
+											</dialog>
+										}
 									}
 								</ul>
 							}
@@ -137,6 +236,68 @@ templ AppPage(data AppPageData) {
 					}
 				</div>
 			}
+			<script>
+				document.addEventListener('click', (event) => {
+					const openButton = event.target.closest('[data-light-open]');
+					if (openButton) {
+						event.preventDefault();
+						const dialog = document.getElementById(openButton.getAttribute('data-light-open'));
+						if (dialog) dialog.showModal();
+					}
+					const closeButton = event.target.closest('[data-light-close]');
+					if (closeButton) {
+						event.preventDefault();
+						closeButton.closest('dialog')?.close();
+					}
+				});
+				document.addEventListener('submit', async (event) => {
+					const form = event.target.closest('[data-light-state-form]');
+					if (!form) return;
+					event.preventDefault();
+					const button = event.submitter;
+					if (button) button.disabled = true;
+					try {
+						const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+						if (!response.ok) throw new Error('state request failed');
+						const state = new FormData(form).get('state');
+						const dialog = form.closest('dialog');
+						const label = dialog?.querySelector('[data-light-state-label]');
+						if (label) label.textContent = state;
+					} catch (error) {
+						window.alert('Failed to update light state.');
+					} finally {
+						if (button) button.disabled = false;
+					}
+				});
+				document.addEventListener('input', (event) => {
+					if (!event.target.matches('[data-brightness-slider]')) return;
+					const label = event.target.form?.querySelector('[data-brightness-label]');
+					if (label) label.textContent = event.target.value + '%';
+				});
+				document.addEventListener('change', async (event) => {
+					let fieldName = '';
+					let fieldValue = '';
+					if (event.target.matches('[data-brightness-slider]')) {
+						fieldName = 'brightness';
+						fieldValue = event.target.value;
+					} else if (event.target.matches('[data-color-preset-input]')) {
+						fieldName = 'colorPreset';
+						fieldValue = event.target.value;
+					} else {
+						return;
+					}
+					const form = event.target.form;
+					if (!form) return;
+					const data = new FormData();
+					data.set(fieldName, fieldValue);
+					try {
+						const response = await fetch(form.action, { method: 'POST', body: data, credentials: 'same-origin' });
+						if (!response.ok) throw new Error('light request failed');
+					} catch (error) {
+						window.alert('Failed to update light setting.');
+					}
+				});
+			</script>
 		</div>
 	}
 }

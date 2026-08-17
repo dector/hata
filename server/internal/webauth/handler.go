@@ -15,6 +15,7 @@ import (
 	"hata/internal/api"
 	"hata/internal/db"
 	"hata/internal/integrations"
+	"hata/internal/light"
 	"hata/internal/webui"
 
 	"github.com/go-chi/chi/v5"
@@ -167,12 +168,19 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 	devicesByHouse := make(map[string][]webui.AppDeviceData, len(memberships))
 	for _, d := range devices {
 		devicesByHouse[d.HouseID] = append(devicesByHouse[d.HouseID], webui.AppDeviceData{
-			ID:            d.ID,
-			Name:          d.Name,
-			IntegrationID: d.IntegrationID,
-			State:         d.State,
-			Availability:  d.Availability,
-			ToggleURL:     webui.HouseDeviceTogglePath(d.HouseID, d.ID),
+			HouseID:          d.HouseID,
+			ID:               d.ID,
+			Name:             d.Name,
+			IntegrationID:    d.IntegrationID,
+			State:            d.State,
+			Availability:     d.Availability,
+			ToggleURL:        webui.HouseDeviceTogglePath(d.HouseID, d.ID),
+			StateURL:         webui.HouseDeviceStatePath(d.HouseID, d.ID),
+			LightURL:         webui.HouseDeviceLightPath(d.HouseID, d.ID),
+			IsLight:          deviceSupportsLight(d),
+			LightBrightness:  d.LightBrightness,
+			LightColorPreset: d.LightColorPreset,
+			LightPresets:     webLightPresets(),
 		})
 	}
 
@@ -264,6 +272,150 @@ func (h *Handler) ToggleHouseDevice(w http.ResponseWriter, r *http.Request) {
 	redirectAfterPost(w, r, "/app")
 }
 
+func (h *Handler) SetHouseDeviceState(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if h.repos == nil || h.deviceController == nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	auth, ok := AuthFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	houseID := strings.TrimSpace(chi.URLParam(r, "houseId"))
+	deviceID := strings.TrimSpace(chi.URLParam(r, "deviceId"))
+	newState, ok := normalizeDeviceState(r.FormValue("state"))
+	if houseID == "" || deviceID == "" || !ok {
+		http.Error(w, "house id, device id, and valid state are required", http.StatusBadRequest)
+		return
+	}
+	memberships, err := h.repos.HouseRole().ListByUser(r.Context(), auth.UserID)
+	if err != nil {
+		http.Error(w, "failed to load houses", http.StatusInternalServerError)
+		return
+	}
+	if findMembership(memberships, houseID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+	device, err := h.repos.Device().GetByHouseAndID(r.Context(), houseID, deviceID)
+	if err != nil {
+		http.Error(w, "failed to load device", http.StatusInternalServerError)
+		return
+	}
+	if device == nil {
+		http.NotFound(w, r)
+		return
+	}
+	if err := h.deviceController.SetState(r.Context(), device, newState); err != nil {
+		if api.IsDeviceNoAck(err) {
+			_ = h.repos.Device().UpdateAvailability(r.Context(), houseID, deviceID, "offline")
+		}
+		fmt.Printf("Error setting device %q in house %q state: %v\n", deviceID, houseID, err)
+		http.Error(w, "failed to set device state", http.StatusBadGateway)
+		return
+	}
+	if err := h.repos.Device().UpdateStatus(r.Context(), houseID, deviceID, newState, "online"); err != nil {
+		http.Error(w, "failed to update device", http.StatusInternalServerError)
+		return
+	}
+	redirectAfterPost(w, r, "/app")
+}
+
+func (h *Handler) SetHouseDeviceLight(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if h.repos == nil || h.deviceController == nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	auth, ok := AuthFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	houseID := strings.TrimSpace(chi.URLParam(r, "houseId"))
+	deviceID := strings.TrimSpace(chi.URLParam(r, "deviceId"))
+	if houseID == "" || deviceID == "" {
+		http.Error(w, "house id and device id are required", http.StatusBadRequest)
+		return
+	}
+	memberships, err := h.repos.HouseRole().ListByUser(r.Context(), auth.UserID)
+	if err != nil {
+		http.Error(w, "failed to load houses", http.StatusInternalServerError)
+		return
+	}
+	if findMembership(memberships, houseID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+	device, err := h.repos.Device().GetByHouseAndID(r.Context(), houseID, deviceID)
+	if err != nil {
+		http.Error(w, "failed to load device", http.StatusInternalServerError)
+		return
+	}
+	if device == nil {
+		http.NotFound(w, r)
+		return
+	}
+	if !deviceSupportsLight(device) {
+		http.Error(w, "device does not support light controls", http.StatusUnprocessableEntity)
+		return
+	}
+	if device.Availability != "online" {
+		http.Error(w, "device is offline", http.StatusConflict)
+		return
+	}
+	if err := r.ParseMultipartForm(32 << 20); err != nil && !errors.Is(err, http.ErrNotMultipart) {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+
+	var brightness *int
+	if _, ok := r.Form["brightness"]; ok {
+		brightnessValue, err := strconv.Atoi(strings.TrimSpace(r.FormValue("brightness")))
+		if err != nil || !light.IsValidBrightness(brightnessValue) {
+			http.Error(w, "invalid brightness", http.StatusBadRequest)
+			return
+		}
+		brightness = &brightnessValue
+	}
+
+	var colorPreset *string
+	if _, ok := r.Form["colorPreset"]; ok {
+		colorPresetValue := strings.TrimSpace(r.FormValue("colorPreset"))
+		if !light.IsValidPreset(colorPresetValue) {
+			http.Error(w, "invalid color preset", http.StatusBadRequest)
+			return
+		}
+		colorPreset = &colorPresetValue
+	}
+	if brightness == nil && colorPreset == nil {
+		http.Error(w, "brightness or color preset is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.deviceController.SetLight(r.Context(), device, brightness, colorPreset); err != nil {
+		if api.IsDeviceNoAck(err) {
+			_ = h.repos.Device().UpdateAvailability(r.Context(), houseID, deviceID, "offline")
+		}
+		fmt.Printf("Error setting light for device %q in house %q: %v\n", deviceID, houseID, err)
+		http.Error(w, "failed to set light", http.StatusBadGateway)
+		return
+	}
+	if err := h.repos.Device().UpdateLight(r.Context(), houseID, deviceID, brightness, colorPreset); err != nil {
+		http.Error(w, "failed to update device", http.StatusInternalServerError)
+		return
+	}
+	redirectAfterPost(w, r, "/app")
+}
+
 func (h *Handler) HouseManagePage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -307,11 +459,15 @@ func (h *Handler) HouseManagePage(w http.ResponseWriter, r *http.Request) {
 	viewDevices := make([]webui.AppDeviceData, 0, len(devices))
 	for _, d := range devices {
 		viewDevices = append(viewDevices, webui.AppDeviceData{
-			ID:            d.ID,
-			Name:          d.Name,
-			IntegrationID: d.IntegrationID,
-			State:         d.State,
-			Availability:  d.Availability,
+			HouseID:          d.HouseID,
+			ID:               d.ID,
+			Name:             d.Name,
+			IntegrationID:    d.IntegrationID,
+			State:            d.State,
+			Availability:     d.Availability,
+			IsLight:          deviceSupportsLight(d),
+			LightBrightness:  d.LightBrightness,
+			LightColorPreset: d.LightColorPreset,
 		})
 	}
 
@@ -646,6 +802,30 @@ func deviceIDForIntegrationIP(integration, ip string) string {
 		return "device"
 	}
 	return id
+}
+
+func normalizeDeviceState(raw string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "on":
+		return "on", true
+	case "off":
+		return "off", true
+	default:
+		return "", false
+	}
+}
+
+func deviceSupportsLight(device *db.DeviceData) bool {
+	integrationID := strings.ToLower(strings.TrimSpace(device.IntegrationID))
+	return strings.HasPrefix(integrationID, "wiz")
+}
+
+func webLightPresets() []webui.LightPresetData {
+	presets := make([]webui.LightPresetData, 0, len(light.Presets))
+	for _, preset := range light.Presets {
+		presets = append(presets, webui.LightPresetData{ID: preset.ID, Label: preset.Label, Hex: preset.Hex})
+	}
+	return presets
 }
 
 func canManageHouse(role string) bool {

@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 
+	"hata/internal/light"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
@@ -41,7 +43,7 @@ func (Device) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Comment("Integration-specific JSON data"),
-			field.String("state").
+		field.String("state").
 			Default("").
 			Validate(validateDeviceState).
 			Comment("Current device state: on, off, or empty for unknown"),
@@ -49,6 +51,16 @@ func (Device) Fields() []ent.Field {
 			Default("unknown").
 			Validate(validateDeviceAvailability).
 			Comment("Current device availability: online, offline, or unknown"),
+		field.Int("light_brightness").
+			Optional().
+			Nillable().
+			Validate(validateLightBrightness).
+			Comment("Latest known light brightness percent"),
+		field.String("light_color_preset").
+			Optional().
+			Nillable().
+			Validate(validateLightColorPreset).
+			Comment("Latest known light color preset"),
 		field.String("house_id").
 			NotEmpty().
 			Comment("Foreign key to House"),
@@ -90,4 +102,18 @@ func validateDeviceAvailability(availability string) error {
 	default:
 		return fmt.Errorf("invalid device availability %q", availability)
 	}
+}
+
+func validateLightBrightness(brightness int) error {
+	if !light.IsValidBrightness(brightness) {
+		return fmt.Errorf("invalid light brightness %d", brightness)
+	}
+	return nil
+}
+
+func validateLightColorPreset(preset string) error {
+	if !light.IsValidPreset(preset) {
+		return fmt.Errorf("invalid light color preset %q", preset)
+	}
+	return nil
 }

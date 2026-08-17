@@ -26,13 +26,16 @@ func IsDeviceNoAck(err error) bool {
 
 // DeviceStatus contains current physical device status.
 type DeviceStatus struct {
-	State        string
-	Availability string
+	State            string
+	Availability     string
+	LightBrightness  *int
+	LightColorPreset *string
 }
 
 // DeviceController executes physical control commands for devices.
 type DeviceController interface {
 	SetState(ctx context.Context, device *db.DeviceData, state string) error
+	SetLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error
 	GetStatus(ctx context.Context, device *db.DeviceData) (DeviceStatus, error)
 }
 
@@ -49,6 +52,16 @@ func (c *RealDeviceController) SetState(ctx context.Context, device *db.DeviceDa
 	switch {
 	case strings.HasPrefix(integrationID, "wiz"):
 		return c.setWizState(device, state)
+	default:
+		return fmt.Errorf("%w: %s", errUnsupportedIntegration, device.IntegrationID)
+	}
+}
+
+func (c *RealDeviceController) SetLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error {
+	integrationID := strings.ToLower(strings.TrimSpace(device.IntegrationID))
+	switch {
+	case strings.HasPrefix(integrationID, "wiz"):
+		return c.setWizLight(ctx, device, brightness, colorPreset)
 	default:
 		return fmt.Errorf("%w: %s", errUnsupportedIntegration, device.IntegrationID)
 	}
@@ -86,10 +99,16 @@ func (c *RealDeviceController) getWizStatus(ctx context.Context, device *db.Devi
 	if !ok {
 		return DeviceStatus{Availability: "online"}, nil
 	}
+	status := DeviceStatus{Availability: "online"}
 	if state {
-		return DeviceStatus{State: "on", Availability: "online"}, nil
+		status.State = "on"
+	} else {
+		status.State = "off"
 	}
-	return DeviceStatus{State: "off", Availability: "online"}, nil
+	if dimming, ok := numberAsInt(result["dimming"]); ok {
+		status.LightBrightness = &dimming
+	}
+	return status, nil
 }
 
 func (c *RealDeviceController) setWizState(device *db.DeviceData, state string) error {
@@ -125,6 +144,72 @@ func (c *RealDeviceController) setWizState(device *db.DeviceData, state string) 
 	}
 
 	return nil
+}
+
+func (c *RealDeviceController) setWizLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error {
+	integration := decodeIntegrationData(device.IntegrationData)
+	if integration == nil {
+		return fmt.Errorf("%w: missing integration data", errInvalidIntegrationData)
+	}
+
+	ip, _ := integration["ip"].(string)
+	ip = strings.TrimSpace(ip)
+	if ip == "" {
+		return fmt.Errorf("%w: missing wiz ip", errInvalidIntegrationData)
+	}
+
+	params := map[string]any{}
+	if brightness != nil {
+		params["dimming"] = *brightness
+	}
+	if colorPreset != nil {
+		for key, value := range wizPresetParams(*colorPreset) {
+			params[key] = value
+		}
+	}
+
+	if _, err := udpJSON(ctx, net.JoinHostPort(ip, "38899"), map[string]any{"method": "setPilot", "params": params}); err != nil {
+		return fmt.Errorf("%w: %w", errDeviceNoAck, err)
+	}
+	return nil
+}
+
+func wizPresetParams(preset string) map[string]any {
+	switch preset {
+	case "warm_white":
+		return map[string]any{"temp": 2700}
+	case "soft_white":
+		return map[string]any{"temp": 3000}
+	case "daylight_white":
+		return map[string]any{"temp": 5000}
+	case "cold_white":
+		return map[string]any{"temp": 6500}
+	case "red":
+		return map[string]any{"r": 255, "g": 0, "b": 0}
+	case "orange":
+		return map[string]any{"r": 255, "g": 128, "b": 0}
+	case "yellow":
+		return map[string]any{"r": 255, "g": 220, "b": 0}
+	case "green":
+		return map[string]any{"r": 0, "g": 255, "b": 0}
+	case "blue":
+		return map[string]any{"r": 0, "g": 80, "b": 255}
+	case "purple":
+		return map[string]any{"r": 128, "g": 0, "b": 255}
+	default:
+		return map[string]any{}
+	}
+}
+
+func numberAsInt(value any) (int, bool) {
+	switch v := value.(type) {
+	case float64:
+		return int(v), true
+	case int:
+		return v, true
+	default:
+		return 0, false
+	}
 }
 
 func udpJSON(ctx context.Context, address string, payload any) (map[string]any, error) {

@@ -74,5 +74,10 @@ func refreshAll(ctx context.Context, repos db.Repositories, controller api.Devic
 		if updateErr := repos.Device().UpdateStatus(ctx, device.HouseID, device.ID, status.State, status.Availability); updateErr != nil && !errors.Is(updateErr, context.Canceled) {
 			fmt.Printf("Error updating status for device %q in house %q: %v\n", device.ID, device.HouseID, updateErr)
 		}
+		if status.LightBrightness != nil || status.LightColorPreset != nil {
+			if updateErr := repos.Device().UpdateLight(ctx, device.HouseID, device.ID, status.LightBrightness, status.LightColorPreset); updateErr != nil && !errors.Is(updateErr, context.Canceled) {
+				fmt.Printf("Error updating light settings for device %q in house %q: %v\n", device.ID, device.HouseID, updateErr)
+			}
+		}
 	}
 }

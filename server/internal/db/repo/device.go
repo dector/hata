@@ -158,6 +158,26 @@ func (r *DeviceRepo) UpdateStatus(ctx context.Context, houseID, id, state, avail
 	return nil
 }
 
+// UpdateLight updates latest known light settings.
+func (r *DeviceRepo) UpdateLight(ctx context.Context, houseID, id string, brightness *int, colorPreset *string) error {
+	update := r.client.Device.Update().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id))
+	if brightness != nil {
+		update = update.SetLightBrightness(*brightness)
+	}
+	if colorPreset != nil {
+		update = update.SetLightColorPreset(*colorPreset)
+	}
+	count, err := update.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating device light settings: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
 // UpdateName updates the device display name.
 func (r *DeviceRepo) UpdateName(ctx context.Context, houseID, id, name string) error {
 	count, err := r.client.Device.Update().
@@ -175,12 +195,14 @@ func (r *DeviceRepo) UpdateName(ctx context.Context, houseID, id, name string) e
 
 func deviceDataFromEnt(d *orm.Device) *DeviceData {
 	return &DeviceData{
-		ID:              d.DeviceID,
-		Name:            d.Name,
-		IntegrationID:   d.IntegrationID,
-		IntegrationData: d.IntegrationData,
-		State:           d.State,
-		Availability:    d.Availability,
-		HouseID:         d.HouseID,
+		ID:               d.DeviceID,
+		Name:             d.Name,
+		IntegrationID:    d.IntegrationID,
+		IntegrationData:  d.IntegrationData,
+		State:            d.State,
+		Availability:     d.Availability,
+		HouseID:          d.HouseID,
+		LightBrightness:  d.LightBrightness,
+		LightColorPreset: d.LightColorPreset,
 	}
 }

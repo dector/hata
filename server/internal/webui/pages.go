@@ -46,12 +46,25 @@ type AppHouseData struct {
 }
 
 type AppDeviceData struct {
-	ID            string
-	Name          string
-	IntegrationID string
-	State         string
-	Availability  string
-	ToggleURL     string
+	HouseID          string
+	ID               string
+	Name             string
+	IntegrationID    string
+	State            string
+	Availability     string
+	ToggleURL        string
+	StateURL         string
+	LightURL         string
+	IsLight          bool
+	LightBrightness  *int
+	LightColorPreset *string
+	LightPresets     []LightPresetData
+}
+
+type LightPresetData struct {
+	ID    string
+	Label string
+	Hex   string
 }
 
 type HouseManagePageData struct {
@@ -66,6 +79,23 @@ type HouseDiscoveryNetworkData struct {
 	ID    int
 	CIDR  string
 	Label string
+}
+
+func lightDialogID(device AppDeviceData) string {
+	id := device.HouseID + "-" + device.ID
+	id = strings.NewReplacer("/", "-", " ", "-", ".", "-", ":", "-").Replace(id)
+	return "light-" + id
+}
+
+func lightBrightnessValue(device AppDeviceData) string {
+	if device.LightBrightness == nil {
+		return "50"
+	}
+	return strconv.Itoa(*device.LightBrightness)
+}
+
+func lightPresetChecked(device AppDeviceData, presetID string) bool {
+	return device.LightColorPreset != nil && *device.LightColorPreset == presetID
 }
 
 func scriptSrcOrDefault(src string) string {
@@ -89,6 +119,14 @@ func houseDeviceRenamePath(houseID string, deviceID string) string {
 
 func HouseDeviceTogglePath(houseID string, deviceID string) string {
 	return "/h/" + url.PathEscape(houseID) + "/device/" + url.PathEscape(deviceID) + "/toggle"
+}
+
+func HouseDeviceStatePath(houseID string, deviceID string) string {
+	return "/h/" + url.PathEscape(houseID) + "/device/" + url.PathEscape(deviceID) + "/state"
+}
+
+func HouseDeviceLightPath(houseID string, deviceID string) string {
+	return "/h/" + url.PathEscape(houseID) + "/device/" + url.PathEscape(deviceID) + "/light"
 }
 
 func houseDiscoveryNetworksPath(id string) string {

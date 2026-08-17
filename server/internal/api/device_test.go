@@ -550,16 +550,26 @@ func TestDeviceSetState_NoAck_ReturnsGatewayTimeout(t *testing.T) {
 }
 
 type fakeDeviceController struct {
-	calls        int
-	lastDeviceID string
-	lastState    string
-	err          error
+	calls           int
+	lastDeviceID    string
+	lastState       string
+	lastBrightness  *int
+	lastColorPreset *string
+	err             error
 }
 
 func (f *fakeDeviceController) SetState(ctx context.Context, device *db.DeviceData, state string) error {
 	f.calls++
 	f.lastDeviceID = device.ID
 	f.lastState = state
+	return f.err
+}
+
+func (f *fakeDeviceController) SetLight(ctx context.Context, device *db.DeviceData, brightness *int, colorPreset *string) error {
+	f.calls++
+	f.lastDeviceID = device.ID
+	f.lastBrightness = brightness
+	f.lastColorPreset = colorPreset
 	return f.err
 }
 

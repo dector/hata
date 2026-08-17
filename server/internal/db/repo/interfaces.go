@@ -123,6 +123,9 @@ type DeviceRepository interface {
 	// UpdateStatus updates the device state and availability.
 	UpdateStatus(ctx context.Context, houseID, id, state, availability string) error
 
+	// UpdateLight updates latest known light settings.
+	UpdateLight(ctx context.Context, houseID, id string, brightness *int, colorPreset *string) error
+
 	// ListAll lists all devices.
 	ListAll(ctx context.Context) ([]*DeviceData, error)
 
@@ -219,13 +222,15 @@ type HouseMembershipData struct {
 
 // DeviceData represents device information.
 type DeviceData struct {
-	ID              string
-	Name            string
-	IntegrationID   string
-	IntegrationData *string
-	State           string
-	Availability    string
-	HouseID         string
+	ID               string
+	Name             string
+	IntegrationID    string
+	IntegrationData  *string
+	State            string
+	Availability     string
+	HouseID          string
+	LightBrightness  *int
+	LightColorPreset *string
 }
 
 // HouseDiscoveryNetworkData represents a CIDR configured for house device discovery.
