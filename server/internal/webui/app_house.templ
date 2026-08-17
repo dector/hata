@@ -6,14 +6,14 @@ templ AppHouseGrid(houses []AppHouseData) {
 	} else {
 		<div class={ appHousesStyle() }>
 			for _, house := range houses {
-				@AppDeviceList(house.Devices)
+				@AppDeviceList(house.Devices, house.ShoppingLists)
 			}
 		</div>
 	}
 }
 
-templ AppDeviceList(devices []AppDeviceData) {
-	if len(devices) == 0 {
+templ AppDeviceList(devices []AppDeviceData, shoppingLists []ShoppingListData) {
+	if len(devices) == 0 && len(shoppingLists) == 0 {
 		<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
 	} else {
 		<ul class={ "device-list", deviceListStyle() }>
@@ -21,6 +21,19 @@ templ AppDeviceList(devices []AppDeviceData) {
 				@AppDeviceCard(device)
 				@AppLightDialog(device)
 			}
+			for _, list := range shoppingLists {
+				@AppShoppingListCard(list)
+			}
 		</ul>
 	}
+}
+
+templ AppShoppingListCard(list ShoppingListData) {
+	<li class={ "device-card", deviceCardStyle() }>
+		<span class={ deviceNameStyle() }>
+			<span class={ deviceTitleStyle() }>
+				<a href={ templ.SafeURL(ShoppingListPath(list.ID)) }>Shopping List</a>
+			</span>
+		</span>
+	</li>
 }

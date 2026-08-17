@@ -1,8 +1,10 @@
 package webauth
 
 import (
-	"hata/internal/webui"
 	"net/http"
+
+	"hata/internal/db/repo"
+	"hata/internal/webui"
 )
 
 func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
@@ -50,12 +52,23 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "failed to load devices", http.StatusInternalServerError)
 			return
 		}
+		shoppingLists, err := h.repos.ShoppingList().ListByHouse(r.Context(), activeHouseID)
+		if err != nil {
+			http.Error(w, "failed to load shopping lists", http.StatusInternalServerError)
+			return
+		}
 
 		activeHouse := webui.AppHouseData{
-			ID:          activeMembership.HouseID,
-			DisplayName: activeMembership.DisplayName,
-			Role:        activeMembership.Role,
-			Devices:     make([]webui.AppDeviceData, 0, len(devices)),
+			ID:            activeMembership.HouseID,
+			DisplayName:   activeMembership.DisplayName,
+			Role:          activeMembership.Role,
+			Devices:       make([]webui.AppDeviceData, 0, len(devices)),
+			ShoppingLists: make([]webui.ShoppingListData, 0, len(shoppingLists)),
+		}
+		for _, list := range shoppingLists {
+			if list.UID == repo.DefaultShoppingListUID {
+				activeHouse.ShoppingLists = append(activeHouse.ShoppingLists, webui.ShoppingListData{ID: list.UID, Name: list.Name})
+			}
 		}
 		for _, d := range devices {
 			activeHouse.Devices = append(activeHouse.Devices, appDeviceDataFromDB(d))

@@ -1,0 +1,80 @@
+package webui
+
+css shoppingListScreenStyle() {
+	display: grid;
+	gap: 1rem;
+}
+
+css shoppingListMetaStyle() {
+	color: var(--muted);
+	margin: 0;
+}
+
+css shoppingListItemsStyle() {
+	display: grid;
+	gap: 0.5rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+css shoppingListItemStyle() {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	padding: 0.85rem 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	background: #282828;
+}
+
+css shoppingListItemCheckedStyle() {
+	opacity: 0.65;
+	text-decoration: line-through;
+}
+
+css shoppingListCheckStyle() {
+	width: 1.25rem;
+	height: 1.25rem;
+	display: inline-grid;
+	place-items: center;
+	border: 1px solid var(--border);
+	border-radius: 0.35rem;
+	flex: 0 0 auto;
+}
+
+templ ShoppingListPage(data ShoppingListPageData) {
+	@WebPage(data.List.Name + " · Hata") {
+		@HouseSelector(data.HeaderHouses, data.ActiveHouseID, data.PageURL)
+		@UserBadge(data.DisplayName)
+		<main>
+			<div class={ "sl-screen", shoppingListScreenStyle() }>
+				@ScreenHeader(data.List.Name, "Shopping list")
+				<p class={ shoppingListMetaStyle() }>{ data.House.DisplayName } · read-only</p>
+				<div class={ deviceActionsRowStyle() }>
+					<a href="/app">Back to app</a>
+				</div>
+				if len(data.Items) == 0 {
+					<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No items in this shopping list.</p>
+				} else {
+					<ul class={ shoppingListItemsStyle() }>
+						for _, item := range data.Items {
+							<li class={ shoppingListItemStyle() }>
+								<span class={ shoppingListCheckStyle() } aria-hidden="true">
+									if item.Checked {
+										<span>✓</span>
+									}
+								</span>
+								if item.Checked {
+									<span class={ shoppingListItemCheckedStyle() }>{ item.Name }</span>
+								} else {
+									<span>{ item.Name }</span>
+								}
+							</li>
+						}
+					</ul>
+				}
+			</div>
+		</main>
+	}
+}

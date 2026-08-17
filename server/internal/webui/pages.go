@@ -36,10 +36,11 @@ type AppPageData struct {
 }
 
 type AppHouseData struct {
-	ID          string
-	DisplayName string
-	Role        string
-	Devices     []AppDeviceData
+	ID            string
+	DisplayName   string
+	Role          string
+	Devices       []AppDeviceData
+	ShoppingLists []ShoppingListData
 }
 
 type AppDeviceData struct {
@@ -87,6 +88,27 @@ type DevicePageData struct {
 	ReloadURL     string
 	ReloadMessage string
 	ReloadError   string
+}
+
+type ShoppingListPageData struct {
+	DisplayName   string
+	HeaderHouses  []AppHouseData
+	ActiveHouseID string
+	House         AppHouseData
+	List          ShoppingListData
+	Items         []ShoppingItemData
+	PageURL       string
+}
+
+type ShoppingListData struct {
+	ID   string
+	Name string
+}
+
+type ShoppingItemData struct {
+	ID      string
+	Name    string
+	Checked bool
 }
 
 type HouseDiscoveryNetworkData struct {
@@ -251,6 +273,10 @@ func DeviceDetailsPath(deviceID string) string {
 
 func DeviceReloadPath(deviceID string) string {
 	return DeviceDetailsPath(deviceID) + "/reload"
+}
+
+func ShoppingListPath(listID string) string {
+	return "/sl/" + url.PathEscape(listID)
 }
 
 func HouseDeviceTogglePath(houseID string, deviceID string) string {
