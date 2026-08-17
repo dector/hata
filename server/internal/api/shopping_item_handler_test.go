@@ -25,7 +25,7 @@ func TestShoppingItem_CreateDeleteAndIncludeDeleted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create house: %v", err)
 	}
-	if _, err := repos.HouseRole().Assign(ctx, house.ID, user.ID, "habitant"); err != nil {
+	if _, err := repos.HouseRole().Assign(ctx, house.ID, user.ID, "owner"); err != nil {
 		t.Fatalf("Failed to assign role: %v", err)
 	}
 

@@ -10,7 +10,7 @@ import (
 
 // UpdateItem handles PATCH /api/latest/house/{houseId}/shopping-list/{listId}/item/{itemId}
 func (h *ShoppingListHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
-	_, houseID, ok := h.authorizeHouseAccess(w, r)
+	_, houseID, ok := h.authorizeHouseMutation(w, r)
 	if !ok {
 		return
 	}

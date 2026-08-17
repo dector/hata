@@ -10,7 +10,7 @@ import (
 
 // CreateItem handles POST /api/latest/house/{houseId}/shopping-list/{listId}/item
 func (h *ShoppingListHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
-	_, houseID, ok := h.authorizeHouseAccess(w, r)
+	_, houseID, ok := h.authorizeHouseMutation(w, r)
 	if !ok {
 		return
 	}

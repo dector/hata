@@ -10,35 +10,61 @@ import (
 )
 
 func (h *ShoppingListHandler) authorizeHouseAccess(w http.ResponseWriter, r *http.Request) (int, string, bool) {
+	userID, houseID, _, ok := h.authorizeHouseAccessWithRole(w, r)
+	return userID, houseID, ok
+}
+
+func (h *ShoppingListHandler) authorizeHouseMutation(w http.ResponseWriter, r *http.Request) (int, string, bool) {
+	userID, houseID, role, ok := h.authorizeHouseAccessWithRole(w, r)
+	if !ok {
+		return 0, "", false
+	}
+	if !canManageShoppingList(role) {
+		WriteError(w, http.StatusForbidden, "Forbidden", "forbidden")
+		return 0, "", false
+	}
+	return userID, houseID, true
+}
+
+func (h *ShoppingListHandler) authorizeHouseAccessWithRole(w http.ResponseWriter, r *http.Request) (int, string, string, bool) {
 	userID, err := userIDFromBearerToken(r, h.repos)
 	if err != nil {
 		if errors.Is(err, errUnauthorized) {
 			WriteError(w, http.StatusUnauthorized, "Unauthorized", "unauthorized")
-			return 0, "", false
+			return 0, "", "", false
 		}
 		fmt.Printf("Error validating token: %v\n", err)
 		WriteError(w, http.StatusInternalServerError, "Internal server error", "internal-error")
-		return 0, "", false
+		return 0, "", "", false
 	}
 
 	houseID := strings.TrimSpace(chi.URLParam(r, "houseId"))
 	if houseID == "" {
 		WriteError(w, http.StatusBadRequest, "House ID is required", "invalid-request")
-		return 0, "", false
+		return 0, "", "", false
 	}
 
 	role, allowed, err := h.userCanAccessShoppingListHouse(r, userID, houseID)
 	if err != nil {
 		fmt.Printf("Error listing house roles: %v\n", err)
 		WriteError(w, http.StatusInternalServerError, "Internal server error", "internal-error")
-		return 0, "", false
+		return 0, "", "", false
 	}
 	if !allowed || role == "guest" {
 		WriteError(w, http.StatusForbidden, "Forbidden", "forbidden")
-		return 0, "", false
+		return 0, "", "", false
 	}
 
-	return userID, houseID, true
+	return userID, houseID, role, true
+}
+
+func canManageShoppingList(role string) bool {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "owner", "admin":
+		return true
+	default:
+		return false
+	}
 }
 
 func (h *ShoppingListHandler) userCanAccessShoppingListHouse(r *http.Request, userID int, houseID string) (string, bool, error) {

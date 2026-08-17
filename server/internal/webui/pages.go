@@ -91,13 +91,14 @@ type DevicePageData struct {
 }
 
 type ShoppingListPageData struct {
-	DisplayName   string
-	HeaderHouses  []AppHouseData
-	ActiveHouseID string
-	House         AppHouseData
-	List          ShoppingListData
-	Items         []ShoppingItemData
-	PageURL       string
+	DisplayName    string
+	HeaderHouses   []AppHouseData
+	ActiveHouseID  string
+	House          AppHouseData
+	List           ShoppingListData
+	Items          []ShoppingItemData
+	PageURL        string
+	CanManageHouse bool
 }
 
 type ShoppingListData struct {
@@ -277,6 +278,22 @@ func DeviceReloadPath(deviceID string) string {
 
 func ShoppingListPath(listID string) string {
 	return "/sl/" + url.PathEscape(listID)
+}
+
+func shoppingListItemsPath(listID string) string {
+	return ShoppingListPath(listID) + "/items"
+}
+
+func shoppingListItemCheckPath(listID string, itemID string) string {
+	return ShoppingListPath(listID) + "/items/" + url.PathEscape(itemID) + "/check"
+}
+
+func shoppingListItemRenamePath(listID string, itemID string) string {
+	return ShoppingListPath(listID) + "/items/" + url.PathEscape(itemID) + "/rename"
+}
+
+func shoppingListItemDeletePath(listID string, itemID string) string {
+	return ShoppingListPath(listID) + "/items/" + url.PathEscape(itemID) + "/delete"
 }
 
 func HouseDeviceTogglePath(houseID string, deviceID string) string {

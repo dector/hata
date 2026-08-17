@@ -127,6 +127,30 @@ func (r *ShoppingItemRepo) UpdateName(ctx context.Context, houseID, listUID, ite
 
 // SetChecked sets checked state fields.
 func (r *ShoppingItemRepo) SetChecked(ctx context.Context, houseID, listUID, itemUID string, checkedAt *time.Time, checkedByUserID *int) error {
+	var moveToPosition *int
+	if checkedAt != nil {
+		item, err := r.client.ShoppingItem.Query().
+			Where(
+				shoppingitem.UIDEQ(itemUID),
+				shoppingitem.HasListWith(
+					shoppinglist.HouseIDEQ(houseID),
+					shoppinglist.UIDEQ(listUID),
+				),
+			).
+			First(ctx)
+		if err != nil {
+			if orm.IsNotFound(err) {
+				return fmt.Errorf("%w: %q in list %q (house %q)", ErrShoppingItemNotFound, itemUID, listUID, houseID)
+			}
+			return fmt.Errorf("failed loading shopping item before check state update: %w", err)
+		}
+		nextPosition, err := r.nextPositionInList(ctx, item.ListID)
+		if err != nil {
+			return err
+		}
+		moveToPosition = &nextPosition
+	}
+
 	update := r.client.ShoppingItem.Update().
 		Where(
 			shoppingitem.UIDEQ(itemUID),
@@ -146,6 +170,9 @@ func (r *ShoppingItemRepo) SetChecked(ctx context.Context, houseID, listUID, ite
 		update = update.ClearCheckedByUserID()
 	} else {
 		update = update.SetCheckedByUserID(*checkedByUserID)
+	}
+	if moveToPosition != nil {
+		update = update.SetPosition(*moveToPosition)
 	}
 
 	count, err := update.Save(ctx)

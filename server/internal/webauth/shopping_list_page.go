@@ -81,14 +81,53 @@ func (h *Handler) shoppingListPageData(w http.ResponseWriter, r *http.Request) (
 	}
 
 	return webui.ShoppingListPageData{
-		DisplayName:   displayNameFromAuth(auth),
-		HeaderHouses:  headerHouses,
-		ActiveHouseID: membership.HouseID,
-		House:         webui.AppHouseData{ID: membership.HouseID, DisplayName: membership.DisplayName, Role: membership.Role},
-		List:          webui.ShoppingListData{ID: list.UID, Name: list.Name},
-		Items:         viewItems,
-		PageURL:       webui.ShoppingListPath(list.UID),
+		DisplayName:    displayNameFromAuth(auth),
+		HeaderHouses:   headerHouses,
+		ActiveHouseID:  membership.HouseID,
+		House:          webui.AppHouseData{ID: membership.HouseID, DisplayName: membership.DisplayName, Role: membership.Role},
+		List:           webui.ShoppingListData{ID: list.UID, Name: list.Name},
+		Items:          viewItems,
+		PageURL:        webui.ShoppingListPath(list.UID),
+		CanManageHouse: canManageHouse(membership.Role),
 	}, true
+}
+
+func (h *Handler) userShoppingListForRequest(w http.ResponseWriter, r *http.Request) (*db.ShoppingListData, *db.HouseMembershipData, bool) {
+	if h.repos == nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return nil, nil, false
+	}
+	auth, ok := AuthFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return nil, nil, false
+	}
+	listID := strings.TrimSpace(chi.URLParam(r, "listId"))
+	if listID == "" {
+		http.Error(w, "shopping list id is required", http.StatusBadRequest)
+		return nil, nil, false
+	}
+	memberships, err := h.repos.HouseRole().ListByUser(r.Context(), auth.UserID)
+	if err != nil {
+		http.Error(w, "failed to load houses", http.StatusInternalServerError)
+		return nil, nil, false
+	}
+	activeMembership := activeHouseFromRequest(r, memberships)
+	list, membership, err := h.findUserShoppingList(r, listID, activeMembership, memberships)
+	if err != nil {
+		http.Error(w, "failed to load shopping list", http.StatusInternalServerError)
+		return nil, nil, false
+	}
+	if list == nil || membership == nil {
+		http.NotFound(w, r)
+		return nil, nil, false
+	}
+	if !canManageHouse(membership.Role) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return nil, nil, false
+	}
+	setActiveHouseCookie(w, membership.HouseID)
+	return list, membership, true
 }
 
 func (h *Handler) findUserShoppingList(r *http.Request, listID string, activeMembership *db.HouseMembershipData, memberships []*db.HouseMembershipData) (*db.ShoppingListData, *db.HouseMembershipData, error) {

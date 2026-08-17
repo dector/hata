@@ -11,7 +11,7 @@ import (
 
 // SetItemChecked handles PATCH /api/latest/house/{houseId}/shopping-list/{listId}/item/{itemId}/check
 func (h *ShoppingListHandler) SetItemChecked(w http.ResponseWriter, r *http.Request) {
-	userID, houseID, ok := h.authorizeHouseAccess(w, r)
+	userID, houseID, ok := h.authorizeHouseMutation(w, r)
 	if !ok {
 		return
 	}
