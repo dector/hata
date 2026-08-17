@@ -1,0 +1,41 @@
+package webui
+
+css meDetailsStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+	gap: 1rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css meDetailsItemStyle() {
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+css meLogoutFormStyle() {
+	margin-top: 1rem;
+	width: fit-content;
+}
+
+templ MePage(data MePageData) {
+	@PageLayout("Me · Hata", data.HTMXScriptSrc, data.DisplayName) {
+		<div class="me-screen">
+			@ScreenHeader("My session", "Authenticated page.")
+			<ul class={ meDetailsStyle() }>
+				<li class={ meDetailsItemStyle() }>User ID: { data.UserID }</li>
+				<li class={ meDetailsItemStyle() }>Username: { data.Username }</li>
+				if data.HasSessionToken {
+					<li class={ meDetailsItemStyle() }>Session token: present</li>
+				} else {
+					<li class={ meDetailsItemStyle() }>Session token: missing</li>
+				}
+			</ul>
+			<form class={ meLogoutFormStyle() } method="post" action="/auth/logout">
+				<button type="submit">Sign out</button>
+			</form>
+		</div>
+	}
+}

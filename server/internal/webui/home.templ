@@ -1,0 +1,33 @@
+package webui
+
+css homeLinksStyle() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+	gap: 1rem;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
+
+css homeLinkItemStyle() {
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+templ HomePage(data HomePageData) {
+	@PageLayout("Hata", data.HTMXScriptSrc, data.DisplayName) {
+		<div class="dev-screen">
+			@ScreenHeader("Hata", "Smart home backend.")
+			<ul class={ homeLinksStyle() }>
+				if !data.IsLoggedIn {
+					<li class={ homeLinkItemStyle() }><a href="/auth/login">Sign in</a></li>
+				}
+				<li class={ homeLinkItemStyle() }><a href="/me">My session</a></li>
+				<li class={ homeLinkItemStyle() }><a href="/app">App</a></li>
+				<li class={ homeLinkItemStyle() }><a href="/health">Health check</a></li>
+				<li class={ homeLinkItemStyle() }><a href="/apiui">API UI</a></li>
+			</ul>
+		</div>
+	}
+}
