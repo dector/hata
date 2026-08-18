@@ -170,6 +170,12 @@ type DeviceRepository interface {
 
 	// UpdateName updates the device display name.
 	UpdateName(ctx context.Context, houseID, id, name string) error
+
+	// UpdateIntegrationData updates device integration metadata.
+	UpdateIntegrationData(ctx context.Context, houseID, id string, integrationData *string) error
+
+	// DeleteByHouseAndID deletes a device by house and device ID.
+	DeleteByHouseAndID(ctx context.Context, houseID, id string) error
 }
 
 // HouseDiscoveryNetworkRepository provides access to house discovery network data.

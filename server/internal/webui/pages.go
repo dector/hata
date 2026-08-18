@@ -352,6 +352,10 @@ func houseDeviceRenamePath(houseID string, deviceID string) string {
 	return houseManagePath(houseID) + "/devices/" + url.PathEscape(deviceID) + "/rename"
 }
 
+func houseDeviceDeletePath(houseID string, deviceID string) string {
+	return houseManagePath(houseID) + "/devices/" + url.PathEscape(deviceID) + "/delete"
+}
+
 func DeviceDetailsPath(deviceID string) string {
 	return "/d/" + url.PathEscape(deviceID)
 }

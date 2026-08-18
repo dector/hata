@@ -18,6 +18,7 @@ type DiscoveredDevice struct {
 	Integration string `json:"integration"`
 	Name        string `json:"name"`
 	IP          string `json:"ip"`
+	MAC         string `json:"mac"`
 	State       string `json:"state"`
 }
 
@@ -53,9 +54,13 @@ func discoverWiZ(ctx context.Context, devices <-chan wiz.DiscoveredDevice, out c
 		select {
 		case <-ctx.Done():
 			return
-		case out <- DiscoveredDevice{Integration: "WiZ", Name: name, IP: device.IP, State: state}:
+		case out <- DiscoveredDevice{Integration: "WiZ", Name: name, IP: device.IP, MAC: normalizeMAC(device.MAC), State: state}:
 		}
 	}
+}
+
+func normalizeMAC(mac string) string {
+	return strings.ToLower(strings.TrimSpace(mac))
 }
 
 func wizState(ctx context.Context, ip string) string {

@@ -150,6 +150,10 @@ css houseManageIconButtonStyle() {
 	color: var(--muted);
 }
 
+css houseManageDangerButtonStyle() {
+	color: #fb4934;
+}
+
 css discoveryStatusStyle() {
 	color: var(--muted);
 }
@@ -199,6 +203,9 @@ templ HouseManagePage(data HouseManagePageData) {
 										<form class={ "device-rename-form", houseManageIconFormStyle() } method="post" action={ houseDeviceRenamePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
 											<input type="hidden" name="name"/>
 											<button class={ houseManageIconButtonStyle() } type="submit" aria-label={ "Rename " + device.Name } title="Rename">@editIcon()</button>
+										</form>
+										<form class={ "device-delete-form", houseManageIconFormStyle() } method="post" action={ houseDeviceDeletePath(data.House.ID, device.ID) } data-current-name={ device.Name }>
+											<button class={ houseManageIconButtonStyle(), houseManageDangerButtonStyle() } type="submit" aria-label={ "Remove " + device.Name } title="Remove">@deleteIcon()</button>
 										</form>
 									}
 								</div>
@@ -306,6 +313,37 @@ templ HouseManagePage(data HouseManagePageData) {
 						});
 					});
 
+					document.querySelectorAll('.device-delete-form').forEach((form) => {
+						form.addEventListener('submit', (event) => {
+							const currentName = form.dataset.currentName || 'this device';
+							if (!confirm(`Remove ${currentName}?`)) {
+								event.preventDefault();
+							}
+						});
+					});
+
+					function deviceDiscoveryForm(action, buttonLabel, fields) {
+						const form = document.createElement('form');
+						form.method = 'post';
+						form.action = action;
+						form.style.display = 'inline';
+						form.style.marginLeft = '0.5rem';
+
+						for (const [name, value] of Object.entries(fields)) {
+							const input = document.createElement('input');
+							input.type = 'hidden';
+							input.name = name;
+							input.value = value;
+							form.append(input);
+						}
+
+						const button = document.createElement('button');
+						button.type = 'submit';
+						button.textContent = buttonLabel;
+						form.append(button);
+						return form;
+					}
+
 					scanButton?.addEventListener('click', () => {
 						if (source) {
 							source.close();
@@ -331,30 +369,17 @@ templ HouseManagePage(data HouseManagePageData) {
 							label.textContent = `[${device.integration}] ${device.name || 'Unnamed device'} at ${device.ip}`;
 							item.append(label);
 
-							if (device.inHouse) {
+							if (device.ipChanged && device.updateUrl) {
+								const existing = document.createElement('span');
+								existing.textContent = ` · matches ${device.existingDeviceName || device.existingDeviceId}; IP changed ${device.existingIp} → ${device.ip}`;
+								item.append(existing);
+								item.append(deviceDiscoveryForm(device.updateUrl, 'Update', {integration: device.integration, ip: device.ip, mac: device.mac || '', state: device.state || ''}));
+							} else if (device.inHouse) {
 								const existing = document.createElement('span');
 								existing.textContent = ' · already in this house';
 								item.append(existing);
 							} else if (device.addUrl) {
-								const form = document.createElement('form');
-								form.method = 'post';
-								form.action = device.addUrl;
-								form.style.display = 'inline';
-								form.style.marginLeft = '0.5rem';
-
-								for (const [name, value] of Object.entries({integration: device.integration, name: device.name || '', ip: device.ip, state: device.state || ''})) {
-									const input = document.createElement('input');
-									input.type = 'hidden';
-									input.name = name;
-									input.value = value;
-									form.append(input);
-								}
-
-								const button = document.createElement('button');
-								button.type = 'submit';
-								button.textContent = 'Add';
-								form.append(button);
-								item.append(form);
+								item.append(deviceDiscoveryForm(device.addUrl, 'Add', {integration: device.integration, name: device.name || '', ip: device.ip, mac: device.mac || '', state: device.state || ''}));
 							}
 
 							results.append(item);

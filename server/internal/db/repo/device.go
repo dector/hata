@@ -193,6 +193,39 @@ func (r *DeviceRepo) UpdateName(ctx context.Context, houseID, id, name string) e
 	return nil
 }
 
+// UpdateIntegrationData updates device integration metadata.
+func (r *DeviceRepo) UpdateIntegrationData(ctx context.Context, houseID, id string, integrationData *string) error {
+	update := r.client.Device.Update().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id))
+	if integrationData == nil {
+		update = update.ClearIntegrationData()
+	} else {
+		update = update.SetIntegrationData(*integrationData)
+	}
+	count, err := update.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating device integration data: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
+// DeleteByHouseAndID deletes a device by house and device ID.
+func (r *DeviceRepo) DeleteByHouseAndID(ctx context.Context, houseID, id string) error {
+	count, err := r.client.Device.Delete().
+		Where(device.HouseIDEQ(houseID), device.DeviceIDEQ(id)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed deleting device: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q in house %q", ErrDeviceNotFound, id, houseID)
+	}
+	return nil
+}
+
 func deviceDataFromEnt(d *orm.Device) *DeviceData {
 	return &DeviceData{
 		ID:               d.DeviceID,

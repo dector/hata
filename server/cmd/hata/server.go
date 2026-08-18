@@ -123,6 +123,8 @@ func startServer(database db.DB, ctx context.Context) {
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/light", webAuthHandler.SetHouseDeviceLight)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices", webAuthHandler.AddHouseDevice)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices/{deviceId}/rename", webAuthHandler.RenameHouseDevice)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices/{deviceId}/delete", webAuthHandler.DeleteHouseDevice)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/devices/{deviceId}/integration", webAuthHandler.UpdateHouseDeviceIntegration)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks", webAuthHandler.AddHouseDiscoveryNetwork)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/manage/discovery-networks/{networkId}/delete", webAuthHandler.DeleteHouseDiscoveryNetwork)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage/devices/discover", webAuthHandler.HouseDeviceDiscovery)

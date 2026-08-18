@@ -1,7 +1,7 @@
 package webauth
 
 import (
-	"fmt"
+	"encoding/json"
 	"net"
 	"net/http"
 	"strings"
@@ -44,7 +44,16 @@ func (h *Handler) AddHouseDevice(w http.ResponseWriter, r *http.Request) {
 		state = ""
 	}
 
-	integrationData := fmt.Sprintf(`{"ip":%q}`, ip)
+	data := map[string]string{"ip": ip}
+	if mac := normalizeMAC(r.FormValue("mac")); mac != "" {
+		data["mac"] = mac
+	}
+	buf, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, "invalid integration data", http.StatusBadRequest)
+		return
+	}
+	integrationData := string(buf)
 	if _, err := h.repos.Device().Create(r.Context(), membership.HouseID, deviceIDForIntegrationIP(integration, ip), name, integration, &integrationData, state); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

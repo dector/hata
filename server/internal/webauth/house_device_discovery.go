@@ -3,18 +3,28 @@ package webauth
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"hata/internal/db"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type discoveredDeviceView struct {
-	Integration string `json:"integration"`
-	Name        string `json:"name"`
-	IP          string `json:"ip"`
-	State       string `json:"state"`
-	InHouse     bool   `json:"inHouse"`
-	AddURL      string `json:"addUrl"`
+	Integration        string `json:"integration"`
+	Name               string `json:"name"`
+	IP                 string `json:"ip"`
+	MAC                string `json:"mac"`
+	State              string `json:"state"`
+	InHouse            bool   `json:"inHouse"`
+	AddURL             string `json:"addUrl"`
+	UpdateURL          string `json:"updateUrl"`
+	ExistingDeviceID   string `json:"existingDeviceId"`
+	ExistingDeviceName string `json:"existingDeviceName"`
+	ExistingIP         string `json:"existingIp"`
+	IPChanged          bool   `json:"ipChanged"`
 }
 
 func (h *Handler) HouseDeviceDiscovery(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +74,8 @@ func (h *Handler) HouseDeviceDiscovery(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to load devices", http.StatusInternalServerError)
 		return
 	}
-	existingIPs := deviceIPsByIntegration(existingDevices)
+	existingByIP := devicesByIntegrationField(existingDevices, "ip")
+	existingByMAC := devicesByIntegrationField(existingDevices, "mac")
 
 	discoveryNetworks, err := h.repos.HouseDiscoveryNetwork().ListByHouse(r.Context(), houseID)
 	if err != nil {
@@ -82,13 +93,33 @@ func (h *Handler) HouseDeviceDiscovery(w http.ResponseWriter, r *http.Request) {
 	found := 0
 	for device := range h.discoverDevices(r.Context(), cidrs) {
 		found++
+		integrationKey := strings.ToLower(device.Integration)
+		deviceMAC := normalizeMAC(device.MAC)
+		var existing *db.DeviceData
+		if deviceMAC != "" {
+			existing = existingByMAC[integrationKey+":"+deviceMAC]
+		}
+		if existing == nil {
+			existing = existingByIP[integrationKey+":"+device.IP]
+		}
+
 		view := discoveredDeviceView{
 			Integration: device.Integration,
 			Name:        device.Name,
 			IP:          device.IP,
+			MAC:         deviceMAC,
 			State:       device.State,
-			InHouse:     existingIPs[strings.ToLower(device.Integration)+":"+device.IP],
 			AddURL:      houseManageURL(houseID) + "/devices",
+		}
+		if existing != nil {
+			view.InHouse = true
+			view.ExistingDeviceID = existing.ID
+			view.ExistingDeviceName = existing.Name
+			view.ExistingIP = deviceIntegrationField(existing, "ip")
+			view.IPChanged = view.ExistingIP != "" && view.ExistingIP != device.IP
+			if view.IPChanged {
+				view.UpdateURL = houseManageURL(houseID) + "/devices/" + url.PathEscape(existing.ID) + "/integration"
+			}
 		}
 		payload, err := json.Marshal(view)
 		if err != nil {

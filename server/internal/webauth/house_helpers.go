@@ -19,22 +19,44 @@ func writeSSE(w http.ResponseWriter, event, data string) {
 
 func deviceIPsByIntegration(devices []*db.DeviceData) map[string]bool {
 	result := map[string]bool{}
-	for _, device := range devices {
-		if device.IntegrationData == nil {
-			continue
-		}
-		var data map[string]any
-		if err := json.Unmarshal([]byte(*device.IntegrationData), &data); err != nil {
-			continue
-		}
-		ip, _ := data["ip"].(string)
-		ip = strings.TrimSpace(ip)
-		if ip == "" {
-			continue
-		}
-		result[strings.ToLower(device.IntegrationID)+":"+ip] = true
+	for key := range devicesByIntegrationField(devices, "ip") {
+		result[key] = true
 	}
 	return result
+}
+
+func devicesByIntegrationField(devices []*db.DeviceData, field string) map[string]*db.DeviceData {
+	result := map[string]*db.DeviceData{}
+	for _, device := range devices {
+		value := strings.TrimSpace(deviceIntegrationField(device, field))
+		if value == "" {
+			continue
+		}
+		if field == "mac" {
+			value = normalizeMAC(value)
+		}
+		result[strings.ToLower(device.IntegrationID)+":"+value] = device
+	}
+	return result
+}
+
+func deviceIntegrationField(device *db.DeviceData, field string) string {
+	if device == nil || device.IntegrationData == nil {
+		return ""
+	}
+	var data map[string]any
+	if err := json.Unmarshal([]byte(*device.IntegrationData), &data); err != nil {
+		return ""
+	}
+	value, _ := data[field].(string)
+	return strings.TrimSpace(value)
+}
+
+func normalizeMAC(mac string) string {
+	mac = strings.ToLower(strings.TrimSpace(mac))
+	mac = strings.ReplaceAll(mac, ":", "")
+	mac = strings.ReplaceAll(mac, "-", "")
+	return mac
 }
 
 func deviceIDForIntegrationIP(integration, ip string) string {
