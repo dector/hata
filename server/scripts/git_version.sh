@@ -23,11 +23,11 @@ is_dirty() {
 }
 
 if ! git describe --tags --abbrev=0 >/dev/null 2>&1; then
+  version="v0.0.0-$(git rev-parse --short HEAD)"
   if is_dirty; then
-    printf 'dev-dirty\n'
-  else
-    printf 'dev\n'
+    version="${version}-dirty"
   fi
+  printf '%s\n' "${version}"
   exit 0
 fi
 
