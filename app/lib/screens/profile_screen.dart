@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../api/hata_api_client.dart';
+import '../models/server_info.dart';
 import '../session/session.dart';
 import '../theme/hata_colors.dart';
 
@@ -8,10 +10,12 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
     required this.session,
+    required this.apiClient,
     required this.onLogout,
   });
 
   final Session session;
+  final HataApiClient apiClient;
   final Future<void> Function() onLogout;
 
   @override
@@ -20,17 +24,33 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   PackageInfo? _packageInfo;
+  ServerInfo? _serverInfo;
 
   @override
   void initState() {
     super.initState();
     _loadPackageInfo();
+    _loadServerInfo();
   }
 
   Future<void> _loadPackageInfo() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    if (!mounted) return;
-    setState(() => _packageInfo = packageInfo);
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() => _packageInfo = packageInfo);
+    } catch (_) {
+      // Keep fallback values visible if platform package info is unavailable.
+    }
+  }
+
+  Future<void> _loadServerInfo() async {
+    try {
+      final serverInfo = await widget.apiClient.ping(widget.session.serverUrl);
+      if (!mounted) return;
+      setState(() => _serverInfo = serverInfo);
+    } catch (_) {
+      // Keep fallback values visible if the server cannot be reached.
+    }
   }
 
   Future<void> _showLogoutDialog() async {
@@ -82,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 48),
                   _ProfileInfoSections(
                     serverUrl: session.serverUrl,
+                    serverVersion: _serverInfo?.version ?? '—',
                     accountStatus: session.isExpired ? 'Inactive' : 'Active',
                     appPackage: packageInfo?.packageName ?? '—',
                     appVersion: packageInfo?.version ?? '—',
@@ -112,11 +133,7 @@ class _UserAvatar extends StatelessWidget {
     return const CircleAvatar(
       radius: 60,
       backgroundColor: HataColors.avatarBackground,
-      child: Icon(
-        Icons.person,
-        color: HataColors.avatarIcon,
-        size: 64,
-      ),
+      child: Icon(Icons.person, color: HataColors.avatarIcon, size: 64),
     );
   }
 }
@@ -124,6 +141,7 @@ class _UserAvatar extends StatelessWidget {
 class _ProfileInfoSections extends StatelessWidget {
   const _ProfileInfoSections({
     required this.serverUrl,
+    required this.serverVersion,
     required this.accountStatus,
     required this.appVersion,
     required this.appPackage,
@@ -131,6 +149,7 @@ class _ProfileInfoSections extends StatelessWidget {
   });
 
   final String serverUrl;
+  final String serverVersion;
   final String accountStatus;
   final String appVersion;
   final String appPackage;
@@ -154,6 +173,8 @@ class _ProfileInfoSections extends StatelessWidget {
           child: Column(
             children: [
               _InfoRow(label: 'URL', value: serverUrl),
+              const SizedBox(height: 12),
+              _InfoRow(label: 'Version', value: serverVersion),
               const SizedBox(height: 12),
               _StatusRow(label: 'Status', status: accountStatus),
             ],
@@ -207,10 +228,7 @@ class _InfoCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       color: HataColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: child,
-      ),
+      child: Padding(padding: const EdgeInsets.all(24), child: child),
     );
   }
 }
@@ -306,7 +324,9 @@ class _LogoutButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: HataColors.error,
           foregroundColor: HataColors.onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: const Text(
           'Logout',

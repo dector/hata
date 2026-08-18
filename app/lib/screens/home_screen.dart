@@ -271,6 +271,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       MaterialPageRoute<void>(
         builder: (_) => ProfileScreen(
           session: widget.session,
+          apiClient: widget.apiClient,
           onLogout: widget.onSessionInvalid,
         ),
       ),
