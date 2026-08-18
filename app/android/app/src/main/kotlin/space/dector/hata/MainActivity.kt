@@ -1,4 +1,4 @@
-package com.example.app
+package space.dector.hata
 
 import io.flutter.embedding.android.FlutterActivity
 
