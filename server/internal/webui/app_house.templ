@@ -6,26 +6,45 @@ templ AppHouseGrid(houses []AppHouseData) {
 	} else {
 		<div class={ appHousesStyle() }>
 			for _, house := range houses {
-				@AppDeviceList(house.Devices, house.ShoppingLists)
+				@AppDeviceList(house)
 			}
 		</div>
 	}
 }
 
-templ AppDeviceList(devices []AppDeviceData, shoppingLists []ShoppingListData) {
-	if len(devices) == 0 && len(shoppingLists) == 0 {
+templ AppDeviceList(house AppHouseData) {
+	if !hasVisibleWeather(house) && len(house.Devices) == 0 && len(house.ShoppingLists) == 0 {
 		<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
 	} else {
 		<ul class={ "device-list", deviceListStyle() }>
-			for _, device := range devices {
+			if hasVisibleWeather(house) {
+				@AppWeatherCard(*house.Weather)
+			}
+			for _, device := range house.Devices {
 				@AppDeviceCard(device)
 				@AppLightDialog(device)
 			}
-			for _, list := range shoppingLists {
+			for _, list := range house.ShoppingLists {
 				@AppShoppingListCard(list)
 			}
 		</ul>
 	}
+}
+
+templ AppWeatherCard(weather AppWeatherData) {
+	<li class={ "device-card", "weather-card", deviceCardStyle() }>
+		<div class={ weatherHeaderStyle() }>
+			@weatherConditionIcon(weather.ConditionIcon)
+			<div class={ weatherContentStyle() }>
+				<span class={ weatherTemperatureStyle() }>{ weatherTemperatureLabel(weather) }</span>
+				<span class={ weatherConditionStyle() }>{ weather.ConditionText }</span>
+				if weather.LocationLabel != "" {
+					<span class={ weatherLocationStyle() }>{ weather.LocationLabel }</span>
+				}
+			</div>
+		</div>
+		<span class={ weatherMetaStyle() }>{ weatherUpdatedLabel(weather) }</span>
+	</li>
 }
 
 templ AppShoppingListCard(list ShoppingListData) {

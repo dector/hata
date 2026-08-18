@@ -31,6 +31,7 @@ type (
 	HouseRepository                 = repo.HouseRepository
 	HouseRoleRepository             = repo.HouseRoleRepository
 	HouseMetaSettingRepository      = repo.HouseMetaSettingRepository
+	WeatherStatusRepository         = repo.WeatherStatusRepository
 	DeviceRepository                = repo.DeviceRepository
 	HouseDiscoveryNetworkRepository = repo.HouseDiscoveryNetworkRepository
 	ShoppingListRepository          = repo.ShoppingListRepository
@@ -40,6 +41,7 @@ type (
 	HouseData                       = repo.HouseData
 	HouseRoleData                   = repo.HouseRoleData
 	HouseMetaSettingData            = repo.HouseMetaSettingData
+	WeatherStatusData               = repo.WeatherStatusData
 	HouseMembershipData             = repo.HouseMembershipData
 	DeviceData                      = repo.DeviceData
 	HouseDiscoveryNetworkData       = repo.HouseDiscoveryNetworkData

@@ -25,6 +25,9 @@ type Repositories interface {
 	// HouseMetaSetting returns the house metasetting repository.
 	HouseMetaSetting() HouseMetaSettingRepository
 
+	// WeatherStatus returns the weather status repository.
+	WeatherStatus() WeatherStatusRepository
+
 	// Device returns the device repository.
 	Device() DeviceRepository
 
@@ -95,6 +98,9 @@ type HouseRepository interface {
 	// UpdateLocation updates a house location.
 	// Pass nil to clear the location.
 	UpdateLocation(ctx context.Context, id string, location *string) error
+
+	// ListAll lists all houses.
+	ListAll(ctx context.Context) ([]*HouseData, error)
 }
 
 // HouseRoleRepository provides access to house role data.
@@ -120,6 +126,16 @@ type HouseMetaSettingRepository interface {
 
 	// Delete removes a house metasetting.
 	Delete(ctx context.Context, houseID, scope, key string) error
+}
+
+// WeatherStatusRepository provides access to cached weather data.
+type WeatherStatusRepository interface {
+	// GetByHouse retrieves cached weather status for a house.
+	// Returns nil, nil if cache does not exist.
+	GetByHouse(ctx context.Context, houseID string) (*WeatherStatusData, error)
+
+	// UpsertByHouse creates or updates cached weather status for a house.
+	UpsertByHouse(ctx context.Context, data WeatherStatusData) (*WeatherStatusData, error)
 }
 
 // DeviceRepository provides access to device data.
@@ -244,6 +260,22 @@ type HouseMetaSettingData struct {
 	Scope   string
 	Key     string
 	Value   string
+}
+
+// WeatherStatusData represents latest cached weather status for a house.
+type WeatherStatusData struct {
+	ID              int
+	HouseID         string
+	Temperature     float64
+	TemperatureUnit string
+	ConditionCode   int
+	ConditionText   string
+	ConditionIcon   string
+	HumidityPercent *float64
+	WindSpeed       *float64
+	WindSpeedUnit   *string
+	ObservedAt      time.Time
+	UpdatedAt       time.Time
 }
 
 // HouseMembershipData represents a house membership with role.

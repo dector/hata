@@ -115,6 +115,46 @@ css deviceActionsStyle() {
 	margin: 0;
 }
 
+css weatherHeaderStyle() {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+}
+
+css weatherIconStyle() {
+	flex: 0 0 auto;
+	color: #fabd2f;
+	filter: drop-shadow(0 0 0.65rem rgba(250, 189, 47, 0.20));
+}
+
+css weatherContentStyle() {
+	display: grid;
+	gap: 0.45rem;
+}
+
+css weatherConditionStyle() {
+	color: var(--text);
+	font-size: 0.95rem;
+}
+
+css weatherLocationStyle() {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+css weatherMetaStyle() {
+	align-self: end;
+	color: var(--muted);
+	font-size: 0.78rem;
+}
+
+css weatherTemperatureStyle() {
+	font-size: 1.65rem;
+	font-weight: 800;
+	line-height: 1;
+	color: #fabd2f;
+}
+
 css deviceToggleFormStyle() {
 	display: inline-flex;
 	gap: 0;
@@ -254,6 +294,14 @@ templ appPageStyles() {
 		}
 		.device-status-badge {
 			letter-spacing: 0.01em;
+		}
+		.weather-card {
+			grid-template-rows: auto;
+			align-content: space-between;
+			background: linear-gradient(135deg, rgba(69, 133, 136, 0.18), rgba(29, 32, 33, 0.35));
+		}
+		.weather-card:hover {
+			background: linear-gradient(135deg, rgba(69, 133, 136, 0.26), rgba(29, 32, 33, 0.55));
 		}
 		button.device-toggle-button:hover,
 		button.device-controls-button:hover {

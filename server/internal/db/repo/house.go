@@ -69,6 +69,21 @@ func (r *HouseRepo) GetByID(ctx context.Context, id string) (*HouseData, error) 
 	return houseDataFromEnt(h), nil
 }
 
+// ListAll lists all houses.
+func (r *HouseRepo) ListAll(ctx context.Context) ([]*HouseData, error) {
+	houses, err := r.client.House.Query().
+		Order(orm.Asc(house.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed listing houses: %w", err)
+	}
+	results := make([]*HouseData, 0, len(houses))
+	for _, h := range houses {
+		results = append(results, houseDataFromEnt(h))
+	}
+	return results, nil
+}
+
 // UpdateLocation updates a house location.
 func (r *HouseRepo) UpdateLocation(ctx context.Context, id string, location *string) error {
 	update := r.client.House.Update().

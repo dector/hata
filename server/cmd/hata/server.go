@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"hata/internal/api"
 	"hata/internal/apiui"
 	"hata/internal/db"
 	"hata/internal/devicestatus"
+	"hata/internal/weather"
 	"hata/internal/webauth"
 	"hata/internal/webui"
 
@@ -30,11 +32,13 @@ func startServer(database db.DB, ctx context.Context) {
 	// Create API handlers
 	authHandler := api.NewAuthHandler(database.Repos())
 	serverHandler := api.NewServerHandler()
-	houseHandler := api.NewHouseHandler(database.Repos())
+	weatherPlugin := weather.NewPlugin(database.Repos(), weather.NewOpenMeteoProvider(&http.Client{Timeout: 10 * time.Second}))
+	houseHandler := api.NewHouseHandlerWithWeather(database.Repos(), weatherPlugin)
 	deviceController := api.NewRealDeviceController()
 	deviceHandler := api.NewDeviceHandlerWithController(database.Repos(), deviceController)
 	shoppingListHandler := api.NewShoppingListHandler(database.Repos())
 	devicestatus.StartPoller(ctx, database.Repos(), deviceController, 0)
+	weatherPlugin.StartPoller(ctx)
 
 	// Static assets
 	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("public"))))
@@ -73,7 +77,7 @@ func startServer(database db.DB, ctx context.Context) {
 		w.Write([]byte("OK"))
 	})
 
-	webAuthHandler := webauth.NewHandler(authHandler, database.Repos())
+	webAuthHandler := webauth.NewHandlerWithWeather(authHandler, database.Repos(), weatherPlugin)
 
 	// API routes
 	r.Route("/api/latest", func(r chi.Router) {

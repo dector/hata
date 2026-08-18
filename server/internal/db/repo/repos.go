@@ -12,6 +12,7 @@ type Repos struct {
 	house                 *HouseRepo
 	houseRole             *HouseRoleRepo
 	houseMetaSetting      *HouseMetaSettingRepo
+	weatherStatus         *WeatherStatusRepo
 	device                *DeviceRepo
 	houseDiscoveryNetwork *HouseDiscoveryNetworkRepo
 	shoppingList          *ShoppingListRepo
@@ -27,6 +28,7 @@ func NewRepos(client *orm.Client) *Repos {
 		house:                 &HouseRepo{client: client},
 		houseRole:             &HouseRoleRepo{client: client},
 		houseMetaSetting:      &HouseMetaSettingRepo{client: client},
+		weatherStatus:         &WeatherStatusRepo{client: client},
 		device:                &DeviceRepo{client: client},
 		houseDiscoveryNetwork: &HouseDiscoveryNetworkRepo{client: client},
 		shoppingList:          &ShoppingListRepo{client: client},
@@ -62,6 +64,11 @@ func (r *Repos) HouseRole() HouseRoleRepository {
 // HouseMetaSetting returns the house metasetting repository.
 func (r *Repos) HouseMetaSetting() HouseMetaSettingRepository {
 	return r.houseMetaSetting
+}
+
+// WeatherStatus returns the weather status repository.
+func (r *Repos) WeatherStatus() WeatherStatusRepository {
+	return r.weatherStatus
 }
 
 // Device returns the device repository.
