@@ -1,11 +1,61 @@
+import 'package:app/api/hata_api_client.dart';
+import 'package:app/app.dart';
+import 'package:app/models/auth_session.dart';
+import 'package:app/models/server_info.dart';
+import 'package:app/session/session.dart';
+import 'package:app/session/session_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:app/main.dart';
+class FakeApiClient extends HataApiClient {
+  @override
+  Future<ServerInfo> ping(String serverUrl) async => const ServerInfo(
+    serverName: 'Hata Server',
+    version: '1.0.0',
+    apiVersion: 'latest',
+  );
+
+  @override
+  Future<AuthSession> login(
+    String serverUrl,
+    String username,
+    String password,
+  ) async => AuthSession(
+    token: 'token',
+    validUntil: DateTime.now().add(const Duration(days: 1)),
+    displayName: 'Dan',
+  );
+
+  @override
+  Future<void> fetchHouse(String serverUrl, String token) async {}
+}
+
+class MemorySessionRepository implements SessionRepository {
+  Session? session;
+
+  @override
+  Future<void> clear() async => session = null;
+
+  @override
+  Future<Session?> load() async => session;
+
+  @override
+  Future<void> save(Session session) async => this.session = session;
+}
 
 Future<void> _login(WidgetTester tester) async {
-  await tester.pumpWidget(const HataApp());
+  await tester.pumpWidget(
+    HataApp(
+      apiClient: FakeApiClient(),
+      sessionRepository: MemorySessionRepository(),
+    ),
+  );
+  await tester.pumpAndSettle();
 
+  expect(
+    find.widgetWithText(TextField, 'http://10.0.2.2:4501'),
+    findsOneWidget,
+  );
   await tester.tap(find.text('Connect'));
   await tester.pumpAndSettle();
 
@@ -18,7 +68,13 @@ Future<void> _login(WidgetTester tester) async {
 
 void main() {
   testWidgets('renders login from app shell', (WidgetTester tester) async {
-    await tester.pumpWidget(const HataApp());
+    await tester.pumpWidget(
+      HataApp(
+        apiClient: FakeApiClient(),
+        sessionRepository: MemorySessionRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.text('Hata'), findsOneWidget);
     expect(find.text('Server URL'), findsOneWidget);
