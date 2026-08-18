@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+
+	"hata/version"
 )
 
 // ServerHandler provides server-level endpoints.
@@ -12,11 +14,11 @@ func NewServerHandler() *ServerHandler {
 	return &ServerHandler{}
 }
 
-// Ping handles GET /api/next/ping
+// Ping handles GET /api/latest/ping
 func (h *ServerHandler) Ping(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, PingResponse{
 		ServerName: "Hata Server",
-		Version:    "1.0.0",
+		Version:    version.Get(),
 		APIVersion: "latest",
 	})
 }

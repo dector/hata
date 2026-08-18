@@ -13,7 +13,7 @@ trap cleanup EXIT INT TERM
 
 go tool \
   air \
-    -build.cmd="go tool templ generate ./internal/webui && go build -o ./out/hata.air ./cmd/hata" \
+    -build.cmd='VERSION="$(./scripts/git_version.sh)"; go tool templ generate ./internal/webui && go build -ldflags "-X hata/version.Version=${VERSION}" -o ./out/hata.air ./cmd/hata' \
     -build.full_bin="HATA_DEV=1 ./out/hata.air" \
     -build.include_dir="cmd,internal,pkg" \
     -build.include_ext="go,templ" \
