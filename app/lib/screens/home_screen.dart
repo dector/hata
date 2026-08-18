@@ -280,7 +280,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final homeName = _houses.isEmpty ? 'My Home' : _houses.first.displayName;
+    final currentHouse = _houses.firstOrNull;
+    final homeName = currentHouse?.displayName ?? 'My Home';
     final isSyncing = _isRefreshing || _pendingDeviceIds.isNotEmpty;
 
     return Scaffold(
@@ -308,9 +309,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    _WelcomeHeader(
+                    _HomeHeader(
                       displayName:
                           widget.session.displayName ?? widget.session.username,
+                      house: currentHouse,
                     ),
                     ..._contentSlivers(),
                   ],
@@ -405,13 +407,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 }
 
-class _WelcomeHeader extends StatelessWidget {
-  const _WelcomeHeader({required this.displayName});
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.displayName, required this.house});
 
   final String displayName;
+  final House? house;
 
   @override
   Widget build(BuildContext context) {
+    final weather = house?.weather;
+    if (weather != null && weather.hasCurrentConditions) {
+      return _WeatherHeader(weather: weather);
+    }
+
     final firstName = displayName.trim().split(RegExp(r'\s+')).first;
     return SliverToBoxAdapter(
       child: Padding(
@@ -427,6 +435,129 @@ class _WelcomeHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WeatherHeader extends StatelessWidget {
+  const _WeatherHeader({required this.weather});
+
+  final WeatherInfo weather;
+
+  @override
+  Widget build(BuildContext context) {
+    final condition = weather.conditionText ?? 'Weather now';
+    final location = weather.locationLabel;
+    final isStale = weather.status == 'stale';
+    final updatedLabel = _updatedLabel(weather);
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: HataColors.surface,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _iconFor(weather.conditionIcon),
+                color: HataColors.primaryContainerVariant,
+                size: 52,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _temperatureLabel(weather),
+                      style: const TextStyle(
+                        fontSize: 36,
+                        height: 1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      [
+                        condition,
+                        ?location,
+                        if (isStale) 'Updating soon',
+                      ].join(' • '),
+                      style: const TextStyle(
+                        color: HataColors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (updatedLabel != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        updatedLabel,
+                        style: const TextStyle(
+                          color: HataColors.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _temperatureLabel(WeatherInfo weather) {
+    final value = weather.temperature ?? 0;
+    final text = value == value.roundToDouble()
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(1);
+    final unit = weather.temperatureUnit?.trim();
+    if (unit == null || unit.isEmpty) return text;
+    return unit.startsWith('°') ? '$text$unit' : '$text °$unit';
+  }
+
+  static String? _updatedLabel(WeatherInfo weather) {
+    final updatedAt = weather.updatedAt;
+    if (updatedAt == null) return null;
+
+    var age = DateTime.now().difference(updatedAt.toLocal());
+    if (age.isNegative) age = Duration.zero;
+
+    final minutes = age.inMinutes;
+    if (minutes < 1) return 'updated just now';
+    if (minutes < 60) {
+      return minutes == 1
+          ? 'updated 1 minute ago'
+          : 'updated $minutes minutes ago';
+    }
+
+    final hours = age.inHours;
+    if (hours < 24) {
+      return hours == 1 ? 'updated 1 hour ago' : 'updated $hours hours ago';
+    }
+
+    final days = hours ~/ 24;
+    return days == 1 ? 'updated 1 day ago' : 'updated $days days ago';
+  }
+
+  static IconData _iconFor(String? icon) => switch (icon) {
+    'clear' || 'mostly_clear' => Icons.wb_sunny,
+    'partly_cloudy' => Icons.wb_cloudy,
+    'cloudy' || 'fog' => Icons.cloud,
+    'drizzle' ||
+    'freezing_drizzle' ||
+    'rain' ||
+    'freezing_rain' ||
+    'rain_showers' => Icons.water_drop,
+    'snow' || 'snow_showers' => Icons.ac_unit,
+    'thunderstorm' || 'thunderstorm_hail' => Icons.thunderstorm,
+    _ => Icons.thermostat,
+  };
 }
 
 class _MessageState extends StatelessWidget {
