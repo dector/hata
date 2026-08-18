@@ -10,6 +10,7 @@ import '../theme/hata_colors.dart';
 import '../widgets/device_card.dart';
 import '../widgets/hata_top_bar.dart';
 import '../widgets/home_fab_menu.dart';
+import 'profile_screen.dart';
 import 'shopping_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -257,6 +258,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ).push(MaterialPageRoute<void>(builder: (_) => const ShoppingScreen()));
   }
 
+  void _openProfile() {
+    setState(() => _showFabMenu = false);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProfileScreen(
+          session: widget.session,
+          onLogout: widget.onSessionInvalid,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeName = _houses.isEmpty ? 'My Home' : _houses.first.displayName;
@@ -277,6 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               isSyncing: isSyncing,
               displayName: widget.session.displayName,
               username: widget.session.username,
+              onProfile: _openProfile,
             ),
             Expanded(
               child: RefreshIndicator(

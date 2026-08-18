@@ -9,6 +9,7 @@ class HataColors {
   static const onSurfaceVariant = Color(0xFF6B7875);
   static const primaryContainer = Color(0xFFA8C5B0);
   static const primaryContainerVariant = Color(0xFFC8DFD0);
+  static const error = Color(0xFFE57373);
   static const errorVariant = Color(0xFFEF5350);
   static const avatarBackground = Color(0xFFB39B8D);
   static const avatarIcon = Color(0xFFE8D4C4);
