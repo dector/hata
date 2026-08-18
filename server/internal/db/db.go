@@ -30,6 +30,7 @@ type (
 	SessionRepository               = repo.SessionRepository
 	HouseRepository                 = repo.HouseRepository
 	HouseRoleRepository             = repo.HouseRoleRepository
+	HouseMetaSettingRepository      = repo.HouseMetaSettingRepository
 	DeviceRepository                = repo.DeviceRepository
 	HouseDiscoveryNetworkRepository = repo.HouseDiscoveryNetworkRepository
 	ShoppingListRepository          = repo.ShoppingListRepository
@@ -38,6 +39,7 @@ type (
 	SessionData                     = repo.SessionData
 	HouseData                       = repo.HouseData
 	HouseRoleData                   = repo.HouseRoleData
+	HouseMetaSettingData            = repo.HouseMetaSettingData
 	HouseMembershipData             = repo.HouseMembershipData
 	DeviceData                      = repo.DeviceData
 	HouseDiscoveryNetworkData       = repo.HouseDiscoveryNetworkData

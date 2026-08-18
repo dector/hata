@@ -22,6 +22,9 @@ type Repositories interface {
 	// HouseRole returns the house role repository.
 	HouseRole() HouseRoleRepository
 
+	// HouseMetaSetting returns the house metasetting repository.
+	HouseMetaSetting() HouseMetaSettingRepository
+
 	// Device returns the device repository.
 	Device() DeviceRepository
 
@@ -101,6 +104,22 @@ type HouseRoleRepository interface {
 
 	// ListByUser lists houses and roles for the given user.
 	ListByUser(ctx context.Context, userID int) ([]*HouseMembershipData, error)
+}
+
+// HouseMetaSettingRepository provides access to plugin-like house metasettings.
+type HouseMetaSettingRepository interface {
+	// Get retrieves a house metasetting by scope and key.
+	// Returns nil, nil if the setting does not exist.
+	Get(ctx context.Context, houseID, scope, key string) (*HouseMetaSettingData, error)
+
+	// ListByScope lists all metasettings for a house and scope.
+	ListByScope(ctx context.Context, houseID, scope string) ([]*HouseMetaSettingData, error)
+
+	// Set creates or updates a house metasetting.
+	Set(ctx context.Context, houseID, scope, key, value string) (*HouseMetaSettingData, error)
+
+	// Delete removes a house metasetting.
+	Delete(ctx context.Context, houseID, scope, key string) error
 }
 
 // DeviceRepository provides access to device data.
@@ -216,6 +235,15 @@ type HouseRoleData struct {
 	HouseID string
 	UserID  int
 	Role    string
+}
+
+// HouseMetaSettingData represents a scoped house metasetting.
+type HouseMetaSettingData struct {
+	ID      int
+	HouseID string
+	Scope   string
+	Key     string
+	Value   string
 }
 
 // HouseMembershipData represents a house membership with role.

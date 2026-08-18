@@ -44,5 +44,6 @@ func (House) Edges() []ent.Edge {
 		edge.To("devices", Device.Type),
 		edge.To("discovery_networks", HouseDiscoveryNetwork.Type),
 		edge.To("shopping_lists", ShoppingList.Type),
+		edge.To("meta_settings", HouseMetaSetting.Type),
 	}
 }

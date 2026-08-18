@@ -11,6 +11,7 @@ type Repos struct {
 	session               *SessionRepo
 	house                 *HouseRepo
 	houseRole             *HouseRoleRepo
+	houseMetaSetting      *HouseMetaSettingRepo
 	device                *DeviceRepo
 	houseDiscoveryNetwork *HouseDiscoveryNetworkRepo
 	shoppingList          *ShoppingListRepo
@@ -25,6 +26,7 @@ func NewRepos(client *orm.Client) *Repos {
 		session:               &SessionRepo{client: client},
 		house:                 &HouseRepo{client: client},
 		houseRole:             &HouseRoleRepo{client: client},
+		houseMetaSetting:      &HouseMetaSettingRepo{client: client},
 		device:                &DeviceRepo{client: client},
 		houseDiscoveryNetwork: &HouseDiscoveryNetworkRepo{client: client},
 		shoppingList:          &ShoppingListRepo{client: client},
@@ -55,6 +57,11 @@ func (r *Repos) House() HouseRepository {
 // HouseRole returns the house role repository.
 func (r *Repos) HouseRole() HouseRoleRepository {
 	return r.houseRole
+}
+
+// HouseMetaSetting returns the house metasetting repository.
+func (r *Repos) HouseMetaSetting() HouseMetaSettingRepository {
+	return r.houseMetaSetting
 }
 
 // Device returns the device repository.
