@@ -483,7 +483,6 @@ class _WeatherHeader extends StatelessWidget {
                       [
                         condition,
                         ?location,
-                        if (isStale) 'Updating soon',
                       ].join(' • '),
                       style: const TextStyle(
                         color: HataColors.onSurfaceVariant,
