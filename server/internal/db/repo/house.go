@@ -2,11 +2,15 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"hata/internal/orm"
 	"hata/internal/orm/house"
 )
+
+// ErrHouseNotFound is returned when a house does not exist.
+var ErrHouseNotFound = errors.New("house not found")
 
 // HouseRepo implements the HouseRepository interface.
 type HouseRepo struct {
@@ -46,10 +50,7 @@ func (r *HouseRepo) Create(ctx context.Context, id, displayName string) (*HouseD
 		return nil, fmt.Errorf("failed committing house creation transaction: %w", err)
 	}
 
-	return &HouseData{
-		ID:          h.ID,
-		DisplayName: h.DisplayName,
-	}, nil
+	return houseDataFromEnt(h), nil
 }
 
 // GetByID retrieves a house by its ID.
@@ -65,8 +66,36 @@ func (r *HouseRepo) GetByID(ctx context.Context, id string) (*HouseData, error) 
 		return nil, fmt.Errorf("failed querying house by id %q: %w", id, err)
 	}
 
+	return houseDataFromEnt(h), nil
+}
+
+// UpdateLocation updates a house location.
+func (r *HouseRepo) UpdateLocation(ctx context.Context, id string, location *string) error {
+	update := r.client.House.Update().
+		Where(house.IDEQ(id))
+	if location == nil {
+		update.ClearLocation()
+	} else {
+		update.SetLocation(*location)
+	}
+
+	count, err := update.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed updating house %q location: %w", id, err)
+	}
+	if count == 0 {
+		return fmt.Errorf("%w: %q", ErrHouseNotFound, id)
+	}
+	return nil
+}
+
+func houseDataFromEnt(h *orm.House) *HouseData {
+	if h == nil {
+		return nil
+	}
 	return &HouseData{
 		ID:          h.ID,
 		DisplayName: h.DisplayName,
-	}, nil
+		Location:    h.Location,
+	}
 }

@@ -56,6 +56,7 @@ func (r *HouseRoleRepo) ListByUser(ctx context.Context, userID int) ([]*HouseMem
 		results = append(results, &HouseMembershipData{
 			HouseID:     house.ID,
 			DisplayName: house.DisplayName,
+			Location:    house.Location,
 			Role:        string(role.Role),
 		})
 	}

@@ -46,6 +46,7 @@ func (h *HouseHandler) List(w http.ResponseWriter, r *http.Request) {
 		resp.Houses = append(resp.Houses, HouseInfo{
 			ID:          membership.HouseID,
 			DisplayName: membership.DisplayName,
+			Location:    membership.Location,
 			Role:        membership.Role,
 		})
 	}

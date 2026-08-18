@@ -30,6 +30,10 @@ func (House) Fields() []ent.Field {
 		field.String("display_name").
 			NotEmpty().
 			Comment("Display name for the house"),
+		field.String("location").
+			Optional().
+			Nillable().
+			Comment("Optional house location as latitude:longitude[:description]"),
 	}
 }
 

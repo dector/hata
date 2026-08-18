@@ -88,6 +88,10 @@ type HouseRepository interface {
 	// GetByID retrieves a house by its ID.
 	// Returns nil, nil if house doesn't exist.
 	GetByID(ctx context.Context, id string) (*HouseData, error)
+
+	// UpdateLocation updates a house location.
+	// Pass nil to clear the location.
+	UpdateLocation(ctx context.Context, id string, location *string) error
 }
 
 // HouseRoleRepository provides access to house role data.
@@ -203,6 +207,7 @@ type SessionData struct {
 type HouseData struct {
 	ID          string
 	DisplayName string
+	Location    *string
 }
 
 // HouseRoleData represents house role information.
@@ -217,6 +222,7 @@ type HouseRoleData struct {
 type HouseMembershipData struct {
 	HouseID     string
 	DisplayName string
+	Location    *string
 	Role        string
 }
 
