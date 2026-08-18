@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_error.dart';
-import '../api/hata_api_client.dart';
+import '../api/api.dart';
 import '../models/shopping_item.dart';
 import '../session/session.dart';
 import '../theme/hata_colors.dart';
@@ -17,7 +17,7 @@ class ShoppingScreen extends StatefulWidget {
   });
 
   final Session session;
-  final HataApiClient apiClient;
+  final Api apiClient;
   final Future<void> Function() onSessionInvalid;
   final String? houseId;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'api/hata_api_client.dart';
+import 'api/api.dart';
 import 'app_shell.dart';
 import 'routes.dart';
 import 'session/session_repository.dart';
@@ -9,7 +9,7 @@ import 'theme/hata_colors.dart';
 class HataApp extends StatelessWidget {
   const HataApp({super.key, this.apiClient, this.sessionRepository});
 
-  final HataApiClient? apiClient;
+  final Api? apiClient;
   final SessionRepository? sessionRepository;
 
   @override
@@ -28,7 +28,7 @@ class HataApp extends StatelessWidget {
       initialRoute: AppRoute.init,
       routes: {
         AppRoute.init: (_) => AppShell(
-          apiClient: apiClient,
+          api: apiClient,
           sessionRepository: sessionRepository,
         ),
       },

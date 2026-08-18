@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_error.dart';
-import '../api/hata_api_client.dart';
+import '../api/api.dart';
 import '../models/api_device.dart';
 import '../models/home_device.dart';
 import '../models/house.dart';
@@ -22,7 +22,7 @@ class HomeScreen extends StatefulWidget {
   });
 
   final Session session;
-  final HataApiClient apiClient;
+  final Api apiClient;
   final Future<void> Function() onSessionInvalid;
 
   @override

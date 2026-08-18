@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_error.dart';
-import '../api/hata_api_client.dart';
+import '../api/api.dart';
 import '../models/server_info.dart';
 import '../session/session.dart';
 import '../session/session_repository.dart';
@@ -14,7 +14,7 @@ class LoginScreen extends StatefulWidget {
     required this.onLoginSuccess,
   });
 
-  final HataApiClient apiClient;
+  final Api apiClient;
   final SessionRepository sessionRepository;
   final ValueChanged<Session> onLoginSuccess;
 

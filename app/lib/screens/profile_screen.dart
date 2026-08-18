@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../api/hata_api_client.dart';
+import '../api/api.dart';
 import '../models/server_info.dart';
 import '../session/session.dart';
 import '../theme/hata_colors.dart';
@@ -15,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
   });
 
   final Session session;
-  final HataApiClient apiClient;
+  final Api apiClient;
   final Future<void> Function() onLogout;
 
   @override

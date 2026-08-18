@@ -10,17 +10,23 @@ import '../models/shopping_item.dart';
 import '../models/shopping_list.dart';
 import 'api_error.dart';
 
-class HataApiClient {
-  HataApiClient({http.Client? httpClient})
-    : _httpClient = httpClient ?? http.Client();
+const String apiUrlBase = '/api/latest';
 
-  final http.Client _httpClient;
+String _apiUrl(String path) {
+  final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+  return '$apiUrlBase/$normalizedPath';
+}
+
+class Api {
+  Api({http.Client? httpClient}) : _client = httpClient ?? http.Client();
+
+  final http.Client _client;
 
   String normalizeBaseUrl(String serverUrl) =>
       serverUrl.trim().replaceFirst(RegExp(r'/+$'), '');
 
   Future<ServerInfo> ping(String serverUrl) async {
-    final response = await _httpClient.get(_uri(serverUrl, '/api/latest/ping'));
+    final response = await _client.get(_uri(serverUrl, _apiUrl('ping')));
     final json = _decodeResponse(response);
     return ServerInfo.fromJson(json);
   }
@@ -30,8 +36,8 @@ class HataApiClient {
     String username,
     String password,
   ) async {
-    final response = await _httpClient.post(
-      _uri(serverUrl, '/api/latest/auth/login'),
+    final response = await _client.post(
+      _uri(serverUrl, _apiUrl('auth/login')),
       headers: const {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
     );
@@ -48,8 +54,8 @@ class HataApiClient {
   }
 
   Future<List<House>> fetchHouses(String serverUrl, String token) async {
-    final response = await _httpClient.get(
-      _uri(serverUrl, '/api/latest/house'),
+    final response = await _client.get(
+      _uri(serverUrl, _apiUrl('house')),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
@@ -62,8 +68,8 @@ class HataApiClient {
   }
 
   Future<List<ApiDevice>> fetchDevices(String serverUrl, String token) async {
-    final response = await _httpClient.get(
-      _uri(serverUrl, '/api/latest/device'),
+    final response = await _client.get(
+      _uri(serverUrl, _apiUrl('device')),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
@@ -75,8 +81,8 @@ class HataApiClient {
     String token,
     String houseId,
   ) async {
-    final response = await _httpClient.get(
-      _uri(serverUrl, '/api/latest/house/$houseId/device'),
+    final response = await _client.get(
+      _uri(serverUrl, _apiUrl('house/$houseId/device')),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
@@ -90,8 +96,8 @@ class HataApiClient {
     String deviceId,
     bool isOn,
   ) async {
-    final response = await _httpClient.patch(
-      _uri(serverUrl, '/api/latest/house/$houseId/device/$deviceId/state'),
+    final response = await _client.patch(
+      _uri(serverUrl, _apiUrl('house/$houseId/device/$deviceId/state')),
       headers: _authHeaders(token, json: true),
       body: jsonEncode({'state': isOn ? 'on' : 'off'}),
     );
@@ -104,8 +110,8 @@ class HataApiClient {
     String token,
     String houseId,
   ) async {
-    final response = await _httpClient.get(
-      _uri(serverUrl, '/api/latest/house/$houseId/shopping-list'),
+    final response = await _client.get(
+      _uri(serverUrl, _apiUrl('house/$houseId/shopping-list')),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
@@ -123,8 +129,8 @@ class HataApiClient {
     String houseId,
     String listId,
   ) async {
-    final response = await _httpClient.get(
-      _uri(serverUrl, '/api/latest/house/$houseId/shopping-list/$listId/item'),
+    final response = await _client.get(
+      _uri(serverUrl, _apiUrl('house/$houseId/shopping-list/$listId/item')),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
@@ -145,8 +151,8 @@ class HataApiClient {
     String listId,
     String name,
   ) async {
-    final response = await _httpClient.post(
-      _uri(serverUrl, '/api/latest/house/$houseId/shopping-list/$listId/item'),
+    final response = await _client.post(
+      _uri(serverUrl, _apiUrl('house/$houseId/shopping-list/$listId/item')),
       headers: _authHeaders(token, json: true),
       body: jsonEncode({'name': name}),
     );
@@ -162,10 +168,10 @@ class HataApiClient {
     String itemId,
     bool checked,
   ) async {
-    final response = await _httpClient.patch(
+    final response = await _client.patch(
       _uri(
         serverUrl,
-        '/api/latest/house/$houseId/shopping-list/$listId/item/$itemId/check',
+        _apiUrl('house/$houseId/shopping-list/$listId/item/$itemId/check'),
       ),
       headers: _authHeaders(token, json: true),
       body: jsonEncode({'checked': checked}),

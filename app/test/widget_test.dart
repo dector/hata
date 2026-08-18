@@ -1,4 +1,4 @@
-import 'package:app/api/hata_api_client.dart';
+import 'package:app/api/api.dart';
 import 'package:app/app.dart';
 import 'package:app/models/api_device.dart';
 import 'package:app/models/auth_session.dart';
@@ -10,7 +10,7 @@ import 'package:app/session/session_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeApiClient extends HataApiClient {
+class FakeApiClient extends Api {
   @override
   Future<ServerInfo> ping(String serverUrl) async => const ServerInfo(
     serverName: 'Hata Server',

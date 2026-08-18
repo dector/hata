@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'api/hata_api_client.dart';
+import 'api/api.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'session/session.dart';
@@ -10,12 +10,12 @@ import 'session/session_repository.dart';
 class AppShell extends StatefulWidget {
   AppShell({
     super.key,
-    HataApiClient? apiClient,
+    Api? api,
     SessionRepository? sessionRepository,
-  }) : apiClient = apiClient ?? HataApiClient(),
+  }) : api = api ?? Api(),
        sessionRepository = sessionRepository ?? SqliteSessionRepository();
 
-  final HataApiClient apiClient;
+  final Api api;
   final SessionRepository sessionRepository;
 
   @override
@@ -45,7 +45,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     try {
-      await widget.apiClient.fetchHouse(session.serverUrl, session.token);
+      await widget.api.fetchHouse(session.serverUrl, session.token);
       if (mounted) {
         setState(() {
           _session = session;
@@ -85,11 +85,11 @@ class _AppShellState extends State<AppShell> {
     return _session != null
         ? HomeScreen(
             session: _session!,
-            apiClient: widget.apiClient,
+            apiClient: widget.api,
             onSessionInvalid: _clearSession,
           )
         : LoginScreen(
-            apiClient: widget.apiClient,
+            apiClient: widget.api,
             sessionRepository: widget.sessionRepository,
             onLoginSuccess: _startSession,
           );
