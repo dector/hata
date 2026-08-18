@@ -4,6 +4,7 @@ import 'package:app/models/api_device.dart';
 import 'package:app/models/auth_session.dart';
 import 'package:app/models/house.dart';
 import 'package:app/models/server_info.dart';
+import 'package:app/models/shopping_item.dart';
 import 'package:app/session/session.dart';
 import 'package:app/session/session_repository.dart';
 import 'package:flutter/material.dart';
@@ -78,6 +79,25 @@ class FakeApiClient extends HataApiClient {
           houseId: 'home',
         ),
       ];
+
+  @override
+  Future<List<ShoppingItem>> fetchShoppingItems(
+    String serverUrl,
+    String token,
+    String houseId,
+    String listId,
+  ) async => const [
+    ShoppingItem(
+      uid: 'coffee',
+      name: 'Coffee beans',
+      position: 1,
+      checkedAt: null,
+      checkedByUserId: null,
+      deletedAt: null,
+      createdAt: null,
+      updatedAt: null,
+    ),
+  ];
 }
 
 class MemorySessionRepository implements SessionRepository {

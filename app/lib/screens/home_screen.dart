@@ -253,9 +253,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _openShopping() {
     setState(() => _showFabMenu = false);
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const ShoppingScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ShoppingScreen(
+          session: widget.session,
+          apiClient: widget.apiClient,
+          onSessionInvalid: widget.onSessionInvalid,
+          houseId: _houses.firstOrNull?.id,
+        ),
+      ),
+    );
   }
 
   void _openProfile() {

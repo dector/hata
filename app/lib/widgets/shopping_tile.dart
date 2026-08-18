@@ -4,10 +4,16 @@ import '../models/shopping_item.dart';
 import '../theme/hata_colors.dart';
 
 class ShoppingTile extends StatelessWidget {
-  const ShoppingTile({super.key, required this.item, required this.onChanged});
+  const ShoppingTile({
+    super.key,
+    required this.item,
+    required this.onChanged,
+    this.enabled = true,
+  });
 
   final ShoppingItem item;
   final ValueChanged<bool?> onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +23,7 @@ class ShoppingTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: CheckboxListTile(
         value: item.isChecked,
-        onChanged: onChanged,
+        onChanged: enabled ? onChanged : null,
         activeColor: HataColors.primary,
         checkboxShape: const CircleBorder(),
         title: Text(
