@@ -67,6 +67,15 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
+  Future<void> _clearSession() async {
+    await widget.sessionRepository.clear();
+    if (!mounted) return;
+    setState(() {
+      _session = null;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -74,7 +83,11 @@ class _AppShellState extends State<AppShell> {
     }
 
     return _session != null
-        ? const HomeScreen()
+        ? HomeScreen(
+            session: _session!,
+            apiClient: widget.apiClient,
+            onSessionInvalid: _clearSession,
+          )
         : LoginScreen(
             apiClient: widget.apiClient,
             sessionRepository: widget.sessionRepository,

@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/api_device.dart';
 import '../models/auth_session.dart';
+import '../models/house.dart';
 import '../models/server_info.dart';
 import 'api_error.dart';
 
@@ -40,12 +42,74 @@ class HataApiClient {
   }
 
   Future<void> fetchHouse(String serverUrl, String token) async {
+    await fetchHouses(serverUrl, token);
+  }
+
+  Future<List<House>> fetchHouses(String serverUrl, String token) async {
     final response = await _httpClient.get(
       _uri(serverUrl, '/api/latest/house'),
-      headers: {'Authorization': 'Bearer $token'},
+      headers: _authHeaders(token),
     );
-    _decodeResponse(response);
+    final json = _decodeResponse(response);
+    final houses = json['houses'] as List<dynamic>? ?? const [];
+    return houses
+        .whereType<Map<String, dynamic>>()
+        .map(House.fromJson)
+        .where((house) => house.id.isNotEmpty)
+        .toList();
   }
+
+  Future<List<ApiDevice>> fetchDevices(String serverUrl, String token) async {
+    final response = await _httpClient.get(
+      _uri(serverUrl, '/api/latest/device'),
+      headers: _authHeaders(token),
+    );
+    final json = _decodeResponse(response);
+    return _decodeDevices(json);
+  }
+
+  Future<List<ApiDevice>> fetchHouseDevices(
+    String serverUrl,
+    String token,
+    String houseId,
+  ) async {
+    final response = await _httpClient.get(
+      _uri(serverUrl, '/api/latest/house/$houseId/device'),
+      headers: _authHeaders(token),
+    );
+    final json = _decodeResponse(response);
+    return _decodeDevices(json);
+  }
+
+  Future<DeviceStateResult> setDeviceState(
+    String serverUrl,
+    String token,
+    String houseId,
+    String deviceId,
+    bool isOn,
+  ) async {
+    final response = await _httpClient.patch(
+      _uri(serverUrl, '/api/latest/house/$houseId/device/$deviceId/state'),
+      headers: _authHeaders(token, json: true),
+      body: jsonEncode({'state': isOn ? 'on' : 'off'}),
+    );
+    final json = _decodeResponse(response);
+    return DeviceStateResult.fromJson(json);
+  }
+
+  List<ApiDevice> _decodeDevices(Map<String, dynamic> json) {
+    final devices = json['devices'] as List<dynamic>? ?? const [];
+    return devices
+        .whereType<Map<String, dynamic>>()
+        .map(ApiDevice.fromJson)
+        .where((device) => device.id.isNotEmpty)
+        .toList();
+  }
+
+  Map<String, String> _authHeaders(String token, {bool json = false}) => {
+    'Authorization': 'Bearer $token',
+    if (json) 'Content-Type': 'application/json',
+  };
 
   Uri _uri(String serverUrl, String path) =>
       Uri.parse('${normalizeBaseUrl(serverUrl)}$path');

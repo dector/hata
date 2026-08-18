@@ -1,6 +1,8 @@
 import 'package:app/api/hata_api_client.dart';
 import 'package:app/app.dart';
+import 'package:app/models/api_device.dart';
 import 'package:app/models/auth_session.dart';
+import 'package:app/models/house.dart';
 import 'package:app/models/server_info.dart';
 import 'package:app/session/session.dart';
 import 'package:app/session/session_repository.dart';
@@ -28,6 +30,54 @@ class FakeApiClient extends HataApiClient {
 
   @override
   Future<void> fetchHouse(String serverUrl, String token) async {}
+
+  @override
+  Future<List<House>> fetchHouses(String serverUrl, String token) async =>
+      const [House(id: 'home', displayName: 'My Home', role: 'owner')];
+
+  @override
+  Future<List<ApiDevice>> fetchDevices(String serverUrl, String token) async =>
+      const [
+        ApiDevice(
+          id: 'cooler',
+          name: 'Air Cooler',
+          integration: DeviceIntegration(id: 'test', data: {}),
+          state: 'on',
+          availability: 'online',
+          capabilities: DeviceCapabilities(
+            light: false,
+            brightness: false,
+            colorPresets: false,
+          ),
+          houseId: 'home',
+        ),
+        ApiDevice(
+          id: 'kitchen',
+          name: 'Kitchen Light',
+          integration: DeviceIntegration(id: 'test-light', data: {}),
+          state: 'off',
+          availability: 'online',
+          capabilities: DeviceCapabilities(
+            light: true,
+            brightness: false,
+            colorPresets: false,
+          ),
+          houseId: 'home',
+        ),
+        ApiDevice(
+          id: 'office',
+          name: 'Office Light',
+          integration: DeviceIntegration(id: 'test-light', data: {}),
+          state: 'on',
+          availability: 'offline',
+          capabilities: DeviceCapabilities(
+            light: true,
+            brightness: false,
+            colorPresets: false,
+          ),
+          houseId: 'home',
+        ),
+      ];
 }
 
 class MemorySessionRepository implements SessionRepository {
@@ -90,6 +140,12 @@ void main() {
     expect(find.text('Welcome home,\nDan'), findsOneWidget);
     expect(find.text('Air Cooler'), findsOneWidget);
     expect(find.text('Kitchen Light'), findsOneWidget);
+    expect(find.text('Office Light'), findsOneWidget);
+    expect(find.text('test-light • Offline'), findsOneWidget);
+
+    final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+    expect(switches[2].value, isFalse);
+    expect(switches[2].onChanged, isNull);
   });
 
   testWidgets('opens shopping screen from floating menu', (
