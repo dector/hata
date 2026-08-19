@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"hata/internal/extension"
 	"hata/internal/weather"
 
 	"github.com/go-chi/chi/v5"
@@ -59,12 +60,18 @@ func TestRefreshWeather_OK(t *testing.T) {
 	}
 
 	provider := &fakeWeatherProvider{}
-	handler := NewHouseHandlerWithWeather(repos, weather.NewPlugin(repos, provider))
+	weatherPlugin := weather.NewPlugin(repos, provider)
+	registry := extension.NewRegistry()
+	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+		t.Fatalf("Failed to register weather action: %v", err)
+	}
+	handler := NewHouseHandlerWithWeather(repos, weatherPlugin)
+	handler.SetExtensionRegistry(registry)
 
 	router := chi.NewRouter()
-	router.Post("/api/latest/house/{houseId}/weather/refresh", handler.RefreshWeather)
+	router.Post("/api/latest/house/{houseId}/extension/{extensionId}/actions/{action}", handler.HandleHouseExtensionAction)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/latest/house/house-1/weather/refresh", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/latest/house/house-1/extension/"+weather.ExtensionID+"/actions/refresh", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 
@@ -97,11 +104,17 @@ func TestRefreshWeather_Forbidden(t *testing.T) {
 		t.Fatalf("Failed to create house: %v", err)
 	}
 
-	handler := NewHouseHandlerWithWeather(repos, weather.NewPlugin(repos, &fakeWeatherProvider{}))
+	weatherPlugin := weather.NewPlugin(repos, &fakeWeatherProvider{})
+	registry := extension.NewRegistry()
+	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+		t.Fatalf("Failed to register weather action: %v", err)
+	}
+	handler := NewHouseHandlerWithWeather(repos, weatherPlugin)
+	handler.SetExtensionRegistry(registry)
 	router := chi.NewRouter()
-	router.Post("/api/latest/house/{houseId}/weather/refresh", handler.RefreshWeather)
+	router.Post("/api/latest/house/{houseId}/extension/{extensionId}/actions/{action}", handler.HandleHouseExtensionAction)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/latest/house/house-1/weather/refresh", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/latest/house/house-1/extension/"+weather.ExtensionID+"/actions/refresh", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 

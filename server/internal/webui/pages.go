@@ -370,8 +370,8 @@ func ShoppingListPath(listID string) string {
 	return "/sl/" + url.PathEscape(listID)
 }
 
-func HouseWeatherRefreshPath(houseID string) string {
-	return "/h/" + url.PathEscape(houseID) + "/weather/refresh"
+func HouseExtensionActionPath(houseID string, extensionID string, action string) string {
+	return "/h/" + url.PathEscape(houseID) + "/extension/" + url.PathEscape(extensionID) + "/actions/" + url.PathEscape(action)
 }
 
 func shoppingListItemsPath(listID string) string {

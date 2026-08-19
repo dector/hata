@@ -8,13 +8,15 @@ import (
 	"time"
 
 	"hata/internal/db"
+	"hata/internal/extension"
 	"hata/internal/weather"
 )
 
 // HouseHandler provides house endpoints.
 type HouseHandler struct {
-	repos   db.Repositories
-	weather *weather.Plugin
+	repos             db.Repositories
+	weather           *weather.Plugin
+	houseActionRoutes *extension.Registry
 }
 
 // DefaultHouseExtras lists extension IDs enriched into house responses by default.
@@ -30,6 +32,11 @@ func NewHouseHandler(repos db.Repositories) *HouseHandler {
 // NewHouseHandlerWithWeather creates a HouseHandler with weather plugin data.
 func NewHouseHandlerWithWeather(repos db.Repositories, weatherPlugin *weather.Plugin) *HouseHandler {
 	return &HouseHandler{repos: repos, weather: weatherPlugin}
+}
+
+// SetExtensionRegistry sets generic extension action handlers.
+func (h *HouseHandler) SetExtensionRegistry(registry *extension.Registry) {
+	h.houseActionRoutes = registry
 }
 
 // List handles GET /api/latest/house
@@ -102,10 +109,14 @@ func (h *HouseHandler) userCanAccessHouse(r *http.Request, userID int, houseID s
 }
 
 func (h *HouseHandler) weatherInfo(ctx context.Context, houseID string) (*WeatherInfo, error) {
-	if h.weather == nil {
+	return weatherInfoForService(ctx, h.weather, houseID)
+}
+
+func weatherInfoForService(ctx context.Context, weatherPlugin *weather.Plugin, houseID string) (*WeatherInfo, error) {
+	if weatherPlugin == nil {
 		return &WeatherInfo{Status: string(weather.StatusDisabled)}, nil
 	}
-	status, err := h.weather.CurrentStatus(ctx, houseID)
+	status, err := weatherPlugin.CurrentStatus(ctx, houseID)
 	if err != nil {
 		return nil, err
 	}

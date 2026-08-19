@@ -13,6 +13,7 @@ import (
 	"hata/internal/apiui"
 	"hata/internal/db"
 	"hata/internal/devicestatus"
+	"hata/internal/extension"
 	"hata/internal/weather"
 	"hata/internal/webauth"
 	"hata/internal/webui"
@@ -33,7 +34,12 @@ func startServer(database db.DB, ctx context.Context) {
 	authHandler := api.NewAuthHandler(database.Repos())
 	serverHandler := api.NewServerHandler()
 	weatherPlugin := weather.NewPlugin(database.Repos(), weather.NewOpenMeteoProvider(&http.Client{Timeout: 10 * time.Second}))
+	extensionRegistry := extension.NewRegistry()
+	if err := extensionRegistry.RegisterHouseAction(api.NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+		log.Fatalf("failed registering weather API extension action: %v", err)
+	}
 	houseHandler := api.NewHouseHandlerWithWeather(database.Repos(), weatherPlugin)
+	houseHandler.SetExtensionRegistry(extensionRegistry)
 	deviceController := api.NewRealDeviceController()
 	deviceHandler := api.NewDeviceHandlerWithController(database.Repos(), deviceController)
 	shoppingListHandler := api.NewShoppingListHandler(database.Repos())
@@ -77,7 +83,10 @@ func startServer(database db.DB, ctx context.Context) {
 		w.Write([]byte("OK"))
 	})
 
-	webAuthHandler := webauth.NewHandlerWithWeather(authHandler, database.Repos(), weatherPlugin)
+	webAuthHandler := webauth.NewHandlerWithWeatherAndExtensions(authHandler, database.Repos(), weatherPlugin, extensionRegistry)
+	if err := extensionRegistry.RegisterHouseWebAction(webauth.NewWeatherHouseWebActionHandler(webAuthHandler)); err != nil {
+		log.Fatalf("failed registering weather web extension action: %v", err)
+	}
 
 	// API routes
 	r.Route("/api/latest", func(r chi.Router) {
@@ -85,7 +94,7 @@ func startServer(database db.DB, ctx context.Context) {
 			r.Post("/login", authHandler.Login)
 		})
 		r.Get("/house", houseHandler.List)
-		r.Post("/house/{houseId}/weather/refresh", houseHandler.RefreshWeather)
+		r.Post("/house/{houseId}/extension/{extensionId}/actions/{action}", houseHandler.HandleHouseExtensionAction)
 		r.Get("/house/{houseId}/device", deviceHandler.ListByHouse)
 		r.Patch("/house/{houseId}/device/{deviceId}/state", deviceHandler.SetState)
 		r.Patch("/house/{houseId}/device/{deviceId}/light", deviceHandler.SetLight)
@@ -119,7 +128,7 @@ func startServer(database db.DB, ctx context.Context) {
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/sl/{listId}/items/{itemId}/rename", webAuthHandler.RenameShoppingItem)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/sl/{listId}/items/{itemId}/delete", webAuthHandler.DeleteShoppingItem)
 	r.With(webauth.RequirePageAuth(database.Repos())).Get("/h/{houseId}/manage", webAuthHandler.HouseManagePage)
-	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/weather/refresh", webAuthHandler.RefreshHouseWeather)
+	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/extension/{extensionId}/actions/{action}", webAuthHandler.HandleHouseExtensionAction)
 
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/toggle", webAuthHandler.ToggleHouseDevice)
 	r.With(webauth.RequirePageAuth(database.Repos())).Post("/h/{houseId}/device/{deviceId}/state", webAuthHandler.SetHouseDeviceState)
