@@ -22,15 +22,15 @@ func TestHouseMetaSettingRepo_SetGetListDelete(t *testing.T) {
 		t.Fatalf("create house: %v", err)
 	}
 
-	setting, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.weather.v1", "enabled", "true")
+	setting, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.ext.weather.v1", "enabled", "true")
 	if err != nil {
 		t.Fatalf("set setting: %v", err)
 	}
-	if setting.HouseID != "H1" || setting.Scope != "hata.weather.v1" || setting.Key != "enabled" || setting.Value != "true" {
+	if setting.HouseID != "H1" || setting.Scope != "hata.ext.weather.v1" || setting.Key != "enabled" || setting.Value != "true" {
 		t.Fatalf("unexpected created setting: %#v", setting)
 	}
 
-	setting, err = repos.HouseMetaSetting().Get(ctx, "H1", "hata.weather.v1", "enabled")
+	setting, err = repos.HouseMetaSetting().Get(ctx, "H1", "hata.ext.weather.v1", "enabled")
 	if err != nil {
 		t.Fatalf("get setting: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestHouseMetaSettingRepo_SetGetListDelete(t *testing.T) {
 		t.Fatalf("expected enabled=true, got %#v", setting)
 	}
 
-	updated, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.weather.v1", "enabled", "false")
+	updated, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.ext.weather.v1", "enabled", "false")
 	if err != nil {
 		t.Fatalf("update setting: %v", err)
 	}
@@ -46,10 +46,10 @@ func TestHouseMetaSettingRepo_SetGetListDelete(t *testing.T) {
 		t.Fatalf("expected same setting updated to false, got %#v", updated)
 	}
 
-	if _, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.weather.v1", "units", "metric"); err != nil {
+	if _, err := repos.HouseMetaSetting().Set(ctx, "H1", "hata.ext.weather.v1", "units", "metric"); err != nil {
 		t.Fatalf("set second setting: %v", err)
 	}
-	settings, err := repos.HouseMetaSetting().ListByScope(ctx, "H1", "hata.weather.v1")
+	settings, err := repos.HouseMetaSetting().ListByScope(ctx, "H1", "hata.ext.weather.v1")
 	if err != nil {
 		t.Fatalf("list settings: %v", err)
 	}
@@ -57,10 +57,10 @@ func TestHouseMetaSettingRepo_SetGetListDelete(t *testing.T) {
 		t.Fatalf("expected settings ordered by key, got %#v", settings)
 	}
 
-	if err := repos.HouseMetaSetting().Delete(ctx, "H1", "hata.weather.v1", "enabled"); err != nil {
+	if err := repos.HouseMetaSetting().Delete(ctx, "H1", "hata.ext.weather.v1", "enabled"); err != nil {
 		t.Fatalf("delete setting: %v", err)
 	}
-	missing, err := repos.HouseMetaSetting().Get(ctx, "H1", "hata.weather.v1", "enabled")
+	missing, err := repos.HouseMetaSetting().Get(ctx, "H1", "hata.ext.weather.v1", "enabled")
 	if err != nil {
 		t.Fatalf("get deleted setting: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestHouseMetaSettingRepo_DeleteMissing(t *testing.T) {
 		t.Fatalf("create house: %v", err)
 	}
 
-	err = repos.HouseMetaSetting().Delete(ctx, "H1", "hata.weather.v1", "enabled")
+	err = repos.HouseMetaSetting().Delete(ctx, "H1", "hata.ext.weather.v1", "enabled")
 	if !errors.Is(err, repo.ErrHouseMetaSettingNotFound) {
 		t.Fatalf("expected ErrHouseMetaSettingNotFound, got %v", err)
 	}

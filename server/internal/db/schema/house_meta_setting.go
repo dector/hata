@@ -17,7 +17,7 @@ type HouseMetaSetting struct {
 // Annotations of the HouseMetaSetting.
 func (HouseMetaSetting) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		entsql.Annotation{Table: "house_meta_setting"},
+		entsql.Annotation{Table: "house_ext_settings"},
 	}
 }
 
@@ -29,7 +29,7 @@ func (HouseMetaSetting) Fields() []ent.Field {
 			Comment("Foreign key to House"),
 		field.String("scope").
 			NotEmpty().
-			Comment("Settings scope, e.g. hata.weather.v1"),
+			Comment("Settings scope, e.g. hata.ext.weather.v1"),
 		field.String("key").
 			NotEmpty().
 			Comment("Setting key inside the scope"),
