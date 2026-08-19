@@ -62,7 +62,7 @@ func TestRefreshWeather_OK(t *testing.T) {
 	provider := &fakeWeatherProvider{}
 	weatherPlugin := weather.NewPlugin(repos, provider)
 	registry := extension.NewRegistry()
-	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+	if err := registry.RegisterHouseAction(weather.NewAPIHouseActionHandler(weatherPlugin)); err != nil {
 		t.Fatalf("Failed to register weather action: %v", err)
 	}
 	handler := NewHouseHandlerWithExtensions(repos, registry)
@@ -83,7 +83,7 @@ func TestRefreshWeather_OK(t *testing.T) {
 		t.Fatalf("Expected provider to be called once, got %d", provider.calls)
 	}
 
-	var resp WeatherRefreshResponse
+	var resp weather.APIRefreshResponse
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestRefreshWeather_Forbidden(t *testing.T) {
 
 	weatherPlugin := weather.NewPlugin(repos, &fakeWeatherProvider{})
 	registry := extension.NewRegistry()
-	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+	if err := registry.RegisterHouseAction(weather.NewAPIHouseActionHandler(weatherPlugin)); err != nil {
 		t.Fatalf("Failed to register weather action: %v", err)
 	}
 	handler := NewHouseHandlerWithExtensions(repos, registry)

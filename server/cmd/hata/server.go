@@ -35,10 +35,10 @@ func startServer(database db.DB, ctx context.Context) {
 	serverHandler := api.NewServerHandler()
 	weatherPlugin := weather.NewPlugin(database.Repos(), weather.NewOpenMeteoProvider(&http.Client{Timeout: 10 * time.Second}))
 	extensionRegistry := extension.NewRegistry()
-	if err := extensionRegistry.RegisterHouseExtra(api.NewWeatherHouseExtraProvider(weatherPlugin)); err != nil {
+	if err := extensionRegistry.RegisterHouseExtra(weather.NewAPIHouseExtraProvider(weatherPlugin)); err != nil {
 		log.Fatalf("failed registering weather API extension extra: %v", err)
 	}
-	if err := extensionRegistry.RegisterHouseAction(api.NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
+	if err := extensionRegistry.RegisterHouseAction(weather.NewAPIHouseActionHandler(weatherPlugin)); err != nil {
 		log.Fatalf("failed registering weather API extension action: %v", err)
 	}
 	houseHandler := api.NewHouseHandlerWithExtensions(database.Repos(), extensionRegistry)
@@ -86,10 +86,10 @@ func startServer(database db.DB, ctx context.Context) {
 	})
 
 	webAuthHandler := webauth.NewHandlerWithExtensions(authHandler, database.Repos(), extensionRegistry)
-	if err := extensionRegistry.RegisterHouseCard(webauth.NewWeatherHouseCardProvider(weatherPlugin)); err != nil {
+	if err := extensionRegistry.RegisterHouseCard(weather.NewWebHouseCardProvider(weatherPlugin)); err != nil {
 		log.Fatalf("failed registering weather web extension card: %v", err)
 	}
-	if err := extensionRegistry.RegisterHouseWebAction(webauth.NewWeatherHouseWebActionHandler(weatherPlugin)); err != nil {
+	if err := extensionRegistry.RegisterHouseWebAction(weather.NewWebHouseActionHandler(weatherPlugin)); err != nil {
 		log.Fatalf("failed registering weather web extension action: %v", err)
 	}
 

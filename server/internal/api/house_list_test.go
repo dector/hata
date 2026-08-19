@@ -37,7 +37,7 @@ func TestHouseList_IncludesDefaultWeatherExtra(t *testing.T) {
 	}
 
 	registry := extension.NewRegistry()
-	if err := registry.RegisterHouseExtra(NewWeatherHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
+	if err := registry.RegisterHouseExtra(weather.NewAPIHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
 		t.Fatalf("Failed to register weather extra: %v", err)
 	}
 	handler := NewHouseHandlerWithExtensions(repos, registry)
@@ -88,7 +88,7 @@ func TestHouseList_OmitsWeatherExtraWhenNotDefaultEnriched(t *testing.T) {
 	}
 
 	registry := extension.NewRegistry()
-	if err := registry.RegisterHouseExtra(NewWeatherHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
+	if err := registry.RegisterHouseExtra(weather.NewAPIHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
 		t.Fatalf("Failed to register weather extra: %v", err)
 	}
 	handler := NewHouseHandlerWithExtensions(repos, registry)
