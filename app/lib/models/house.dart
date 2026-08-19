@@ -1,3 +1,5 @@
+const String weatherExtensionId = 'hata.ext.weather.v1';
+
 class House {
   const House({
     required this.id,
@@ -25,7 +27,10 @@ class House {
 
   factory House.fromJson(Map<String, dynamic> json) {
     final id = json['id']?.toString() ?? '';
-    final weatherJson = json['weather'];
+    final extrasJson = json['extras'];
+    final weatherJson = extrasJson is Map<String, dynamic>
+        ? extrasJson[weatherExtensionId]
+        : json['weather'];
     return House(
       id: id,
       displayName: json['displayName']?.toString() ?? id,

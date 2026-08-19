@@ -82,7 +82,12 @@ class Api {
     String houseId,
   ) async {
     final response = await _client.post(
-      _uri(serverUrl, _apiUrl('house/$houseId/weather/refresh')),
+      _uri(
+        serverUrl,
+        _apiUrl(
+          'house/$houseId/extension/${Uri.encodeComponent(weatherExtensionId)}/actions/refresh',
+        ),
+      ),
       headers: _authHeaders(token),
     );
     final json = _decodeResponse(response);
