@@ -364,8 +364,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     _HomeHeader(
-                      displayName:
-                          widget.session.displayName ?? widget.session.username,
                       house: currentHouse,
                       onRefreshWeather: currentHouse == null
                           ? null
@@ -465,13 +463,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({
-    required this.displayName,
-    required this.house,
-    this.onRefreshWeather,
-  });
+  const _HomeHeader({required this.house, this.onRefreshWeather});
 
-  final String displayName;
   final House? house;
   final VoidCallback? onRefreshWeather;
 
@@ -482,20 +475,7 @@ class _HomeHeader extends StatelessWidget {
       return _WeatherHeader(weather: weather, onLongPress: onRefreshWeather);
     }
 
-    final firstName = displayName.trim().split(RegExp(r'\s+')).first;
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Text(
-          'Welcome home,\n$firstName',
-          style: const TextStyle(
-            fontSize: 36,
-            height: 1.16,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }
 
