@@ -7,6 +7,7 @@ import '../models/home_device.dart';
 import '../models/house.dart';
 import '../session/session.dart';
 import '../theme/hata_colors.dart';
+import '../wear/wear_devices_bridge.dart';
 import '../wear/wear_weather_bridge.dart';
 import '../widgets/device_card.dart';
 import '../widgets/hata_top_bar.dart';
@@ -84,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.session.token,
       );
       WearWeatherBridge.instance.updateFromHouses(houses);
+      WearDevicesBridge.instance.updateDevices(apiDevices);
       if (!mounted) return;
       setState(() {
         _houses = houses;

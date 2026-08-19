@@ -7,6 +7,7 @@ import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
@@ -14,6 +15,10 @@ private const val WearChannelName = "hata/wear"
 private const val WeatherRequestPath = "/watch/weather/request"
 private const val WeatherUpdatePath = "/phone/weather/update"
 private const val WeatherErrorPath = "/phone/weather/error"
+private const val DevicesRequestPath = "/watch/devices/request"
+private const val DeviceTogglePath = "/watch/device/toggle"
+private const val DevicesUpdatePath = "/phone/devices/update"
+private const val DevicesErrorPath = "/phone/devices/error"
 
 class MainActivity : FlutterActivity(), MessageClient.OnMessageReceivedListener {
     private var wearChannel: MethodChannel? = null
@@ -35,24 +40,83 @@ class MainActivity : FlutterActivity(), MessageClient.OnMessageReceivedListener 
     }
 
     override fun onMessageReceived(event: MessageEvent) {
-        if (event.path != WeatherRequestPath) {
+        when (event.path) {
+            WeatherRequestPath -> handleWeatherRequest(event)
+            DevicesRequestPath -> handleDevicesRequest(event)
+            DeviceTogglePath -> handleDeviceToggle(event)
+        }
+    }
+
+    private fun handleWeatherRequest(event: MessageEvent) {
+        invokeFlutter(
+            nodeId = event.sourceNodeId,
+            method = "getWeather",
+            arguments = null,
+            updatePath = WeatherUpdatePath,
+            errorPath = WeatherErrorPath,
+            notImplementedMessage = "Weather bridge is not implemented",
+            payload = ::weatherPayload,
+        )
+    }
+
+    private fun handleDevicesRequest(event: MessageEvent) {
+        invokeFlutter(
+            nodeId = event.sourceNodeId,
+            method = "getDevices",
+            arguments = null,
+            updatePath = DevicesUpdatePath,
+            errorPath = DevicesErrorPath,
+            notImplementedMessage = "Devices bridge is not implemented",
+            payload = ::devicesPayload,
+        )
+    }
+
+    private fun handleDeviceToggle(event: MessageEvent) {
+        val body = event.data.toString(StandardCharsets.UTF_8)
+        val json = runCatching { JSONObject(body) }.getOrNull()
+        if (json == null) {
+            sendError(event.sourceNodeId, DevicesErrorPath, "Invalid toggle payload")
             return
         }
 
+        val arguments = hashMapOf<String, Any?>(
+            "houseId" to json.optString("houseId"),
+            "deviceId" to json.optString("deviceId"),
+            "targetState" to json.optString("targetState"),
+        )
+        invokeFlutter(
+            nodeId = event.sourceNodeId,
+            method = "toggleDevice",
+            arguments = arguments,
+            updatePath = DevicesUpdatePath,
+            errorPath = DevicesErrorPath,
+            notImplementedMessage = "Device controls bridge is not implemented",
+            payload = ::devicesPayload,
+        )
+    }
+
+    private fun invokeFlutter(
+        nodeId: String,
+        method: String,
+        arguments: Any?,
+        updatePath: String,
+        errorPath: String,
+        notImplementedMessage: String,
+        payload: (Any?) -> String,
+    ) {
         runOnUiThread {
             val channel = wearChannel
             if (channel == null) {
-                sendError(event.sourceNodeId, "Phone app is not ready")
+                sendError(nodeId, errorPath, "Phone app is not ready")
                 return@runOnUiThread
             }
 
             channel.invokeMethod(
-                "getWeather",
-                null,
+                method,
+                arguments,
                 object : MethodChannel.Result {
                     override fun success(result: Any?) {
-                        val payload = weatherPayload(result)
-                        sendMessage(event.sourceNodeId, WeatherUpdatePath, payload)
+                        sendMessage(nodeId, updatePath, payload(result))
                     }
 
                     override fun error(
@@ -60,11 +124,11 @@ class MainActivity : FlutterActivity(), MessageClient.OnMessageReceivedListener 
                         errorMessage: String?,
                         errorDetails: Any?,
                     ) {
-                        sendError(event.sourceNodeId, errorMessage ?: errorCode)
+                        sendError(nodeId, errorPath, errorMessage ?: errorCode)
                     }
 
                     override fun notImplemented() {
-                        sendError(event.sourceNodeId, "Weather bridge is not implemented")
+                        sendError(nodeId, errorPath, notImplementedMessage)
                     }
                 },
             )
@@ -84,14 +148,37 @@ class MainActivity : FlutterActivity(), MessageClient.OnMessageReceivedListener 
             .toString()
     }
 
+    private fun devicesPayload(result: Any?): String {
+        val devices = JSONArray()
+        if (result is List<*>) {
+            result.forEach { item ->
+                if (item is Map<*, *>) {
+                    devices.put(
+                        JSONObject()
+                            .put("id", item["id"])
+                            .put("houseId", item["houseId"])
+                            .put("name", item["name"])
+                            .put("state", item["state"])
+                            .put("availability", item["availability"])
+                            .put("brightness", item["brightness"]),
+                    )
+                }
+            }
+        }
+        return JSONObject()
+            .put("devices", devices)
+            .toString()
+    }
+
     private fun sendError(
         nodeId: String,
+        path: String,
         message: String,
     ) {
         val payload = JSONObject()
             .put("message", message)
             .toString()
-        sendMessage(nodeId, WeatherErrorPath, payload)
+        sendMessage(nodeId, path, payload)
     }
 
     private fun sendMessage(
