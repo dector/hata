@@ -14,9 +14,9 @@ import (
 
 // HouseHandler provides house endpoints.
 type HouseHandler struct {
-	repos             db.Repositories
-	weather           *weather.Plugin
-	houseActionRoutes *extension.Registry
+	repos      db.Repositories
+	weather    *weather.Plugin
+	extensions *extension.Registry
 }
 
 // DefaultHouseExtras lists extension IDs enriched into house responses by default.
@@ -26,17 +26,22 @@ var DefaultHouseExtras = []string{
 
 // NewHouseHandler creates a new HouseHandler.
 func NewHouseHandler(repos db.Repositories) *HouseHandler {
-	return &HouseHandler{repos: repos}
+	return &HouseHandler{repos: repos, extensions: extension.NewRegistry()}
 }
 
 // NewHouseHandlerWithWeather creates a HouseHandler with weather plugin data.
 func NewHouseHandlerWithWeather(repos db.Repositories, weatherPlugin *weather.Plugin) *HouseHandler {
-	return &HouseHandler{repos: repos, weather: weatherPlugin}
+	h := NewHouseHandler(repos)
+	h.weather = weatherPlugin
+	if weatherPlugin != nil {
+		_ = h.extensions.RegisterHouseExtra(NewWeatherHouseExtraProvider(weatherPlugin))
+	}
+	return h
 }
 
 // SetExtensionRegistry sets generic extension action handlers.
 func (h *HouseHandler) SetExtensionRegistry(registry *extension.Registry) {
-	h.houseActionRoutes = registry
+	h.extensions = registry
 }
 
 // List handles GET /api/latest/house
@@ -70,15 +75,19 @@ func (h *HouseHandler) List(w http.ResponseWriter, r *http.Request) {
 			Location:    membership.Location,
 			Role:        membership.Role,
 		}
-		if defaultHouseExtraEnabled(weather.ExtensionID) {
-			weatherInfo, err := h.weatherInfo(ctx, membership.HouseID)
+		for _, provider := range h.extensions.HouseExtras() {
+			if !defaultHouseExtraEnabled(provider.ExtensionID()) {
+				continue
+			}
+			extra, err := provider.HouseExtra(ctx, membership.HouseID)
 			if err != nil {
-				fmt.Printf("Error loading weather for house %q: %v\n", membership.HouseID, err)
-				weatherInfo = &WeatherInfo{Status: string(weather.StatusError), Error: "failed to load weather"}
+				fmt.Printf("Error loading extension %q for house %q: %v\n", provider.ExtensionID(), membership.HouseID, err)
+				continue
 			}
-			houseInfo.Extras = map[string]any{
-				weather.ExtensionID: weatherInfo,
+			if houseInfo.Extras == nil {
+				houseInfo.Extras = map[string]any{}
 			}
+			houseInfo.Extras[provider.ExtensionID()] = extra
 		}
 		resp.Houses = append(resp.Houses, houseInfo)
 	}

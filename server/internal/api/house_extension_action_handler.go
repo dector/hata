@@ -41,7 +41,7 @@ func (h *HouseHandler) HandleHouseExtensionAction(w http.ResponseWriter, r *http
 		return
 	}
 
-	handler, ok := h.houseActionRoutes.HouseAction(extensionID)
+	handler, ok := h.extensions.HouseAction(extensionID)
 	if !ok {
 		WriteError(w, http.StatusNotFound, "Extension action not found", "extension-action-not-found")
 		return

@@ -10,6 +10,7 @@ import (
 	"hata/internal/weather"
 	"hata/internal/webui"
 
+	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -57,6 +58,30 @@ func (h *Handler) HandleHouseExtensionAction(w http.ResponseWriter, r *http.Requ
 			fmt.Printf("Error rendering extension action %q/%q for house %q: %v\n", extensionID, action, membership.HouseID, err)
 		}
 	}
+}
+
+type weatherHouseCardProvider struct {
+	handler *Handler
+}
+
+// NewWeatherHouseCardProvider adapts weather status to generic house cards.
+func NewWeatherHouseCardProvider(handler *Handler) extension.HouseCardProvider {
+	return &weatherHouseCardProvider{handler: handler}
+}
+
+func (p *weatherHouseCardProvider) ExtensionID() string {
+	return weather.ExtensionID
+}
+
+func (p *weatherHouseCardProvider) HouseCard(ctx context.Context, houseID string, r *http.Request) (templ.Component, error) {
+	if p.handler == nil {
+		return nil, fmt.Errorf("weather card handler is not configured")
+	}
+	weatherData := p.handler.appWeatherData(r, houseID)
+	if weatherData == nil {
+		return nil, nil
+	}
+	return webui.AppWeatherCard(*weatherData), nil
 }
 
 type weatherHouseWebActionHandler struct {

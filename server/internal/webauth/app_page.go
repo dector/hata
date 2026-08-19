@@ -63,9 +63,18 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 			ID:            activeMembership.HouseID,
 			DisplayName:   activeMembership.DisplayName,
 			Role:          activeMembership.Role,
-			Weather:       h.appWeatherData(r, activeMembership.HouseID),
 			Devices:       make([]webui.AppDeviceData, 0, len(devices)),
 			ShoppingLists: make([]webui.ShoppingListData, 0, len(shoppingLists)),
+		}
+		for _, provider := range h.extensions.HouseCards() {
+			card, err := provider.HouseCard(r.Context(), activeMembership.HouseID, r)
+			if err != nil {
+				http.Error(w, "failed to load extension cards", http.StatusInternalServerError)
+				return
+			}
+			if card != nil {
+				activeHouse.Cards = append(activeHouse.Cards, card)
+			}
 		}
 		for _, list := range shoppingLists {
 			if list.UID == repo.DefaultShoppingListUID {

@@ -31,6 +31,9 @@ func NewHandlerWithWeather(auth *api.AuthHandler, repos db.Repositories, weather
 }
 
 func NewHandlerWithWeatherAndExtensions(auth *api.AuthHandler, repos db.Repositories, weatherPlugin *weather.Plugin, extensions *extension.Registry) *Handler {
+	if extensions == nil {
+		extensions = extension.NewRegistry()
+	}
 	return &Handler{
 		auth:             auth,
 		repos:            repos,

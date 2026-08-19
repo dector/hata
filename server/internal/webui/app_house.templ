@@ -13,12 +13,12 @@ templ AppHouseGrid(houses []AppHouseData) {
 }
 
 templ AppDeviceList(house AppHouseData) {
-	if !hasVisibleWeather(house) && len(house.Devices) == 0 && len(house.ShoppingLists) == 0 {
+	if !hasHouseCards(house) && len(house.Devices) == 0 && len(house.ShoppingLists) == 0 {
 		<p class={ appFlushBlockStyle(), deviceEmptyStyle() }>No devices in this house.</p>
 	} else {
 		<ul class={ "device-list", deviceListStyle() }>
-			if hasVisibleWeather(house) {
-				@AppWeatherCard(*house.Weather)
+			for _, card := range house.Cards {
+				@card
 			}
 			for _, device := range house.Devices {
 				@AppDeviceCard(device)

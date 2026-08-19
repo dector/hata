@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/a-h/templ"
 )
 
 const LocalDatastarScriptPath = "/assets/js/datastar-1.0.2.js"
@@ -40,7 +42,7 @@ type AppHouseData struct {
 	ID            string
 	DisplayName   string
 	Role          string
-	Weather       *AppWeatherData
+	Cards         []templ.Component
 	Devices       []AppDeviceData
 	ShoppingLists []ShoppingListData
 }
@@ -140,8 +142,8 @@ func houseDevicesTitle(house AppHouseData) string {
 	return "Devices (" + strconv.Itoa(len(house.Devices)) + ")"
 }
 
-func hasVisibleWeather(house AppHouseData) bool {
-	return house.Weather != nil && (house.Weather.Status == "ok" || house.Weather.Status == "stale")
+func hasHouseCards(house AppHouseData) bool {
+	return len(house.Cards) > 0
 }
 
 func weatherIconPath(icon string) string {

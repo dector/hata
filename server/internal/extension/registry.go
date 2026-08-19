@@ -5,7 +5,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/a-h/templ"
 )
+
+// HouseExtraProvider provides API extension data scoped to a house.
+type HouseExtraProvider interface {
+	ExtensionID() string
+	HouseExtra(ctx context.Context, houseID string) (any, error)
+}
+
+// HouseCardProvider provides browser UI cards scoped to a house.
+type HouseCardProvider interface {
+	ExtensionID() string
+	HouseCard(ctx context.Context, houseID string, r *http.Request) (templ.Component, error)
+}
 
 // HouseActionResult is the result of an extension action for a house.
 type HouseActionResult struct {
@@ -34,6 +48,8 @@ type HouseWebActionHandler interface {
 
 // Registry stores extension action handlers.
 type Registry struct {
+	houseExtras     map[string]HouseExtraProvider
+	houseCards      map[string]HouseCardProvider
 	houseActions    map[string]HouseActionHandler
 	houseWebActions map[string]HouseWebActionHandler
 }
@@ -41,9 +57,43 @@ type Registry struct {
 // NewRegistry creates an empty extension registry.
 func NewRegistry() *Registry {
 	return &Registry{
+		houseExtras:     map[string]HouseExtraProvider{},
+		houseCards:      map[string]HouseCardProvider{},
 		houseActions:    map[string]HouseActionHandler{},
 		houseWebActions: map[string]HouseWebActionHandler{},
 	}
+}
+
+// RegisterHouseExtra registers an API house extra provider.
+func (r *Registry) RegisterHouseExtra(provider HouseExtraProvider) error {
+	if provider == nil {
+		return fmt.Errorf("extension house extra provider is nil")
+	}
+	id := provider.ExtensionID()
+	if id == "" {
+		return fmt.Errorf("extension ID is required")
+	}
+	if _, exists := r.houseExtras[id]; exists {
+		return fmt.Errorf("extension house extra provider %q already registered", id)
+	}
+	r.houseExtras[id] = provider
+	return nil
+}
+
+// RegisterHouseCard registers a browser house card provider.
+func (r *Registry) RegisterHouseCard(provider HouseCardProvider) error {
+	if provider == nil {
+		return fmt.Errorf("extension house card provider is nil")
+	}
+	id := provider.ExtensionID()
+	if id == "" {
+		return fmt.Errorf("extension ID is required")
+	}
+	if _, exists := r.houseCards[id]; exists {
+		return fmt.Errorf("extension house card provider %q already registered", id)
+	}
+	r.houseCards[id] = provider
+	return nil
 }
 
 // RegisterHouseAction registers an API house action handler.
@@ -76,6 +126,30 @@ func (r *Registry) RegisterHouseWebAction(handler HouseWebActionHandler) error {
 	}
 	r.houseWebActions[id] = handler
 	return nil
+}
+
+// HouseExtras returns registered API house extra providers.
+func (r *Registry) HouseExtras() []HouseExtraProvider {
+	if r == nil {
+		return nil
+	}
+	providers := make([]HouseExtraProvider, 0, len(r.houseExtras))
+	for _, provider := range r.houseExtras {
+		providers = append(providers, provider)
+	}
+	return providers
+}
+
+// HouseCards returns registered browser house card providers.
+func (r *Registry) HouseCards() []HouseCardProvider {
+	if r == nil {
+		return nil
+	}
+	providers := make([]HouseCardProvider, 0, len(r.houseCards))
+	for _, provider := range r.houseCards {
+		providers = append(providers, provider)
+	}
+	return providers
 }
 
 // HouseAction finds an API house action handler.
