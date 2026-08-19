@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	ExtensionID = "hata.ext.weather.v1"
 	PluginScope = "hata.weather.v1"
 	EnabledKey  = "enabled"
 )

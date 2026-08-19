@@ -2,11 +2,11 @@ package api
 
 // HouseInfo contains house details for a user.
 type HouseInfo struct {
-	ID          string       `json:"id"`
-	DisplayName string       `json:"displayName"`
-	Location    *string      `json:"location,omitempty"`
-	Role        string       `json:"role"`
-	Weather     *WeatherInfo `json:"weather"`
+	ID          string         `json:"id"`
+	DisplayName string         `json:"displayName"`
+	Location    *string        `json:"location,omitempty"`
+	Role        string         `json:"role"`
+	Extras      map[string]any `json:"extras,omitempty"`
 }
 
 // WeatherInfo contains current weather plugin data for a house.

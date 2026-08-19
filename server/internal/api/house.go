@@ -17,6 +17,11 @@ type HouseHandler struct {
 	weather *weather.Plugin
 }
 
+// DefaultHouseExtras lists extension IDs enriched into house responses by default.
+var DefaultHouseExtras = []string{
+	weather.ExtensionID,
+}
+
 // NewHouseHandler creates a new HouseHandler.
 func NewHouseHandler(repos db.Repositories) *HouseHandler {
 	return &HouseHandler{repos: repos}
@@ -52,21 +57,35 @@ func (h *HouseHandler) List(w http.ResponseWriter, r *http.Request) {
 		Houses: make([]HouseInfo, 0, len(memberships)),
 	}
 	for _, membership := range memberships {
-		weatherInfo, err := h.weatherInfo(ctx, membership.HouseID)
-		if err != nil {
-			fmt.Printf("Error loading weather for house %q: %v\n", membership.HouseID, err)
-			weatherInfo = &WeatherInfo{Status: string(weather.StatusError), Error: "failed to load weather"}
-		}
-		resp.Houses = append(resp.Houses, HouseInfo{
+		houseInfo := HouseInfo{
 			ID:          membership.HouseID,
 			DisplayName: membership.DisplayName,
 			Location:    membership.Location,
 			Role:        membership.Role,
-			Weather:     weatherInfo,
-		})
+		}
+		if defaultHouseExtraEnabled(weather.ExtensionID) {
+			weatherInfo, err := h.weatherInfo(ctx, membership.HouseID)
+			if err != nil {
+				fmt.Printf("Error loading weather for house %q: %v\n", membership.HouseID, err)
+				weatherInfo = &WeatherInfo{Status: string(weather.StatusError), Error: "failed to load weather"}
+			}
+			houseInfo.Extras = map[string]any{
+				weather.ExtensionID: weatherInfo,
+			}
+		}
+		resp.Houses = append(resp.Houses, houseInfo)
 	}
 
 	WriteJSON(w, http.StatusOK, resp)
+}
+
+func defaultHouseExtraEnabled(extensionID string) bool {
+	for _, enabled := range DefaultHouseExtras {
+		if enabled == extensionID {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *HouseHandler) userCanAccessHouse(r *http.Request, userID int, houseID string) (bool, error) {
