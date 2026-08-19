@@ -1,46 +1,43 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"hata/internal/db"
 	"hata/internal/extension"
-	"hata/internal/weather"
 )
 
 // HouseHandler provides house endpoints.
 type HouseHandler struct {
 	repos      db.Repositories
-	weather    *weather.Plugin
 	extensions *extension.Registry
 }
 
 // DefaultHouseExtras lists extension IDs enriched into house responses by default.
 var DefaultHouseExtras = []string{
-	weather.ExtensionID,
+	"hata.ext.weather.v1",
 }
 
 // NewHouseHandler creates a new HouseHandler.
 func NewHouseHandler(repos db.Repositories) *HouseHandler {
-	return &HouseHandler{repos: repos, extensions: extension.NewRegistry()}
+	return NewHouseHandlerWithExtensions(repos, nil)
 }
 
-// NewHouseHandlerWithWeather creates a HouseHandler with weather plugin data.
-func NewHouseHandlerWithWeather(repos db.Repositories, weatherPlugin *weather.Plugin) *HouseHandler {
-	h := NewHouseHandler(repos)
-	h.weather = weatherPlugin
-	if weatherPlugin != nil {
-		_ = h.extensions.RegisterHouseExtra(NewWeatherHouseExtraProvider(weatherPlugin))
+// NewHouseHandlerWithExtensions creates a HouseHandler with extension data.
+func NewHouseHandlerWithExtensions(repos db.Repositories, extensions *extension.Registry) *HouseHandler {
+	if extensions == nil {
+		extensions = extension.NewRegistry()
 	}
-	return h
+	return &HouseHandler{repos: repos, extensions: extensions}
 }
 
 // SetExtensionRegistry sets generic extension action handlers.
 func (h *HouseHandler) SetExtensionRegistry(registry *extension.Registry) {
+	if registry == nil {
+		registry = extension.NewRegistry()
+	}
 	h.extensions = registry
 }
 
@@ -115,47 +112,4 @@ func (h *HouseHandler) userCanAccessHouse(r *http.Request, userID int, houseID s
 		}
 	}
 	return false, nil
-}
-
-func (h *HouseHandler) weatherInfo(ctx context.Context, houseID string) (*WeatherInfo, error) {
-	return weatherInfoForService(ctx, h.weather, houseID)
-}
-
-func weatherInfoForService(ctx context.Context, weatherPlugin *weather.Plugin, houseID string) (*WeatherInfo, error) {
-	if weatherPlugin == nil {
-		return &WeatherInfo{Status: string(weather.StatusDisabled)}, nil
-	}
-	status, err := weatherPlugin.CurrentStatus(ctx, houseID)
-	if err != nil {
-		return nil, err
-	}
-	return weatherInfoFromStatus(status), nil
-}
-
-func weatherInfoFromStatus(status *weather.Status) *WeatherInfo {
-	if status == nil {
-		return &WeatherInfo{Status: string(weather.StatusDisabled)}
-	}
-	info := &WeatherInfo{
-		Status:        string(status.Status),
-		LocationLabel: status.LocationLabel,
-		Error:         status.Error,
-	}
-	if status.Status == weather.StatusOK || status.Status == weather.StatusStale {
-		temperature := status.Temperature
-		conditionCode := status.ConditionCode
-		info.Temperature = &temperature
-		info.TemperatureUnit = status.TemperatureUnit
-		info.ConditionCode = &conditionCode
-		info.ConditionText = status.ConditionText
-		info.ConditionIcon = status.ConditionIcon
-		info.HumidityPercent = status.HumidityPercent
-		info.WindSpeed = status.WindSpeed
-		if status.WindSpeedUnit != nil {
-			info.WindSpeedUnit = *status.WindSpeedUnit
-		}
-		info.ObservedAt = status.ObservedAt.Format(time.RFC3339)
-		info.UpdatedAt = status.UpdatedAt.Format(time.RFC3339)
-	}
-	return info
 }

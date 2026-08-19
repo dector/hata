@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"hata/internal/db/repo"
-	"hata/internal/weather"
 	"hata/internal/webui"
 )
 
@@ -91,33 +90,5 @@ func (h *Handler) AppPage(w http.ResponseWriter, r *http.Request) {
 	if err := webui.AppPage(webui.AppPageData{DisplayName: displayNameFromAuth(auth), Houses: houses, HeaderHouses: headerHouses, ActiveHouseID: activeHouseID}).Render(r.Context(), w); err != nil {
 		http.Error(w, "failed to render app page", http.StatusInternalServerError)
 		return
-	}
-}
-
-func (h *Handler) appWeatherData(r *http.Request, houseID string) *webui.AppWeatherData {
-	if h.weather == nil {
-		return nil
-	}
-	status, err := h.weather.CurrentStatus(r.Context(), houseID)
-	if err != nil || status == nil || (status.Status != weather.StatusOK && status.Status != weather.StatusStale) {
-		return nil
-	}
-	windUnit := ""
-	if status.WindSpeedUnit != nil {
-		windUnit = *status.WindSpeedUnit
-	}
-	return &webui.AppWeatherData{
-		HouseID:         houseID,
-		RefreshURL:      webui.HouseExtensionActionPath(houseID, weather.ExtensionID, weatherRefreshAction),
-		Status:          string(status.Status),
-		LocationLabel:   status.LocationLabel,
-		Temperature:     status.Temperature,
-		TemperatureUnit: status.TemperatureUnit,
-		ConditionText:   status.ConditionText,
-		ConditionIcon:   status.ConditionIcon,
-		HumidityPercent: status.HumidityPercent,
-		WindSpeed:       status.WindSpeed,
-		WindSpeedUnit:   windUnit,
-		UpdatedAt:       status.UpdatedAt,
 	}
 }

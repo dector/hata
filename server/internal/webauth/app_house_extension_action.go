@@ -60,54 +60,43 @@ func (h *Handler) HandleHouseExtensionAction(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-type weatherHouseCardProvider struct {
-	handler *Handler
+type weatherWebExtension struct {
+	weather *weather.Plugin
 }
 
 // NewWeatherHouseCardProvider adapts weather status to generic house cards.
-func NewWeatherHouseCardProvider(handler *Handler) extension.HouseCardProvider {
-	return &weatherHouseCardProvider{handler: handler}
+func NewWeatherHouseCardProvider(weatherPlugin *weather.Plugin) extension.HouseCardProvider {
+	return &weatherWebExtension{weather: weatherPlugin}
 }
 
-func (p *weatherHouseCardProvider) ExtensionID() string {
+// NewWeatherHouseWebActionHandler adapts weather browser actions to generic extension actions.
+func NewWeatherHouseWebActionHandler(weatherPlugin *weather.Plugin) extension.HouseWebActionHandler {
+	return &weatherWebExtension{weather: weatherPlugin}
+}
+
+func (e *weatherWebExtension) ExtensionID() string {
 	return weather.ExtensionID
 }
 
-func (p *weatherHouseCardProvider) HouseCard(ctx context.Context, houseID string, r *http.Request) (templ.Component, error) {
-	if p.handler == nil {
-		return nil, fmt.Errorf("weather card handler is not configured")
-	}
-	weatherData := p.handler.appWeatherData(r, houseID)
+func (e *weatherWebExtension) HouseCard(ctx context.Context, houseID string, r *http.Request) (templ.Component, error) {
+	weatherData := appWeatherData(ctx, e.weather, houseID)
 	if weatherData == nil {
 		return nil, nil
 	}
 	return webui.AppWeatherCard(*weatherData), nil
 }
 
-type weatherHouseWebActionHandler struct {
-	handler *Handler
-}
-
-// NewWeatherHouseWebActionHandler adapts weather browser actions to generic extension actions.
-func NewWeatherHouseWebActionHandler(handler *Handler) extension.HouseWebActionHandler {
-	return &weatherHouseWebActionHandler{handler: handler}
-}
-
-func (h *weatherHouseWebActionHandler) ExtensionID() string {
-	return weather.ExtensionID
-}
-
-func (h *weatherHouseWebActionHandler) HandleHouseWebAction(ctx context.Context, houseID string, action string, r *http.Request) (extension.HouseWebActionResult, error) {
-	if h.handler == nil || h.handler.weather == nil {
+func (e *weatherWebExtension) HandleHouseWebAction(ctx context.Context, houseID string, action string, r *http.Request) (extension.HouseWebActionResult, error) {
+	if e.weather == nil {
 		return extension.HouseWebActionResult{}, fmt.Errorf("weather is not configured")
 	}
 	if action != weatherRefreshAction {
 		return extension.HouseWebActionResult{}, fmt.Errorf("unknown weather action %q", action)
 	}
-	if err := h.handler.weather.RefreshHouse(ctx, houseID); err != nil {
+	if err := e.weather.RefreshHouse(ctx, houseID); err != nil {
 		return extension.HouseWebActionResult{}, err
 	}
-	weatherData := h.handler.appWeatherData(r, houseID)
+	weatherData := appWeatherData(ctx, e.weather, houseID)
 	if weatherData == nil {
 		return extension.HouseWebActionResult{}, fmt.Errorf("weather is not available")
 	}
@@ -116,4 +105,32 @@ func (h *weatherHouseWebActionHandler) HandleHouseWebAction(ctx context.Context,
 		ContentType: "text/html; charset=utf-8",
 		Render:      webui.AppWeatherCard(*weatherData).Render,
 	}, nil
+}
+
+func appWeatherData(ctx context.Context, weatherPlugin *weather.Plugin, houseID string) *webui.AppWeatherData {
+	if weatherPlugin == nil {
+		return nil
+	}
+	status, err := weatherPlugin.CurrentStatus(ctx, houseID)
+	if err != nil || status == nil || (status.Status != weather.StatusOK && status.Status != weather.StatusStale) {
+		return nil
+	}
+	windUnit := ""
+	if status.WindSpeedUnit != nil {
+		windUnit = *status.WindSpeedUnit
+	}
+	return &webui.AppWeatherData{
+		HouseID:         houseID,
+		RefreshURL:      webui.HouseExtensionActionPath(houseID, weather.ExtensionID, weatherRefreshAction),
+		Status:          string(status.Status),
+		LocationLabel:   status.LocationLabel,
+		Temperature:     status.Temperature,
+		TemperatureUnit: status.TemperatureUnit,
+		ConditionText:   status.ConditionText,
+		ConditionIcon:   status.ConditionIcon,
+		HumidityPercent: status.HumidityPercent,
+		WindSpeed:       status.WindSpeed,
+		WindSpeedUnit:   windUnit,
+		UpdatedAt:       status.UpdatedAt,
+	}
 }

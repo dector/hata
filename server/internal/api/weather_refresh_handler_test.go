@@ -65,8 +65,7 @@ func TestRefreshWeather_OK(t *testing.T) {
 	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
 		t.Fatalf("Failed to register weather action: %v", err)
 	}
-	handler := NewHouseHandlerWithWeather(repos, weatherPlugin)
-	handler.SetExtensionRegistry(registry)
+	handler := NewHouseHandlerWithExtensions(repos, registry)
 
 	router := chi.NewRouter()
 	router.Post("/api/latest/house/{houseId}/extension/{extensionId}/actions/{action}", handler.HandleHouseExtensionAction)
@@ -109,8 +108,7 @@ func TestRefreshWeather_Forbidden(t *testing.T) {
 	if err := registry.RegisterHouseAction(NewWeatherHouseActionHandler(weatherPlugin)); err != nil {
 		t.Fatalf("Failed to register weather action: %v", err)
 	}
-	handler := NewHouseHandlerWithWeather(repos, weatherPlugin)
-	handler.SetExtensionRegistry(registry)
+	handler := NewHouseHandlerWithExtensions(repos, registry)
 	router := chi.NewRouter()
 	router.Post("/api/latest/house/{houseId}/extension/{extensionId}/actions/{action}", handler.HandleHouseExtensionAction)
 

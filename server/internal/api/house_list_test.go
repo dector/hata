@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"hata/internal/extension"
 	"hata/internal/weather"
 )
 
@@ -35,7 +36,11 @@ func TestHouseList_IncludesDefaultWeatherExtra(t *testing.T) {
 		t.Fatalf("Failed to enable weather: %v", err)
 	}
 
-	handler := NewHouseHandlerWithWeather(repos, weather.NewPlugin(repos, nil))
+	registry := extension.NewRegistry()
+	if err := registry.RegisterHouseExtra(NewWeatherHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
+		t.Fatalf("Failed to register weather extra: %v", err)
+	}
+	handler := NewHouseHandlerWithExtensions(repos, registry)
 	req := httptest.NewRequest(http.MethodGet, "/api/latest/house", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
@@ -82,7 +87,11 @@ func TestHouseList_OmitsWeatherExtraWhenNotDefaultEnriched(t *testing.T) {
 		t.Fatalf("Failed to assign house role: %v", err)
 	}
 
-	handler := NewHouseHandlerWithWeather(repos, weather.NewPlugin(repos, nil))
+	registry := extension.NewRegistry()
+	if err := registry.RegisterHouseExtra(NewWeatherHouseExtraProvider(weather.NewPlugin(repos, nil))); err != nil {
+		t.Fatalf("Failed to register weather extra: %v", err)
+	}
+	handler := NewHouseHandlerWithExtensions(repos, registry)
 	req := httptest.NewRequest(http.MethodGet, "/api/latest/house", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
