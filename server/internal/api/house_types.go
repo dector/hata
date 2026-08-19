@@ -30,3 +30,8 @@ type WeatherInfo struct {
 type HouseListResponse struct {
 	Houses []HouseInfo `json:"houses"`
 }
+
+// WeatherRefreshResponse represents the force weather refresh endpoint response.
+type WeatherRefreshResponse struct {
+	Weather *WeatherInfo `json:"weather"`
+}

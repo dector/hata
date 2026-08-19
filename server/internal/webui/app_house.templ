@@ -32,7 +32,7 @@ templ AppDeviceList(house AppHouseData) {
 }
 
 templ AppWeatherCard(weather AppWeatherData) {
-	<li class={ "device-card", "weather-card", deviceCardStyle() }>
+	<li id={ weatherCardID(weather) } class={ "device-card", "weather-card", deviceCardStyle() }>
 		<div class={ weatherHeaderStyle() }>
 			@weatherConditionIcon(weather.ConditionIcon)
 			<div class={ weatherContentStyle() }>
@@ -42,6 +42,18 @@ templ AppWeatherCard(weather AppWeatherData) {
 					<span class={ weatherLocationStyle() }>{ weather.LocationLabel }</span>
 				}
 			</div>
+			<form
+				class={ weatherRefreshFormStyle() }
+				method="post"
+				action={ templ.SafeURL(weather.RefreshURL) }
+				data-on-submit__prevent={ datastarPostFormAction(weather.RefreshURL, "#" + weatherCardID(weather)) }
+				data-weather-refresh-form
+				data-weather-refresh-target={ "#" + weatherCardID(weather) }
+			>
+				<button class={ "weather-refresh-button", deviceIconToggleButtonStyle() } type="submit" aria-label="Refresh weather" title="Refresh weather">
+					@refreshIcon()
+				</button>
+			</form>
 		</div>
 		<span class={ weatherMetaStyle() }>{ weatherUpdatedLabel(weather) }</span>
 	</li>

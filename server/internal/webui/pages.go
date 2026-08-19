@@ -47,6 +47,8 @@ type AppHouseData struct {
 
 // AppWeatherData contains weather shown on the app page.
 type AppWeatherData struct {
+	HouseID         string
+	RefreshURL      string
 	Status          string
 	LocationLabel   string
 	Temperature     float64
@@ -368,6 +370,10 @@ func ShoppingListPath(listID string) string {
 	return "/sl/" + url.PathEscape(listID)
 }
 
+func HouseWeatherRefreshPath(houseID string) string {
+	return "/h/" + url.PathEscape(houseID) + "/weather/refresh"
+}
+
 func shoppingListItemsPath(listID string) string {
 	return ShoppingListPath(listID) + "/items"
 }
@@ -382,6 +388,12 @@ func shoppingListItemRenamePath(listID string, itemID string) string {
 
 func shoppingListItemDeletePath(listID string, itemID string) string {
 	return ShoppingListPath(listID) + "/items/" + url.PathEscape(itemID) + "/delete"
+}
+
+func weatherCardID(weather AppWeatherData) string {
+	id := weather.HouseID
+	id = strings.NewReplacer("/", "-", " ", "-", ".", "-", ":", "-").Replace(id)
+	return "weather-card-" + id
 }
 
 func HouseDeviceTogglePath(houseID string, deviceID string) string {

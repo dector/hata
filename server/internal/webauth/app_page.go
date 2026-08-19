@@ -98,6 +98,8 @@ func (h *Handler) appWeatherData(r *http.Request, houseID string) *webui.AppWeat
 		windUnit = *status.WindSpeedUnit
 	}
 	return &webui.AppWeatherData{
+		HouseID:         houseID,
+		RefreshURL:      webui.HouseWeatherRefreshPath(houseID),
 		Status:          string(status.Status),
 		LocationLabel:   status.LocationLabel,
 		Temperature:     status.Temperature,

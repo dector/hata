@@ -69,6 +69,19 @@ func (h *HouseHandler) List(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, resp)
 }
 
+func (h *HouseHandler) userCanAccessHouse(r *http.Request, userID int, houseID string) (bool, error) {
+	memberships, err := h.repos.HouseRole().ListByUser(r.Context(), userID)
+	if err != nil {
+		return false, err
+	}
+	for _, membership := range memberships {
+		if membership.HouseID == houseID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (h *HouseHandler) weatherInfo(ctx context.Context, houseID string) (*WeatherInfo, error) {
 	if h.weather == nil {
 		return &WeatherInfo{Status: string(weather.StatusDisabled)}, nil
