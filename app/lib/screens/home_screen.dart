@@ -7,6 +7,7 @@ import '../models/home_device.dart';
 import '../models/house.dart';
 import '../session/session.dart';
 import '../theme/hata_colors.dart';
+import '../wear/wear_weather_bridge.dart';
 import '../widgets/device_card.dart';
 import '../widgets/hata_top_bar.dart';
 import '../widgets/home_fab_menu.dart';
@@ -82,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.session.serverUrl,
         widget.session.token,
       );
+      WearWeatherBridge.instance.updateFromHouses(houses);
       if (!mounted) return;
       setState(() {
         _houses = houses;
@@ -188,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         await _loadHome();
         return;
       }
+      WearWeatherBridge.instance.updateWeather(weather);
       final index = _houses.indexWhere((house) => house.id == houseId);
       setState(() {
         _connectionStatus = ConnectionStatus.online;

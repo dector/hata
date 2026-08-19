@@ -28,6 +28,8 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.Instant
 
 private const val PhoneCapability = "hata_phone_app"
 private const val WeatherRequestPath = "/watch/weather/request"
@@ -103,6 +105,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             val weather = JSONObject(body).getJSONObject("weather")
             WatchScreenState.Weather(
                 temperatureC = weather.getInt("temperatureC"),
+                temperatureLabel = weather.optString("temperatureLabel"),
                 condition = weather.getString("condition"),
                 updatedAt = weather.optString("updatedAt"),
             )
@@ -118,6 +121,7 @@ private sealed interface WatchScreenState {
     data object Disconnected : WatchScreenState
     data class Weather(
         val temperatureC: Int,
+        val temperatureLabel: String,
         val condition: String,
         val updatedAt: String,
     ) : WatchScreenState
@@ -194,7 +198,7 @@ private fun RetryState(
 @Composable
 private fun WeatherState(state: WatchScreenState.Weather) {
     Text(
-        text = "${state.temperatureC}°C",
+        text = state.temperatureLabel.ifBlank { "${state.temperatureC}°C" },
         textAlign = TextAlign.Center,
         style = MaterialTheme.typography.display2,
     )
@@ -203,12 +207,47 @@ private fun WeatherState(state: WatchScreenState.Weather) {
         textAlign = TextAlign.Center,
         style = MaterialTheme.typography.title3,
     )
-    if (state.updatedAt.isNotBlank()) {
+    val updatedLabel = updatedLabel(state.updatedAt)
+    if (updatedLabel != null) {
         Text(
-            text = state.updatedAt,
+            text = updatedLabel,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.caption2,
         )
+    }
+}
+
+private fun updatedLabel(updatedAt: String): String? {
+    if (updatedAt.isBlank()) return null
+
+    val instant = runCatching { Instant.parse(updatedAt) }.getOrNull() ?: return null
+    var age = Duration.between(instant, Instant.now())
+    if (age.isNegative) age = Duration.ZERO
+
+    val minutes = age.toMinutes()
+    if (minutes < 1) return "updated just now"
+    if (minutes < 60) {
+        return if (minutes == 1L) {
+            "updated 1 minute ago"
+        } else {
+            "updated $minutes minutes ago"
+        }
+    }
+
+    val hours = age.toHours()
+    if (hours < 24) {
+        return if (hours == 1L) {
+            "updated 1 hour ago"
+        } else {
+            "updated $hours hours ago"
+        }
+    }
+
+    val days = hours / 24
+    return if (days == 1L) {
+        "updated 1 day ago"
+    } else {
+        "updated $days days ago"
     }
 }
 
@@ -221,6 +260,7 @@ private fun HataWatchAppPreview() {
     HataWatchApp(
         state = WatchScreenState.Weather(
             temperatureC = 22,
+            temperatureLabel = "22°C",
             condition = "Cloudy",
             updatedAt = "2026-08-19T20:00:00Z",
         ),

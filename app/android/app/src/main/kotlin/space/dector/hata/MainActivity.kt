@@ -75,6 +75,7 @@ class MainActivity : FlutterActivity(), MessageClient.OnMessageReceivedListener 
         val weather = JSONObject()
         if (result is Map<*, *>) {
             weather.put("temperatureC", result["temperatureC"])
+            weather.put("temperatureLabel", result["temperatureLabel"])
             weather.put("condition", result["condition"])
             weather.put("updatedAt", result["updatedAt"])
         }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'wear/wear_weather_bridge.dart';
 
 export 'app.dart';
 
@@ -17,11 +18,7 @@ void _registerWearBridge() {
   _wearChannel.setMethodCallHandler((call) async {
     switch (call.method) {
       case 'getWeather':
-        return <String, Object>{
-          'temperatureC': 22,
-          'condition': 'Cloudy',
-          'updatedAt': DateTime.now().toUtc().toIso8601String(),
-        };
+        return WearWeatherBridge.instance.getWeather();
       default:
         throw PlatformException(
           code: 'not_implemented',
