@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   ConnectionStatus _connectionStatus = ConnectionStatus.unknown;
   bool _isInitialLoading = true;
   bool _isRefreshing = false;
+  bool _isWeatherRefreshing = false;
   String? _errorMessage;
   final Set<String> _pendingDeviceIds = <String>{};
 
@@ -161,6 +162,58 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return parts.join(' • ');
   }
 
+  Future<void> _refreshWeather(String houseId) async {
+    if (_isWeatherRefreshing) return;
+
+    setState(() {
+      _isWeatherRefreshing = true;
+      _errorMessage = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Refreshing weather...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    try {
+      final weather = await widget.apiClient.refreshWeather(
+        widget.session.serverUrl,
+        widget.session.token,
+        houseId,
+      );
+      if (!mounted) return;
+      if (weather == null) {
+        setState(() => _isWeatherRefreshing = false);
+        await _loadHome();
+        return;
+      }
+      final index = _houses.indexWhere((house) => house.id == houseId);
+      setState(() {
+        _connectionStatus = ConnectionStatus.online;
+        _isWeatherRefreshing = false;
+        if (index != -1) {
+          _houses = List<House>.from(_houses)
+            ..[index] = _houses[index].copyWith(weather: weather);
+        }
+      });
+    } catch (error) {
+      if (_isUnauthorized(error)) {
+        await widget.onSessionInvalid();
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _connectionStatus = ConnectionStatus.offline;
+        _isWeatherRefreshing = false;
+        _errorMessage = _messageFor(error);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage ?? 'Weather refresh failed')),
+      );
+    }
+  }
+
   Future<void> _toggleDevice(String id, bool value) async {
     final index = _devices.indexWhere((device) => device.id == id);
     if (index == -1) return;
@@ -282,7 +335,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final currentHouse = _houses.firstOrNull;
     final homeName = currentHouse?.displayName ?? 'My Home';
-    final isSyncing = _isRefreshing || _pendingDeviceIds.isNotEmpty;
+    final isSyncing =
+        _isRefreshing || _isWeatherRefreshing || _pendingDeviceIds.isNotEmpty;
 
     return Scaffold(
       floatingActionButton: HomeFabMenu(
@@ -313,6 +367,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       displayName:
                           widget.session.displayName ?? widget.session.username,
                       house: currentHouse,
+                      onRefreshWeather: currentHouse == null
+                          ? null
+                          : () => _refreshWeather(currentHouse.id),
                     ),
                     ..._contentSlivers(),
                   ],
@@ -408,16 +465,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.displayName, required this.house});
+  const _HomeHeader({
+    required this.displayName,
+    required this.house,
+    this.onRefreshWeather,
+  });
 
   final String displayName;
   final House? house;
+  final VoidCallback? onRefreshWeather;
 
   @override
   Widget build(BuildContext context) {
     final weather = house?.weather;
     if (weather != null && weather.hasCurrentConditions) {
-      return _WeatherHeader(weather: weather);
+      return _WeatherHeader(weather: weather, onLongPress: onRefreshWeather);
     }
 
     final firstName = displayName.trim().split(RegExp(r'\s+')).first;
@@ -438,72 +500,72 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _WeatherHeader extends StatelessWidget {
-  const _WeatherHeader({required this.weather});
+  const _WeatherHeader({required this.weather, this.onLongPress});
 
   final WeatherInfo weather;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final condition = weather.conditionText ?? 'Weather now';
     final location = weather.locationLabel;
-    final isStale = weather.status == 'stale';
     final updatedLabel = _updatedLabel(weather);
 
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: HataColors.surface,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _iconFor(weather.conditionIcon),
-                color: HataColors.primaryContainerVariant,
-                size: 52,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _temperatureLabel(weather),
-                      style: const TextStyle(
-                        fontSize: 36,
-                        height: 1,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      [
-                        condition,
-                        ?location,
-                      ].join(' • '),
-                      style: const TextStyle(
-                        color: HataColors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (updatedLabel != null) ...[
-                      const SizedBox(height: 4),
+        child: GestureDetector(
+          onLongPress: onLongPress,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: HataColors.surface,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _iconFor(weather.conditionIcon),
+                  color: HataColors.primaryContainerVariant,
+                  size: 52,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        updatedLabel,
+                        _temperatureLabel(weather),
                         style: const TextStyle(
-                          color: HataColors.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 36,
+                          height: 1,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        [condition, ?location].join(' • '),
+                        style: const TextStyle(
+                          color: HataColors.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (updatedLabel != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          updatedLabel,
+                          style: const TextStyle(
+                            color: HataColors.onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -13,6 +13,16 @@ class House {
   final String? location;
   final WeatherInfo? weather;
 
+  House copyWith({WeatherInfo? weather}) {
+    return House(
+      id: id,
+      displayName: displayName,
+      role: role,
+      location: location,
+      weather: weather ?? this.weather,
+    );
+  }
+
   factory House.fromJson(Map<String, dynamic> json) {
     final id = json['id']?.toString() ?? '';
     final weatherJson = json['weather'];

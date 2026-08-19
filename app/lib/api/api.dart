@@ -76,6 +76,22 @@ class Api {
     return _decodeDevices(json);
   }
 
+  Future<WeatherInfo?> refreshWeather(
+    String serverUrl,
+    String token,
+    String houseId,
+  ) async {
+    final response = await _client.post(
+      _uri(serverUrl, _apiUrl('house/$houseId/weather/refresh')),
+      headers: _authHeaders(token),
+    );
+    final json = _decodeResponse(response);
+    final weather = json['weather'];
+    return weather is Map<String, dynamic>
+        ? WeatherInfo.fromJson(weather)
+        : null;
+  }
+
   Future<List<ApiDevice>> fetchHouseDevices(
     String serverUrl,
     String token,
