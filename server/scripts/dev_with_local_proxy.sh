@@ -3,20 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-go run ./cmd/devproxy -listen 127.0.0.1:4500 -target http://127.0.0.1:4501 &
-proxy_pid=$!
-
-cleanup() {
-  kill "$proxy_pid" 2>/dev/null || true
-}
-trap cleanup EXIT INT TERM
-
-go tool \
-  air \
-    -build.cmd='VERSION="$(./scripts/git_version.sh)"; go tool templ generate ./internal/webui && go build -ldflags "-X hata/version.Version=${VERSION}" -o ./out/hata.air ./cmd/hata' \
-    -build.full_bin="HATA_DEV=1 ./out/hata.air" \
-    -build.include_dir="cmd,internal,pkg" \
-    -build.include_ext="go,templ" \
-    -build.exclude_regex="_templ.go" \
-    -build.delay=100 \
-    -tmp_dir=out
+go tool gust \
+  -e 'HATA_DEV=1 go run -ldflags "-X hata/version.Version=$(./scripts/git_version.sh)" ./cmd/hata' \
+  -TT \
+  --e.before 'go tool templ generate ./internal/webui' \
+  --exclude data \
+  --exclude docs \
+  --exclude out \
+  --exclude .jj \
+  --exclude.glob '*_templ.go'

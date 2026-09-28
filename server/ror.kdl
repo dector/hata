@@ -5,28 +5,23 @@ task build {
 }
 
 task dev:server {
-    description "Run project (live reload, no Air proxy)"
+    description "Run project (live reload with Tailscale Serve, no proxy)"
 
-    env AIR=1
-
-    cmd #"""go tool \
-      air \
-        -build.cmd='VERSION="$(./scripts/git_version.sh)"; go tool templ generate ./internal/webui && go build -ldflags "-X hata/version.Version=${VERSION}" -o ./out/hata.air ./cmd/hata' \
-        -build.full_bin="HATA_DEV=1 ./out/hata.air" \
-        -build.include_dir="cmd,internal,pkg" \
-        -build.include_ext="go,templ" \
-        -build.exclude_regex="_templ.go" \
-        -build.delay=100 \
-        -tmp_dir=out \
+    cmd #"""
+      go tool gust \
+        -e 'HATA_DEV=1 go run -ldflags "-X hata/version.Version=$(./scripts/git_version.sh)" ./cmd/hata' \
+        -T \
+        --e.before 'go tool templ generate ./internal/webui' \
+        --exclude data \
+        --exclude docs \
+        --exclude out \
+        --exclude .jj \
+        --exclude.glob '*_templ.go'
     """#
 }
 
 task dev {
-    description "Run project (live reload with localhost proxy 4500 -> 4501)"
-
-    env AIR=1
-    env AIR_PROXY=1
-    env AIR_PROXY_PORT=4500
+    description "Run project (live reload with Tailscale Serve)"
 
     cmd "bash ./scripts/dev_with_local_proxy.sh"
 }

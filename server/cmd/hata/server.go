@@ -170,16 +170,8 @@ func startServer(database db.DB, ctx context.Context) {
 	port = strings.TrimPrefix(port, ":")
 	listenAddr := fmt.Sprintf("%s:%s", host, port)
 
-	portAccess := port
-	if os.Getenv("AIR_PROXY") == "1" {
-		portAccess = os.Getenv("AIR_PROXY_PORT")
-		if strings.TrimSpace(portAccess) == "" {
-			portAccess = "4500"
-		}
-	}
-
 	// Start server
-	log.Printf("Starting server on http://%s:%s\n", host, portAccess)
+	log.Printf("Starting server on http://%s:%s\n", host, port)
 	if err := http.ListenAndServe(listenAddr, r); err != nil {
 		log.Fatalf("failed starting server: %v", err)
 	}
